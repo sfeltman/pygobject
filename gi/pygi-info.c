@@ -1243,7 +1243,7 @@ _wrap_g_constant_info_get_value (PyGIBaseInfo *self)
     type_info = g_constant_info_get_type ( (GIConstantInfo *) self->info);
 
     if (g_type_info_get_tag (type_info) == GI_TYPE_TAG_ARRAY) {
-        value.v_pointer = _pygi_argument_to_array (&value, NULL, NULL,
+        value.v_pointer = _pygi_argument_to_array (&value, NULL, NULL, NULL,
                                                    type_info, &free_array);
     }
 
@@ -1376,8 +1376,38 @@ _wrap_g_field_info_get_value (PyGIBaseInfo *self,
     }
 
     if (g_type_info_get_tag (field_type_info) == GI_TYPE_TAG_ARRAY) {
-        value.v_pointer = _pygi_argument_to_array (&value, NULL, NULL,
+        switch (container_info_type) {
+            case GI_INFO_TYPE_STRUCT:
+            {
+                gint n_infos;
+                GIArgument **values;
+                int i;
+
+                n_infos = g_struct_info_get_n_fields ( (GIStructInfo *) container_info);
+
+                values = g_new0 (GIArgument *, n_infos);
+
+                for (i = 0; i < n_infos; i++) {
+                    values[i] = g_new0 (GIArgument, 1);
+                    GIFieldInfo *struct_info = g_struct_info_get_field((GIStructInfo *) container_info, i);
+                    g_field_info_get_field (struct_info, pointer, values[i]);
+                    g_base_info_unref ( (GIBaseInfo *) struct_info);
+                }
+
+	        value.v_pointer = _pygi_argument_to_array (&value, values, NULL,
+                           (GIStructInfo *) container_info, field_type_info, &free_array);
+                for (i = 0; i < n_infos; i++) {
+                    g_free (values[i]);
+                }
+
+                g_free (values);
+
+            } break;
+            default:
+                /* Fallback. */
+	        value.v_pointer = _pygi_argument_to_array (&value, NULL, NULL, NULL,
                                                    field_type_info, &free_array);
+        }
     }
 
 argument_to_object:

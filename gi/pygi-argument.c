@@ -753,9 +753,10 @@ check_number_release:
 /**
  * _pygi_argument_to_array
  * @arg: The argument to convert
- * @args: Arguments to method invocation, possibly contaning the array length.
- *        Set to NULL if this is not for a method call
+ * @args: peer arguments to @arg, possibly contaning the array length.
+ *        Set to NULL if this is not for a method call or a structure
  * @callable_info: Info on the callable, if this a method call; otherwise NULL
+ * @struct_info: Info on the structure, if this a structure field; otherwise NULL
  * @type_info: The type info for @arg
  * @out_free_array: A return location for a gboolean that indicates whether
  *                  or not the wrapped GArray should be freed
@@ -774,6 +775,7 @@ GArray *
 _pygi_argument_to_array (GIArgument  *arg,
                          GIArgument  *args[],
                          GICallableInfo *callable_info,                  
+                         GIStructInfo *struct_info,
                          GITypeInfo  *type_info,
                          gboolean    *out_free_array)
 {
@@ -812,14 +814,23 @@ _pygi_argument_to_array (GIArgument  *arg,
                     }
                     gint length_arg_pos;
                     GIArgInfo *length_arg_info;
+                    GIFieldInfo *length_struct_info;
                     GITypeInfo *length_type_info;
 
                     length_arg_pos = g_type_info_get_array_length (type_info);
                     g_assert (length_arg_pos >= 0);
-                    g_assert (callable_info);
-                    length_arg_info = g_callable_info_get_arg (callable_info, length_arg_pos);
-                    length_type_info = g_arg_info_get_type (length_arg_info);
-                    g_base_info_unref ( (GIBaseInfo *) length_arg_info);
+                    g_assert ((callable_info || struct_info) && !(callable_info && struct_info));
+                    if (callable_info) {
+                        length_arg_info = g_callable_info_get_arg (callable_info, length_arg_pos);
+                        length_type_info = g_arg_info_get_type (length_arg_info);
+                        g_base_info_unref ( (GIBaseInfo *) length_arg_info);
+                    }
+                    if (struct_info) {
+                        length_struct_info = g_struct_info_get_field (struct_info, length_arg_pos);
+                        length_type_info = g_field_info_get_type (length_struct_info);
+                        g_base_info_unref ( (GIBaseInfo *) length_struct_info);
+                    }
+
                     if (!gi_argument_to_gssize (args[length_arg_pos],
                                                 g_type_info_get_tag (length_type_info),
                                                 &length)) {
