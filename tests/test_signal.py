@@ -3,6 +3,7 @@
 import gc
 import unittest
 import sys
+import types
 
 from gi.repository import GObject, GLib
 from gi._gobject import signalhelper
@@ -531,7 +532,7 @@ class TestSignalDecorator(unittest.TestCase):
         @GObject.SignalOverride
         def notify(self, *args, **kargs):
             self.overridden_closure_called = True
-            #GObject.GObject.notify(self, *args, **kargs)
+            GObject.GObject.notify(self, *args, **kargs)
 
         def on_notify(self, obj, prop):
             self.notify_called = True
@@ -561,7 +562,7 @@ class TestSignalDecorator(unittest.TestCase):
     def test_signal_copy(self):
         blah = self.Decorated.stomped.copy('blah')
         self.assertEqual(str(blah), blah)
-        self.assertEqual(blah.func, self.Decorated.stomped.func)
+        self.assertEqual(blah.__func__, self.Decorated.stomped.__func__)
         self.assertEqual(blah.flags, self.Decorated.stomped.flags)
         self.assertEqual(blah.return_type, self.Decorated.stomped.return_type)
         self.assertEqual(blah.arg_types, self.Decorated.stomped.arg_types)
@@ -583,7 +584,7 @@ class TestSignalDecorator(unittest.TestCase):
         obj.emit('unnamed')
         self.assertEqual(self.unnamedCalled, True)
 
-    def NOtest_overridden_signal(self):
+    def test_overridden_signal(self):
         # Test that the pushed signal is called in with super and the override
         # which should both increment the "value" to 3
         obj = self.DecoratedOverride()
@@ -591,6 +592,7 @@ class TestSignalDecorator(unittest.TestCase):
         self.assertEqual(obj.value, 0)
         #obj.notify.emit()
         obj.value = 1
+        obj.notify('value')
         self.assertEqual(obj.value, 1)
         self.assertTrue(obj.overridden_closure_called)
         self.assertTrue(obj.notify_called)
@@ -738,9 +740,9 @@ class TestPython3Signals(unittest.TestCase):
 
     def test_annotations(self):
         if self.AnnotatedClass:
-            self.assertEqual(signalhelper.get_signal_annotations(self.AnnotatedClass.sig1.func),
+            self.assertEqual(signalhelper.get_signal_annotations(self.AnnotatedClass.sig1.__func__),
                              (None, (int, float)))
-            self.assertEqual(signalhelper.get_signal_annotations(self.AnnotatedClass.sig2_with_return.func),
+            self.assertEqual(signalhelper.get_signal_annotations(self.AnnotatedClass.sig2_with_return.__func__),
                              (str, (int, float)))
 
             self.assertEqual(self.AnnotatedClass.sig2_with_return.get_signal_args(),
@@ -803,6 +805,88 @@ class TestSignalModuleLevelFunctions(unittest.TestCase):
         self.assertEqual(GObject.signal_query(0), None)
         self.assertEqual(GObject.signal_query('NOT_A_SIGNAL', C),
                          None)
+
+
+class MockSignalInfo(object):
+    """Class that mocks gi.SignalInfo so we don't have to
+    use real gi objects and introspection for the tests.
+    """
+    def __init__(self, name):
+        self.name = name
+
+    def get_name(self):
+        return self.name
+
+
+class BaseSignalTesterObject(GObject.GObject):
+    # Use the old style signal so we can wrap its with a BaseSignal accessor
+    __gsignals__ = {'signal-no-method': (GObject.SignalFlags.RUN_FIRST, None, tuple()),
+                    'signal-with-method': (GObject.SignalFlags.RUN_FIRST, None, tuple())}
+
+    def __init__(self):
+        super(BaseSignalTesterObject, self).__init__()
+        self.signal_no_method_called = 0
+        self.signal_with_method_called = 0
+
+    def signal_with_method(self):
+        """Method name with the same name as a signal on the object.
+        This is not the closure but rather a helper function used to
+        emit the given signal, similar to something like: Gtk.Button.pressed"""
+        self.signal_with_method_called += 1
+        self.emit('signal-with-method')
+
+    def do_signal_no_method(self):
+        self.signal_no_method_called += 1
+
+
+class TestBaseSignalWrapping(unittest.TestCase):
+    # These tests mock and work with signalhelper as if through the eyes of the gi.types
+    # code without the complexity of actually using gi.
+    # There are two cases at play here:
+    # 1) An object has a signal and a method with the same name, in this case
+    #    BaseSignal.from_gi_info will create a new signal which wraps the existing
+    #    method so as to not disturb anything.
+    # 2) An object has a signal only, this in case a signal object is created
+    #    which wrap emit for the given signal name.
+
+    def test_signal_with_method(self):
+        # Test BaseSignal.get_gi_info creates a new signal which wraps an
+        # existing method object on the object with the supposed signal.
+        info = MockSignalInfo('signal-with-method')
+        signal = signalhelper.BaseSignal.from_gi_info(BaseSignalTesterObject, info)
+
+        self.assertEqual(type(signal), signalhelper.BaseSignal)
+        self.assertEqual(signal.__func__, BaseSignalTesterObject.signal_with_method)
+
+        # Dynamically add the signal instance to the class as gi.types does.
+        # This will clobber the existing signal_with_method with the signal
+        # object, but this signal object will wrap the previous method.
+        BaseSignalTesterObject.signal_with_method = signal
+        obj = BaseSignalTesterObject()
+        # Call the newly assigned signal as a method and verify the closure was called.
+        self.assertEqual(obj.signal_with_method_called, 0)
+        # This will call the original "signal_with_method" which existed before the
+        # above clobber, keeping current functionality.
+        obj.signal_with_method()
+        self.assertEqual(obj.signal_with_method_called, 1)
+
+    def test_signal_no_method(self):
+        # Test BaseSignal.get_gi_info creates a new signal which wraps an
+        # existing method object on the object with the supposed signal.
+        info = MockSignalInfo('signal-no-method')
+        signal = signalhelper.BaseSignal.from_gi_info(BaseSignalTesterObject, info)
+
+        self.assertEqual(type(signal), signalhelper.BaseSignal)
+        # Test from_gi_info creates a wrapper function for use to invoke.
+        self.assertTrue(isinstance(signal.__func__, types.FunctionType))
+
+        # Dynamically add the signal instance to the class as gi.types does.
+        BaseSignalTesterObject.signal_no_method = signal
+        obj = BaseSignalTesterObject()
+        # Call the newly assigned signal as a method and verify the closure was called.
+        self.assertEqual(obj.signal_no_method_called, 0)
+        obj.signal_no_method()  # Essentially calls obj.emit('signal_no_method')
+        self.assertEqual(obj.signal_no_method_called, 1)
 
 
 if __name__ == '__main__':

@@ -33,7 +33,106 @@ if (3, 0) <= sys.version_info < (3, 2):
         return hasattr(fn, '__call__')
 
 
-class Signal(str):
+class BaseSignal(str):
+    """
+    Base signal class which acts as an accessor for connecting and emitting signals.
+
+    The class implements the python object protocal so it acts somewhat like a property
+    and retrieves a "BoundSignal" when accessed on object instances.
+    """
+    class BoundSignal(str):
+        """
+        Temporary binding object which can be used for connecting signals
+        without specifying the signal name string to connect.
+        """
+        def __new__(cls, name, *args, **kargs):
+            return str.__new__(cls, name)
+
+        def __init__(self, signal, gobj):
+            str.__init__(self)
+            self.signal = signal
+            self.gobj = gobj
+
+        def __repr__(self):
+            return 'BoundSignal("%s")' % self
+
+        def __call__(self, *args, **kargs):
+            """Call the signals closure."""
+            return self.signal.__func__(self.gobj, *args, **kargs)
+
+        def connect(self, callback, *args, **kargs):
+            """Same as GObject.GObject.connect except there is no need to specify
+            the signal name."""
+            return self.gobj.connect(self, callback, *args, **kargs)
+
+        def connect_detailed(self, callback, detail, *args, **kargs):
+            """Same as GObject.GObject.connect except there is no need to specify
+            the signal name.
+
+            In addition concats "::<detail>" to the signal name
+            when connecting; for use with notifications like "notify" when a property
+            changes.
+            """
+            return self.gobj.connect(self + '::' + detail, callback, *args, **kargs)
+
+        def disconnect(self, handler_id):
+            """Same as GObject.GObject.disconnect."""
+            self.instance.disconnect(handler_id)
+
+        def emit(self, *args, **kargs):
+            """Same as GObject.GObject.emit except there is no need to specify
+            the signal name."""
+            self.gobj.emit(str(self), *args, **kargs)
+
+    def __new__(cls, name='', *args, **kargs):
+        if callable(name):
+            name = name.__name__
+        return str.__new__(cls, name)
+
+    def __init__(self, name='', func=None, doc=''):
+        super(BaseSignal, self).__init__()
+
+        if func and not name:
+            name = func.__name__
+        elif callable(name):
+            func = name
+            name = func.__name__
+        if func and not doc:
+            doc = func.__doc__
+
+        self.__name__ = name
+        self.__func__ = func
+        self.__doc__ = doc
+
+    def __call__(self, obj, *args, **kargs):
+        """Base implementation simply calls through to the wrapped func."""
+        return self.__func__(obj, *args, **kargs)
+
+    def __repr__(self):
+        return '%s("%s")' % (self.__class__.__name__, self)
+
+    def __get__(self, instance, owner=None):
+        """Returns a BoundSignal when accessed on an object instance."""
+        if instance is None:
+            return self
+        return self.BoundSignal(self, instance)
+
+    def get_signal_args(self):
+        """BaseSignal does not implement get_signal_args as this is used for
+        signal creation within python."""
+        raise NotImplementedError(__doc__)
+
+    @classmethod
+    def from_gi_info(self_class, gobject_class, info):
+        name = info.get_name().replace('-', '_')
+        if hasattr(gobject_class, name):
+            func = getattr(gobject_class, name)
+        else:
+            func = lambda obj, *args, **kargs: obj.emit(name, *args, **kargs)
+        return self_class(name=name, func=func)
+
+
+class Signal(BaseSignal):
     """
     Object which gives a nice API for creating and binding signals.
 
@@ -62,53 +161,6 @@ class Signal(str):
     spam.pushed.connect(on_pushed)
     spam.pushed.emit()
     """
-    class BoundSignal(str):
-        """
-        Temporary binding object which can be used for connecting signals
-        without specifying the signal name string to connect.
-        """
-        def __new__(cls, name, *args, **kargs):
-            return str.__new__(cls, name)
-
-        def __init__(self, signal, gobj):
-            str.__init__(self)
-            self.signal = signal
-            self.gobj = gobj
-
-        def __repr__(self):
-            return 'BoundSignal("%s")' % self
-
-        def __call__(self, *args, **kargs):
-            """Call the signals closure."""
-            return self.signal.func(self.gobj, *args, **kargs)
-
-        def connect(self, callback, *args, **kargs):
-            """Same as GObject.GObject.connect except there is no need to specify
-            the signal name."""
-            return self.gobj.connect(self, callback, *args, **kargs)
-
-        def connect_detailed(self, callback, detail, *args, **kargs):
-            """Same as GObject.GObject.connect except there is no need to specify
-            the signal name. In addition concats "::<detail>" to the signal name
-            when connecting; for use with notifications like "notify" when a property
-            changes.
-            """
-            return self.gobj.connect(self + '::' + detail, callback, *args, **kargs)
-
-        def disconnect(self, handler_id):
-            """Same as GObject.GObject.disconnect."""
-            self.instance.disconnect(handler_id)
-
-        def emit(self, *args, **kargs):
-            """Same as GObject.GObject.emit except there is no need to specify
-            the signal name."""
-            self.gobj.emit(str(self), *args, **kargs)
-
-    def __new__(cls, name='', *args, **kargs):
-        if callable(name):
-            name = name.__name__
-        return str.__new__(cls, name)
-
     def __init__(self, name='', func=None, flags=_gobject.SIGNAL_RUN_FIRST,
                  return_type=None, arg_types=None, doc=''):
         """
@@ -125,32 +177,16 @@ class Signal(str):
         @param  doc: documentation of signal object
         @type   doc: string
         """
-        if func and not name:
-            name = func.__name__
-        elif callable(name):
-            func = name
-            name = func.__name__
-        if func and not doc:
-            doc = func.__doc__
+        super(Signal, self).__init__(name=name, func=func, doc=doc)
 
-        str.__init__(self)
-
-        if func and not (return_type or arg_types):
-            return_type, arg_types = get_signal_annotations(func)
+        if self.__func__ and not (return_type or arg_types):
+            return_type, arg_types = get_signal_annotations(self.__func__)
         if arg_types is None:
             arg_types = tuple()
 
-        self.func = func
         self.flags = flags
         self.return_type = return_type
         self.arg_types = arg_types
-        self.__doc__ = doc
-
-    def __get__(self, instance, owner=None):
-        """Returns a BoundSignal when accessed on an object instance."""
-        if instance is None:
-            return self
-        return self.BoundSignal(self, instance)
 
     def __call__(self, obj, *args, **kargs):
         """Allows for instantiated Signals to be used as a decorator or calling
@@ -159,7 +195,7 @@ class Signal(str):
         # If obj is a GObject, than we call this signal as a closure otherwise
         # it is used as a re-application of a decorator.
         if isinstance(obj, _gobject.GObject):
-            self.func(obj, *args, **kargs)
+            return self.__func__(obj, *args, **kargs)
         else:
             # If self is already an allocated name, use it otherwise create a new named
             # signal using the closure name as the name.
@@ -176,7 +212,7 @@ class Signal(str):
         """Returns a renamed copy of the Signal."""
         if newName is None:
             newName = self.name
-        return type(self)(name=newName, func=self.func, flags=self.flags,
+        return type(self)(name=newName, func=self.__func__, flags=self.flags,
                           return_type=self.return_type, arg_types=self.arg_types,
                           doc=self.__doc__)
 
@@ -185,8 +221,8 @@ class Signal(str):
         return (self.flags, self.return_type, self.arg_types)
 
 
-class SignalOverride(Signal):
-    """Specialized sub-class of signal which can be used as a decorator for overriding
+class SignalOverride(BaseSignal):
+    """Specialized sub-class of which can be used as a decorator for overriding
     existing signals on GObjects.
 
     Example:
@@ -204,7 +240,7 @@ def get_signal_annotations(func):
     """Attempt pulling python 3 function annotations off of 'func' for
     use as a signals type information. Returns an ordered nested tuple
     of (return_type, (arg_type1, arg_type2, ...)). If the given function
-    does not have annotations then (None, tuple()) is returned.
+    does not have annotations than (None, tuple()) is returned.
     """
     arg_types = tuple()
     return_type = None
@@ -226,6 +262,8 @@ def install_signals(cls):
     gsignals = cls.__dict__.get('__gsignals__', {})
     newsignals = {}
     for name, signal in cls.__dict__.items():
+        # Note this tests for Signal and not BaseSignal as we don't want to pull in
+        # use existing signals pulled in through introspection.
         if isinstance(signal, Signal):
             signalName = str(signal)
             # Fixup a signal which is unnamed by using the class variable name.
@@ -245,7 +283,7 @@ def install_signals(cls):
     # Setup signal closures by adding the specially named
     # method to the class in the form of "do_<signal_name>".
     for name, signal in newsignals.items():
-        if signal.func is not None:
+        if signal.__func__ is not None:
             funcName = 'do_' + name.replace('-', '_')
             if not hasattr(cls, funcName):
-                setattr(cls, funcName, signal.func)
+                setattr(cls, funcName, signal.__func__)

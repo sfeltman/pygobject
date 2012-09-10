@@ -34,12 +34,14 @@ from ._gi import \
     StructInfo, \
     VFuncInfo, \
     FunctionInfo, \
+    SignalInfo, \
     register_interface_info, \
     hook_up_vfunc_implementation, \
     DIRECTION_IN, \
     DIRECTION_OUT, \
     DIRECTION_INOUT
 
+from ._gobject.signalhelper import BaseSignal
 
 StructInfo  # pyflakes
 
@@ -70,10 +72,15 @@ def split_function_info_args(info):
 
 def get_callable_info_doc_string(info):
     """Build a signature string which can be used for documentation."""
+    name = info.get_name()
     in_args, out_args = split_function_info_args(info)
     in_args_strs = []
+
     if isinstance(info, VFuncInfo):
         in_args_strs = ['self']
+    elif isinstance(info, SignalInfo):
+        in_args_strs = ['self']
+        name = name.replace('-', '_')
     elif isinstance(info, FunctionInfo):
         if info.is_method():
             in_args_strs = ['self']
@@ -90,9 +97,9 @@ def get_callable_info_doc_string(info):
     if out_args:
         out_args_str = ', '.join(arg.get_name() + ':' + arg.get_pytype_hint()
                                  for arg in out_args)
-        return '%s(%s) -> %s' % (info.get_name(), in_args_str, out_args_str)
+        return '%s(%s) -> %s' % (name, in_args_str, out_args_str)
     else:
-        return '%s(%s)' % (info.get_name(), in_args_str)
+        return '%s(%s)' % (name, in_args_str)
 
 
 def wraps_callable_info(info):
@@ -235,6 +242,12 @@ class MetaClassHelper(object):
             value = NativeVFunc(vfunc_info)
             setattr(cls, name, value)
 
+    def _setup_signals(cls):
+        for info in cls.__info__.get_signals():
+            signal = BaseSignal.from_gi_info(cls, info)
+            signal.__doc__ = get_callable_info_doc_string(info)
+            setattr(cls, str(signal), signal)
+
 
 def find_vfunc_info_in_interface(bases, vfunc_name):
     for base in bases:
@@ -295,6 +308,11 @@ class GObjectMeta(_gobject.GObjectMeta, MetaClassHelper):
             cls._setup_methods()
             cls._setup_constants()
             cls._setup_native_vfuncs()
+
+            # Note signals setup should be done after methods, so that methods with
+            # the same name as a signal (closure) can be used instead of emit
+            # within the signal objects details.
+            cls._setup_signals()
 
             if isinstance(cls.__info__, ObjectInfo):
                 cls._setup_fields()
