@@ -184,6 +184,8 @@ gboolean _pygi_marshal_from_py_interface_instance (PyGIInvokeState   *state,
                                                    PyObject          *py_arg,
                                                    GIArgument        *arg);
 
+GObjectClass * _pygi_marshal_get_gobject_class    (PyObject          *registered_object);
+
 /* Simplified marshalers shared between vfunc/closure and direct function calls. */
 
 gboolean pygi_marshal_from_py_gobject (PyObject *py_arg, /*in*/

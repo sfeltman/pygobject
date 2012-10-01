@@ -66,6 +66,9 @@ _interface_cache_free_func (PyGIInterfaceCache *cache)
             g_free (cache->type_name);
         if (cache->interface_info != NULL)
             g_base_info_unref ( (GIBaseInfo *)cache->interface_info);
+	if (cache->object_class)
+	    g_type_class_unref(cache->object_class);
+
         g_slice_free (PyGIInterfaceCache, cache);
     }
 }

@@ -1708,6 +1708,48 @@ _pygi_marshal_from_py_interface_union (PyGIInvokeState   *state,
     return FALSE;
 }
 
+GObjectClass *
+_pygi_marshal_get_gobject_class (PyObject *registered_object)
+{
+    PyObject *py_info;
+    GIBaseInfo *info;
+    GIBaseInfo *struct_info;
+    GType struct_type;
+
+    /* Get argument.__info__ */
+    py_info = PyObject_GetAttrString (registered_object, "__info__");
+    if (py_info == Py_None)
+	return NULL;
+
+    /* Verify that __info__ is a gi.BaseInfo subclass */
+    if (!PyObject_IsSubclass ((PyObject*)Py_TYPE (py_info),
+			      (PyObject*)&PyGIBaseInfo_Type)) {
+	Py_DECREF (py_info);
+	return NULL;
+    }
+
+    info = ( (PyGIBaseInfo *) py_info)->info;
+
+    /* Check if the class has a class struct */
+    struct_info = g_object_info_get_class_struct (info);
+    if (struct_info == NULL) {
+	g_base_info_unref (struct_info);
+	Py_DECREF (py_info);
+    }
+
+    struct_type = g_registered_type_info_get_g_type (info);
+
+    /* FIXME: Make sure that the class structs type is an ancestor of
+     * the expected type. Eg, GtkContainerClass should accept subtypes
+     * of GtkContainer.
+     */
+
+    g_base_info_unref (struct_info);
+    Py_DECREF (py_info);
+
+    return g_type_class_ref (struct_type);
+}
+
 gboolean _pygi_marshal_from_py_interface_instance (PyGIInvokeState   *state,
                                                    PyGICallableCache *callable_cache,
                                                    PyGIArgCache      *arg_cache,
@@ -1725,6 +1767,12 @@ gboolean _pygi_marshal_from_py_interface_instance (PyGIInvokeState   *state,
             GType type = iface_cache->g_type;
 
             if (!PyObject_IsInstance (py_arg, iface_cache->py_type)) {
+		GObjectClass *object_class = _pygi_marshal_get_gobject_class (py_arg);
+		if (object_class != NULL) {
+		    arg->v_pointer = iface_cache->object_class = object_class;
+		    return TRUE;
+		}
+
                 /* wait, we might be a member of a union so manually check */
                 if (!_is_union_member (iface_cache->interface_info, py_arg)) {
                     if (!PyErr_Occurred()) {

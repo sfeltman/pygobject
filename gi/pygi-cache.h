@@ -147,6 +147,7 @@ typedef struct _PyGIInterfaceCache
     PyObject *py_type;
     GIInterfaceInfo *interface_info;
     gchar *type_name;
+    GObjectClass *object_class;
 } PyGIInterfaceCache;
 
 typedef struct _PyGIHashCache
