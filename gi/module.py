@@ -296,6 +296,7 @@ class DynamicModule(types.ModuleType):
             #       speedup.
             key = '%s.%s' % (self._namespace, name)
             if key in registry:
+                print('*GETTING', key)
                 return registry[key]
 
         return getattr(self._introspection_module, name)

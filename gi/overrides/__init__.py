@@ -23,44 +23,45 @@ class _Registry(dict):
         if not key == value:
             raise KeyError('You have tried to modify the registry.  This should only be done by the override decorator')
 
-        try:
-            info = getattr(value, '__info__')
-        except AttributeError:
-            raise TypeError('Can not override a type %s, which is not in a gobject introspection typelib' % value.__name__)
-
         if not value.__module__.startswith('gi.overrides'):
             raise KeyError('You have tried to modify the registry outside of the overrides module.  This is not allowed')
 
+        # strip gi.overrides from module name
+        module = value.__module__[13:]
+        key = "%s.%s" % (module, value.__name__)
+        super(_Registry, self).__setitem__(key, value)
+
+    def register(self, override_class):
+        try:
+            info = getattr(override_class, '__info__')
+        except AttributeError:
+            raise TypeError('Can not override type %s because it does not come from '
+                            'an introspection typelib' % override_class.__name__)
+
+        # TODO: should the code for applying the gtype from the
+        # info live somewhere else like in the metaclass?
         g_type = info.get_g_type()
         assert g_type != _gobject.TYPE_NONE
         if g_type != _gobject.TYPE_INVALID:
-            g_type.pytype = value
+            g_type.pytype = override_class
+            self[override_class] = override_class
 
-            # strip gi.overrides from module name
-            module = value.__module__[13:]
-            key = "%s.%s" % (module, value.__name__)
-            super(_Registry, self).__setitem__(key, value)
+    def register_func(self, override_func, introspection_func):
+        if not hasattr(introspection_func, '__info__'):
+            raise TypeError('Can not override function %s because it does not come from '
+                            'an introspection typelib' % introspection_func.__name__)
 
-    def register(self, override_class):
-        self[override_class] = override_class
+        self[override_func] = override_func
 
-
-class overridefunc(object):
-    '''decorator for overriding a function'''
-    def __init__(self, func):
-        if not hasattr(func, '__info__'):
-            raise TypeError("func must be an gi function")
-        from ..importer import modules
-        self.module = modules[func.__module__]._introspection_module
-
-    def __call__(self, func):
-        def wrapper(*args, **kwargs):
-            return func(*args, **kwargs)
-        wrapper.__name__ = func.__name__
-        setattr(self.module, func.__name__, wrapper)
-        return wrapper
 
 registry = _Registry()
+
+
+def overridefunc(introspection_func):
+    def decorator(override_func):
+        registry.register_func(override_func, introspection_func)
+        return override_func
+    return decorator
 
 
 def override(type_):

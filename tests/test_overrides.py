@@ -14,15 +14,49 @@ except ImportError:
 
 
 class TestRegistry(unittest.TestCase):
-    def test_non_gi(self):
+    def test_non_gi_class(self):
         class MyClass:
             pass
 
-        try:
+        with self.assertRaisesRegexp(TypeError, 'Can not override type MyClass.*'):
             gi.overrides.override(MyClass)
-            self.fail('unexpected success of overriding non-GI class')
-        except TypeError as e:
-            self.assertTrue('Can not override a type MyClass' in str(e))
+
+    def test_non_gi_function(self):
+        def my_non_gi_func():
+            pass
+
+        with self.assertRaisesRegexp(TypeError, 'Can not override function my_non_gi_func.*'):
+            @gi.overrides.override(my_non_gi_func)
+            def my_func():
+                pass
+
+    def test_override_gi_function(self):
+        full_name = 'GIMarshallingTests.boolean_return_true'
+        GIMarshallingTests = gi.module.get_introspection_module('GIMarshallingTests')
+        introspected_boolean_return_true = GIMarshallingTests.boolean_return_true
+
+        # Verify the registry does not hold boolean_return_true
+        self.assertFalse(full_name in gi.overrides.registry)
+        self.assertEqual(GIMarshallingTests.boolean_return_true(), True)
+
+        # Make a mocked override of boolean_return_true which returns False
+        def boolean_return_true():
+            return False
+        boolean_return_true.__module__ = 'gi.overrides.GIMarshallingTests'
+
+        # Call the decorator (without using decorator syntax)
+        res = gi.overrides.override(GIMarshallingTests.boolean_return_true)(boolean_return_true)
+        # The return value is the same as the input override func.
+        self.assertEqual(res, boolean_return_true)
+        self.assertTrue(full_name in gi.overrides.registry)
+
+        # In this case simply overriding a function will add it to the registry
+        # but should not modify the original introspection module.
+        self.assertEqual(GIMarshallingTests.boolean_return_true(), True)
+        self.assertEqual(GIMarshallingTests.boolean_return_true,
+                         introspected_boolean_return_true)
+
+        del gi.overrides.registry[full_name]
 
     @unittest.skipUnless(Regress, 'built without cairo support')
     def test_separate_path(self):
