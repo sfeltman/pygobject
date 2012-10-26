@@ -11,6 +11,15 @@ registry = None
 
 
 class _Registry(dict):
+    '''Registry used as a temporary lookup for overridden types during load time.
+
+    After an override module is fully loaded, accessing members will follow
+    standard attribute retrieval on the override module itself. However,
+    during loading of the override module, when a sub-class of an overridden
+    class is overridden, the overridden parent class must be retrieved wrapped types within
+    the override module must be used to construct hierarchies containing parent classes
+    which are overridden.
+    '''
     def __setitem__(self, key, value):
         '''We do checks here to make sure only submodules of the override
         module are added.  Key and value should be the same object and come

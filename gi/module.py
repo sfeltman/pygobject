@@ -24,6 +24,7 @@ from __future__ import absolute_import
 
 import sys
 import types
+import traceback
 
 _have_py3 = (sys.version_info[0] >= 3)
 
@@ -297,6 +298,9 @@ class DynamicModule(types.ModuleType):
             key = '%s.%s' % (self._namespace, name)
             if key in registry:
                 print('*GETTING', key)
+                for line in traceback.format_stack():
+                    print(line.strip())
+                print('\n')
                 return registry[key]
 
         return getattr(self._introspection_module, name)
