@@ -1446,23 +1446,6 @@ _pygi_marshal_from_py_interface_callback (PyGIInvokeState   *state,
 
     callback_cache = (PyGICallbackCache *)arg_cache;
 
-    if (callback_cache->user_data_index > 0) {
-        user_data_cache = callable_cache->args_cache[callback_cache->user_data_index];
-        if (user_data_cache->py_arg_index < state->n_py_in_args) {
-            /* py_user_data is a borrowed reference. */
-            py_user_data = PyTuple_GetItem (state->py_in_args, user_data_cache->py_arg_index);
-            if (!py_user_data)
-                return FALSE;
-        }
-    }
-
-    if (py_arg == Py_None && !(py_user_data == Py_None || py_user_data == NULL)) {
-        PyErr_Format (PyExc_TypeError,
-                      "When passing None for a callback userdata must also be None");
-
-        return FALSE;
-    }
-
     if (py_arg == Py_None) {
         return TRUE;
     }
@@ -1473,6 +1456,16 @@ _pygi_marshal_from_py_interface_callback (PyGIInvokeState   *state,
                       py_arg->ob_type->tp_name);
 
         return FALSE;
+    }
+
+    if (callback_cache->user_data_index > 0) {
+        user_data_cache = callable_cache->args_cache[callback_cache->user_data_index];
+        if (user_data_cache->py_arg_index < state->n_py_in_args) {
+            /* py_user_data is a borrowed reference. */
+            py_user_data = PyTuple_GetItem (state->py_in_args, user_data_cache->py_arg_index);
+            if (!py_user_data)
+                return FALSE;
+        }
     }
 
     callable_info = (GICallableInfo *)callback_cache->interface_info;

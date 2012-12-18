@@ -547,6 +547,29 @@ class _FreezeNotifyManager(object):
         self.obj.thaw_notify()
 
 
+class _BindingRef(object):
+    """_BindingRef is used to manage Binding objects in Python.
+
+    Normally in C, a Binding can be explicitly managed by keeping a reference to it
+    and using "unref" to disconnect the source and target if desired.
+    However, in Python "unref" is not safe to expose as a public API because GObject
+    references are tied to Python wrapper object references. Unreffing could cause
+    a reference counting discrepancy and eventual crash in Python. A BindingRef gives
+    explicit direct control of the binding lifetime with the "unbind" method along
+    with implicit management based on the lifetime of the source or target objects.
+    """
+    def __init__(self, binding):
+        self.binding_weak_ref = binding.weak_ref()
+
+    def __call__(self):
+        return self.binding_weak_ref()
+
+    def unbind(self):
+        if self.binding_weak_ref() is None:
+            raise ValueError('No binding reference is held')
+        GObjectModule.Object.unref(self.binding_weak_ref())
+
+
 class Object(GObjectModule.Object):
     def _unsupported_method(self, *args, **kargs):
         raise RuntimeError('This method is currently unsupported.')
@@ -567,7 +590,6 @@ class Object(GObjectModule.Object):
 
     # The following methods as unsupported until we verify
     # they work as gi methods.
-    bind_property_full = _unsupported_method
     compat_control = _unsupported_method
     interface_find_property = _unsupported_method
     interface_install_property = _unsupported_method
@@ -593,7 +615,6 @@ class Object(GObjectModule.Object):
     get_properties = _gobject.GObject.get_properties
     set_property = _gobject.GObject.set_property
     set_properties = _gobject.GObject.set_properties
-    bind_property = _gobject.GObject.bind_property
     connect = _gobject.GObject.connect
     connect_after = _gobject.GObject.connect_after
     connect_object = _gobject.GObject.connect_object
@@ -606,6 +627,39 @@ class Object(GObjectModule.Object):
     weak_ref = _gobject.GObject.weak_ref
     __copy__ = _gobject.GObject.__copy__
     __deepcopy__ = _gobject.GObject.__deepcopy__
+
+    def bind_property_full(self, source_property, target, target_property,
+                           flag=GObjectModule.BindingFlags.DEFAULT,
+                           transform_to=None, transform_from=None, user_data=None):
+
+        # Canonicalize names to support API consistency with the rest of
+        # GObject property accessors in Python.
+        source_property = source_property.replace('_', '-')
+        target_property = target_property.replace('_', '-')
+
+        # user_data is not available with bind_property_full (g_object_bind_property_with_closures)
+        # so we need to use lambdas to support this.
+        if transform_to is not None:
+            orig_transform_to = transform_to
+            if user_data is None:
+                transform_to = lambda binding, value, data: (True, orig_transform_to(binding, value))
+            else:
+                transform_to = lambda binding, value, data: (True, orig_transform_to(binding, value, data))
+
+        if transform_from is not None:
+            orig_transform_from = transform_from
+            if user_data is None:
+                transform_from = lambda binding, value, data: (True, orig_transform_from(binding, value))
+            else:
+                transform_from = lambda binding, value, data: (True, orig_transform_from(binding, value, data))
+
+        binding = super(Object, self).bind_property_full(source_property, target, target_property,
+                                                         flag, transform_to, transform_from, user_data)
+
+        return _BindingRef(binding)
+
+    # Adding the kwargs to bind_property_full makes it the same as bind_property.
+    bind_property = bind_property_full
 
     def freeze_notify(self):
         """Freezes the object's property-changed notification queue.
