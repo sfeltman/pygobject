@@ -80,11 +80,21 @@ _wrap_pyg_enum_register_new_gtype_and_add (PyObject *self,
     }
 
     info = (GIEnumInfo *)py_info->info;
-    n_values = g_enum_info_get_n_values (info);
+    namespace = g_base_info_get_namespace ((GIBaseInfo *) info);
+    type_name = g_base_info_get_name ((GIBaseInfo *) info);
+    full_name = g_strconcat (namespace, type_name, NULL);
+
+    /* If the type name is already registered with glib only return a new wrapper for it.
+     * See: https://bugzilla.gnome.org/show_bug.cgi?id=692515
+     */
+    g_type = g_type_from_name (full_name);
+    if (g_type != G_TYPE_INVALID)
+        goto out;
 
     /* The new memory is zero filled which fulfills the registration
      * function requirement that the last item is zeroed out as a terminator.
      */
+    n_values = g_enum_info_get_n_values (info);
     g_enum_values = g_new0 (GEnumValue, n_values + 1);
 
     for (i = 0; i < n_values; i++) {
@@ -111,10 +121,6 @@ _wrap_pyg_enum_register_new_gtype_and_add (PyObject *self,
         g_base_info_unref ((GIBaseInfo *) value_info);
     }
 
-    namespace = g_base_info_get_namespace ((GIBaseInfo *) info);
-    type_name = g_base_info_get_name ((GIBaseInfo *) info);
-    full_name = g_strconcat (namespace, type_name, NULL);
-
     /* If enum registration fails, free all the memory allocated
      * for the values array. This needs to leak when successful
      * as GObject keeps a reference to the data as specified in the docs.
@@ -140,6 +146,7 @@ _wrap_pyg_enum_register_new_gtype_and_add (PyObject *self,
         return NULL;
     }
 
+out:
     g_free (full_name);
     return pyg_enum_add (NULL, g_type_name (g_type), NULL, g_type);
 }
@@ -196,11 +203,21 @@ _wrap_pyg_flags_register_new_gtype_and_add (PyObject *self,
     }
 
     info = (GIEnumInfo *)py_info->info;
-    n_values = g_enum_info_get_n_values (info);
+    namespace = g_base_info_get_namespace ((GIBaseInfo *) info);
+    type_name = g_base_info_get_name ((GIBaseInfo *) info);
+    full_name = g_strconcat (namespace, type_name, NULL);
+
+    /* If the type name is already registered with glib only return a new wrapper for it.
+     * See: https://bugzilla.gnome.org/show_bug.cgi?id=692515
+     */
+    g_type = g_type_from_name (full_name);
+    if (g_type != G_TYPE_INVALID)
+        goto out;
 
     /* The new memory is zero filled which fulfills the registration
      * function requirement that the last item is zeroed out as a terminator.
      */
+    n_values = g_enum_info_get_n_values (info);
     g_flags_values = g_new0 (GFlagsValue, n_values + 1);
 
     for (i = 0; i < n_values; i++) {
@@ -227,10 +244,6 @@ _wrap_pyg_flags_register_new_gtype_and_add (PyObject *self,
         g_base_info_unref ((GIBaseInfo *) value_info);
     }
 
-    namespace = g_base_info_get_namespace ((GIBaseInfo *) info);
-    type_name = g_base_info_get_name ((GIBaseInfo *) info);
-    full_name = g_strconcat (namespace, type_name, NULL);
-
     /* If enum registration fails, free all the memory allocated
      * for the values array. This needs to leak when successful
      * as GObject keeps a reference to the data as specified in the docs.
@@ -256,6 +269,7 @@ _wrap_pyg_flags_register_new_gtype_and_add (PyObject *self,
         return NULL;
     }
 
+out:
     g_free (full_name);
     return pyg_flags_add (NULL, g_type_name (g_type), NULL, g_type);
 }

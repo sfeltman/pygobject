@@ -50,10 +50,9 @@ from ._gi import \
     Struct, \
     Boxed, \
     CCallback, \
-    enum_add, \
     enum_register_new_gtype_and_add, \
-    flags_add, \
     flags_register_new_gtype_and_add
+
 from .types import \
     GObjectMeta, \
     StructMeta, \
@@ -66,9 +65,7 @@ from ._gobject._gobject import \
 from ._gobject.constants import \
     TYPE_NONE, \
     TYPE_BOXED, \
-    TYPE_POINTER, \
-    TYPE_ENUM, \
-    TYPE_FLAGS
+    TYPE_POINTER
 
 
 repository = Repository.get_default()
@@ -140,17 +137,9 @@ class IntrospectionModule(object):
 
             if wrapper is None:
                 if info.is_flags():
-                    if g_type.is_a(TYPE_FLAGS):
-                        wrapper = flags_add(g_type)
-                    else:
-                        assert g_type == TYPE_NONE
-                        wrapper = flags_register_new_gtype_and_add(info)
+                    wrapper = flags_register_new_gtype_and_add(info)
                 else:
-                    if g_type.is_a(TYPE_ENUM):
-                        wrapper = enum_add(g_type)
-                    else:
-                        assert g_type == TYPE_NONE
-                        wrapper = enum_register_new_gtype_and_add(info)
+                    wrapper = enum_register_new_gtype_and_add(info)
 
                 wrapper.__info__ = info
                 wrapper.__module__ = 'gi.repository.' + info.get_namespace()

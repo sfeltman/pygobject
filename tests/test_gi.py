@@ -1477,16 +1477,11 @@ class TestEnum(unittest.TestCase):
         self.assertEqual(GIMarshallingTests.Enum.__gtype__.name,
                          'GIMarshallingTestsEnum')
 
-    def test_enum_double_registration_error(self):
+    def test_enum_double_registration(self):
         # a warning is printed for double registration and pygobject will
         # also raise a RuntimeError.
-        old_mask = GLib.log_set_always_fatal(GLib.LogLevelFlags.LEVEL_ERROR)
-        try:
-            self.assertRaises(RuntimeError,
-                              gi._gi.enum_register_new_gtype_and_add,
-                              GIMarshallingTests.Enum.__info__)
-        finally:
-            GLib.log_set_always_fatal(old_mask)
+        enum = gi._gi.enum_register_new_gtype_and_add(GIMarshallingTests.Enum.__info__)
+        self.assertEqual(enum, GIMarshallingTests.Enum)
 
     def test_enum_add_type_error(self):
         self.assertRaises(TypeError,
