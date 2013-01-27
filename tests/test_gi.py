@@ -1490,7 +1490,6 @@ class TestEnum(unittest.TestCase):
 
 
 class TestGEnum(unittest.TestCase):
-
     def test_genum(self):
         self.assertTrue(issubclass(GIMarshallingTests.GEnum, GObject.GEnum))
         self.assertTrue(isinstance(GIMarshallingTests.GEnum.VALUE1, GIMarshallingTests.GEnum))
@@ -1531,6 +1530,12 @@ class TestGEnum(unittest.TestCase):
 
 
 class TestGFlags(unittest.TestCase):
+    def setUp(self):
+        # Note this function will register a new GFlags type with GLib
+        # If this is not done, pygobject will attempt to create a new GFlags
+        # type based on introspection information which can conflict with this.
+        gtype = GIMarshallingTests.flags_get_type()
+        gtype
 
     def test_flags(self):
         self.assertTrue(issubclass(GIMarshallingTests.Flags, GObject.GFlags))
@@ -1624,7 +1629,7 @@ class TestNoTypeFlags(unittest.TestCase):
         self.assertEqual(GIMarshallingTests.NoTypeFlags.__gtype__.name,
                          'GIMarshallingTestsNoTypeFlags')
 
-    def test_flags_double_registration_error(self):
+    def test_flags_double_registration(self):
         # a warning is printed for double registration and pygobject will
         # also raise a RuntimeError.
         old_mask = GLib.log_set_always_fatal(GLib.LogLevelFlags.LEVEL_ERROR)
