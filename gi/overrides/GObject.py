@@ -23,6 +23,8 @@
 
 import sys
 import warnings
+import functools
+import weakref
 from collections import namedtuple
 
 import gi.overrides
@@ -487,10 +489,6 @@ class Object(GObjectModule.Object):
     set_property = _gobject.GObject.set_property
     set_properties = _gobject.GObject.set_properties
     bind_property = _gobject.GObject.bind_property
-    connect = _gobject.GObject.connect
-    connect_after = _gobject.GObject.connect_after
-    connect_object = _gobject.GObject.connect_object
-    connect_object_after = _gobject.GObject.connect_object_after
     disconnect_by_func = _gobject.GObject.disconnect_by_func
     handler_block_by_func = _gobject.GObject.handler_block_by_func
     handler_unblock_by_func = _gobject.GObject.handler_unblock_by_func
@@ -553,6 +551,66 @@ class Object(GObjectModule.Object):
         return self.stop_emission_by_name(detailed_signal)
 
     emit_stop_by_name = stop_emission
+
+    def _get_closure_data(self):
+        if not hasattr(self, '_closure_data'):
+            self._closure_data = weakref.WeakKeyDictionary()
+        return self._closure_data
+
+    def _add_closure(self, callback, handler_id):
+        data = self._get_closure_data()
+        data.setdefault(callback, set()).add(handler_id)
+
+    def _connect(self, detailed_name, callback, connect_after, swap_obj, *user_args):
+        success, signal_id, detail = GObjectModule.signal_parse_name(detailed_name,
+                                                                     self,
+                                                                     True)
+        if not success:
+            raise TypeError("%s: unknown signal name: %s" % (self, detailed_name))
+
+        if swap_obj is None:
+            @functools.wraps(callback)
+            def wrapper(*args):
+                return callback(*(args + user_args))
+            wrapper
+
+        else:
+            @functools.wraps(callback)
+            def wrapper(obj, *args):
+                return callback(swap_obj, *(args + user_args))
+            wrapper
+
+        handler_id = GObjectModule.signal_connect_closure_by_id(self.__gpointer__,
+                                                                signal_id,
+                                                                detail,
+                                                                wrapper,
+                                                                connect_after)
+        self._add_closure(callback, handler_id)
+        return handler_id
+
+    def connect(self, detailed_name, callback, *args):
+        return self._connect(detailed_name, callback, False, None, *args)
+
+    def connect_after(self, detailed_name, callback, *args):
+        return self._connect(detailed_name, callback, True, None, *args)
+
+    def connect_object(self, detailed_name, callback, swap_obj, *args):
+        return self._connect(detailed_name, callback, False, swap_obj, *args)
+
+    def connect_object_after(self, detailed_name, callback, swap_obj, *args):
+        return self._connect(detailed_name, callback, True, swap_obj, *args)
+
+    def disconnect_by_func(self, callback):
+        for handler_id in self._closure_data.get(callback, []):
+            self.disconnect(handler_id)
+
+    def handler_block_by_func(self, callback):
+        for handler_id in self._closure_data.get(callback, []):
+            self.handler_block(handler_id)
+
+    def handler_unblock_by_func(self, callback):
+        for handler_id in self._closure_data.get(callback, []):
+            self.handler_unblock(handler_id)
 
 
 Object = override(Object)
