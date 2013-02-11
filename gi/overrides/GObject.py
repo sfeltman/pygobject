@@ -629,7 +629,7 @@ class Object(GObjectModule.Object):
     __deepcopy__ = _gobject.GObject.__deepcopy__
 
     def bind_property_full(self, source_property, target, target_property,
-                           flag=GObjectModule.BindingFlags.DEFAULT,
+                           flags=GObjectModule.BindingFlags.DEFAULT,
                            transform_to=None, transform_from=None, user_data=None):
 
         # Canonicalize names to support API consistency with the rest of
@@ -637,6 +637,36 @@ class Object(GObjectModule.Object):
         source_property = source_property.replace('_', '-')
         target_property = target_property.replace('_', '-')
 
+        # Call simpler method early if there are no transform closures
+        if transform_to is None and transform_from is None:
+            binding = super(Object, self).bind_property(source_property, target, target_property, flags)
+            return _BindingRef(binding)
+
+        def transform_wrap(func):
+            def transform(binding, invalue, outvalue):
+                print(binding, invalue, type(invalue), type(outvalue))
+                value = None
+                if user_data is None:
+                    value = func(binding, invalue)
+                else:
+                    value = func(binding, invalue, user_data)
+                outvalue.set_value(value)
+            return transform
+
+        def transform_dummy(binding, invalue, outvalue):
+            assert 'This should not be reached based upon input flags.'
+
+        if transform_to is None:
+            transform_to = transform_dummy
+        else:
+            transform_to = transform_wrap(transform_to)
+
+        if transform_from is None:
+            transform_from = transform_dummy
+        else:
+            transform_from = transform_wrap(transform_from)
+
+        """
         # user_data is not available with bind_property_full (g_object_bind_property_with_closures)
         # so we need to use lambdas to support this.
         if transform_to is not None:
@@ -652,9 +682,10 @@ class Object(GObjectModule.Object):
                 transform_from = lambda binding, value, data: (True, orig_transform_from(binding, value))
             else:
                 transform_from = lambda binding, value, data: (True, orig_transform_from(binding, value, data))
+        """
 
-        binding = super(Object, self).bind_property_full(source_property, target, target_property,
-                                                         flag, transform_to, transform_from, user_data)
+        binding = super().bind_property_full(source_property, target, target_property,
+                                             flags, transform_to, transform_from)
 
         return _BindingRef(binding)
 
