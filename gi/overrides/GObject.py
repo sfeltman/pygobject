@@ -460,7 +460,6 @@ class Object(GObjectModule.Object):
 
     # The following methods as unsupported until we verify
     # they work as gi methods.
-    bind_property_full = _unsupported_method
     compat_control = _unsupported_method
     interface_find_property = _unsupported_method
     interface_install_property = _unsupported_method
@@ -486,7 +485,6 @@ class Object(GObjectModule.Object):
     get_properties = _gobject.GObject.get_properties
     set_property = _gobject.GObject.set_property
     set_properties = _gobject.GObject.set_properties
-    bind_property = _gobject.GObject.bind_property
     connect = _gobject.GObject.connect
     connect_after = _gobject.GObject.connect_after
     connect_object = _gobject.GObject.connect_object
@@ -499,6 +497,14 @@ class Object(GObjectModule.Object):
     weak_ref = _gobject.GObject.weak_ref
     __copy__ = _gobject.GObject.__copy__
     __deepcopy__ = _gobject.GObject.__deepcopy__
+
+
+    def     bind_property_full = _unsupported_method
+
+    def bind_property(self, source_property, target, target_property,
+                      flags=GObject.BindingFlags.DEFAULT, transform_to=None, transform_from=None):
+        return 
+
 
     def handler_block(self, handler_id):
         """Blocks the signal handler from being invoked until handler_unblock() is called.
