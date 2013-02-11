@@ -594,6 +594,92 @@ pyg_channel_read(PyObject* self, PyObject *args, PyObject *kwargs)
     return NULL;
 }
 
+static void
+_pygi_signal_destroy_notify(gpointer data, GClosure *closure)
+{
+    _pygi_invoke_closure_free (data);
+}
+
+static PyObject *
+_pygi_signal_connect(PyObject *module, PyObject *args)
+{
+    PyObject *obj;
+    PyObject *first;
+    PyObject *callback;
+    PyObject *extra_args;
+
+    GObject *gobj;
+    GISignalInfo *signal_info;
+    PyGICClosure *closure = NULL;
+    GType gtype;
+    gchar *name;
+    guint sigid;
+    guint len;
+    gulong handlerid;
+    GQuark detail = 0;
+
+    len = PyTuple_Size (args);
+    if (len < 3) {
+        PyErr_SetString (PyExc_TypeError,
+                         "gi._signal_connect requires at least 3 arguments");
+        return NULL;
+    }
+
+    first = PySequence_GetSlice (args, 0, 3);
+    if (!PyArg_ParseTuple (args, "OsO:signal_connect",
+                           &obj,
+                           &name,
+                           &callback)) {
+        Py_DECREF (first);
+        return NULL;
+    }
+    Py_DECREF(first);
+
+    //if (!pygobject_check (obj)) {
+    //    return NULL;
+    //}
+    gobj = pygobject_get (obj);
+
+    if (!PyCallable_Check (callback)) {
+        PyErr_SetString (PyExc_TypeError, "third argument must be callable");
+        return NULL;
+    }
+
+    if (!g_signal_parse_name (name, G_OBJECT_TYPE (pygobject_get (obj)),
+                              &sigid, &detail, TRUE)) {
+        PyObject *repr = PyObject_Repr (obj);
+        PyErr_Format( PyExc_TypeError, "%s: unknown signal name: %s",
+                      PYGLIB_PyUnicode_AsString (repr),
+                      name);
+        Py_DECREF (repr);
+        return NULL;
+    }
+    extra_args = PySequence_GetSlice (args, 3, len);
+    if (extra_args == NULL)
+        return NULL;
+
+    gtype = pyg_type_from_object (obj);
+    signal_info = _pygi_lookup_signal_from_g_type (gtype, name);
+
+    if (signal_info == NULL)
+        return NULL;
+
+    closure = _pygi_make_native_closure ( (GICallableInfo*) signal_info,
+                                          GI_SCOPE_TYPE_NOTIFIED, callback, NULL);
+    if (closure == NULL)
+        return NULL;
+
+    handlerid = g_signal_connect_data (gobj,
+                                       name,
+                                       G_CALLBACK (closure->closure),
+                                       closure,
+                                       _pygi_signal_destroy_notify,
+                                       0);
+
+    Py_DECREF(extra_args);
+    return PyLong_FromUnsignedLong(handlerid);
+}
+
 
 static PyMethodDef _gi_functions[] = {
     { "enum_add", (PyCFunction) _wrap_pyg_enum_add, METH_VARARGS | METH_KEYWORDS },
@@ -608,6 +694,7 @@ static PyMethodDef _gi_functions[] = {
     { "source_new", (PyCFunction) _wrap_pyg_source_new, METH_NOARGS },
     { "source_set_callback", (PyCFunction) pyg_source_set_callback, METH_VARARGS },
     { "io_channel_read", (PyCFunction) pyg_channel_read, METH_VARARGS },
+    { "_signal_connect", (PyCFunction) _pygi_signal_connect, METH_VARARGS },
     { NULL, NULL, 0 }
 };
 

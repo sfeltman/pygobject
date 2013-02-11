@@ -19,6 +19,7 @@
  */
 
 #include "pygi-private.h"
+#include "pygi-closure.h"
 
 /* Copied from glib */
 static void
@@ -38,7 +39,7 @@ canonicalize_key (gchar *key)
     }
 }
 
-static GISignalInfo *
+GISignalInfo *
 _pygi_lookup_signal_from_g_type (GType g_type,
                                  const gchar *signal_name)
 {
@@ -188,6 +189,7 @@ pygi_signal_closure_marshal(GClosure *closure,
     Py_DECREF(params);
     PyGILState_Release(state);
 }
+
 
 GClosure *
 pygi_signal_closure_new_real (PyGObject *instance,

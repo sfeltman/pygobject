@@ -52,6 +52,16 @@ PyGICClosure* _pygi_make_native_closure (GICallableInfo* info,
                                          PyObject *function,
                                          gpointer user_data);
 
+gboolean
+_pygi_closure_convert_arguments (GICallableInfo *callable_info, void **args,
+                                 void *user_data, PyObject **py_args,
+                                 GIArgument **out_args);
+
+void
+_pygi_closure_set_out_arguments (GICallableInfo *callable_info,
+                                 PyObject *py_retval, GIArgument *out_args,
+                                 void *resp);
+
 G_END_DECLS
 
 #endif /* __PYGI_CLOSURE_H__ */

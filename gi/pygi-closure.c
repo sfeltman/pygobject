@@ -253,7 +253,7 @@ _pygi_closure_convert_ffi_arguments (GICallableInfo *callable_info, void **args)
     return g_args;
 }
 
-static gboolean
+gboolean
 _pygi_closure_convert_arguments (GICallableInfo *callable_info, void **args,
                                  void *user_data, PyObject **py_args,
                                  GIArgument **out_args)
@@ -390,7 +390,7 @@ error:
     return FALSE;
 }
 
-static void
+void
 _pygi_closure_set_out_arguments (GICallableInfo *callable_info,
                                  PyObject *py_retval, GIArgument *out_args,
                                  void *resp)

@@ -41,6 +41,10 @@ GClosure * pygi_signal_closure_new_real (PyGObject *instance,
                                          PyObject *extra_args,
                                          PyObject *swap_data);
 
+
+GISignalInfo *_pygi_lookup_signal_from_g_type (GType g_type,
+                                               const gchar *signal_name);
+
 G_END_DECLS
 
 #endif /* __PYGI_SIGNAL_CLOSURE_H__ */
