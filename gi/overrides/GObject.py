@@ -440,6 +440,20 @@ class _FreezeNotifyManager(object):
         self.obj.thaw_notify()
 
 
+class Props(object):
+    def __init__(self, obj):
+        self.obj = obj
+
+    def __dir__(self):
+        pass
+
+    def __getattr__(self, name):
+        pass
+
+    def __setattr__(self, name, value):
+        pass
+
+
 class Object(GObjectModule.Object):
     def _unsupported_method(self, *args, **kargs):
         raise RuntimeError('This method is currently unsupported.')
@@ -482,10 +496,6 @@ class Object(GObjectModule.Object):
 
     # The following methods are static APIs which need to leap frog the
     # gi methods until we verify the gi methods can replace them.
-    get_property = _gobject.GObject.get_property
-    get_properties = _gobject.GObject.get_properties
-    set_property = _gobject.GObject.set_property
-    set_properties = _gobject.GObject.set_properties
     bind_property = _gobject.GObject.bind_property
     connect = _gobject.GObject.connect
     connect_after = _gobject.GObject.connect_after
@@ -499,6 +509,25 @@ class Object(GObjectModule.Object):
     weak_ref = _gobject.GObject.weak_ref
     __copy__ = _gobject.GObject.__copy__
     __deepcopy__ = _gobject.GObject.__deepcopy__
+
+    def get_property(self, name):
+        pspec = _gobject.find_property(self, name)
+        gvalue = Value(pspec.value_type)
+        super(Object, self).get_property(name, gvalue)
+        return gvalue.get_value()
+
+    def get_properties(self, *names):
+        for name in names:
+            yield self.get_property(name)
+
+    def set_property(self, name, value):
+        pspec = _gobject.find_property(self, name)
+        gvalue = Value(pspec.value_type, value)
+        super(Object, self).set_property(name, gvalue)
+
+    def set_properties(self, **names_and_values):
+        for name, value in names_and_values:
+            self.set_property(name, value)
 
     def handler_block(self, handler_id):
         """Blocks the signal handler from being invoked until handler_unblock() is called.

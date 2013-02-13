@@ -1438,6 +1438,52 @@ pyg_object_class_list_properties (PyObject *self, PyObject *args)
 }
 
 static PyObject *
+pyg_object_class_find_property (PyObject *self, PyObject *args)
+{
+    GParamSpec *spec;
+    PyObject *py_itype;
+    GType itype;
+    gchar *name;
+    GObjectClass *class = NULL;
+    gpointer iface = NULL;
+
+    if (!PyArg_ParseTuple(args, "Os:gobject.find_property",
+                          &py_itype, &name))
+        return NULL;
+    if ((itype = pyg_type_from_object(py_itype)) == 0)
+        return NULL;
+
+    if (G_TYPE_IS_INTERFACE(itype)) {
+        iface = g_type_default_interface_ref(itype);
+        if (!iface) {
+            PyErr_SetString(PyExc_RuntimeError,
+                            "could not get a reference to interface type");
+            return NULL;
+        }
+        spec = g_object_interface_find_property(iface, name);
+    } else if (g_type_is_a(itype, G_TYPE_OBJECT)) {
+        class = g_type_class_ref(itype);
+        if (!class) {
+            PyErr_SetString(PyExc_RuntimeError,
+                            "could not get a reference to type class");
+            return NULL;
+        }
+        spec = g_object_class_find_property(class, name);
+    } else {
+        PyErr_SetString(PyExc_TypeError,
+                        "type must be derived from GObject or an interface");
+        return NULL;
+    }
+
+    if (class)
+        g_type_class_unref(class);
+    else
+        g_type_default_interface_unref(iface);
+
+    return pyg_param_spec_new(spec);
+}
+
+static PyObject *
 pyg_object_new (PyGObject *self, PyObject *args, PyObject *kwargs)
 {
     PyObject *pytype;
@@ -1725,6 +1771,8 @@ static PyMethodDef _gobject_functions[] = {
       (PyCFunction)pyg_signal_query, METH_VARARGS|METH_KEYWORDS },
     { "list_properties",
       pyg_object_class_list_properties, METH_VARARGS },
+    { "find_property",
+      pyg_object_class_find_property, METH_VARARGS },
     { "new",
       (PyCFunction)pyg_object_new, METH_VARARGS|METH_KEYWORDS },
     { "threads_init",
