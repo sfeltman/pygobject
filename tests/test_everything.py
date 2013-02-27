@@ -1348,6 +1348,17 @@ class TestSignals(unittest.TestCase):
         self.assertEqual(type(rv), GLib.Array)
         self.assertEqual(rv.len, 2)
 
+    def test_array_parm(self):
+        obj = Everything.TestObj()
+
+        def callback(obj, arr):
+            obj.callback_arr = arr
+
+        obj.connect('sig-with-array-prop', callback)
+        obj.callback_arr = None
+        self.assertEqual(obj.emit('sig-with-array-prop', [1, 2, GObject.G_MAXUINT]), None)
+        self.assertEqual(obj.callback_arr, [1, 2, GObject.G_MAXUINT])
+
 
 @unittest.skipUnless(has_cairo, 'built without cairo support')
 @unittest.skipUnless(Gtk, 'Gtk not available')
