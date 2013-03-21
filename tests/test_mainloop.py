@@ -95,3 +95,80 @@ class TestMainLoop(unittest.TestCase):
             pass
         self.assertFalse(loop.is_running())
         os.waitpid(pid, 0)
+
+    def test_interruptible_loop_context_nesting(self):
+        quits_called = []
+
+        def quit1():
+            quits_called.append(1)
+
+        def quit2():
+            quits_called.append(2)
+
+        def quit3():
+            quits_called.append(3)
+
+        # Simulate using three nested context managers
+        # with Context(loop1):         # Receives Ctrl+C
+        #    with Context(loop2):      # Exits normally
+        #        with Context(loop3):  # Receives Ctrl+C
+        #             pass
+
+        # creation of a context manager does nothing to the globals
+        context1 = GLib.InterruptibleLoopContext(quit1)
+        self.assertTrue(GLib.InterruptibleLoopContext._signal_source_id is None)
+        self.assertEqual(len(GLib.InterruptibleLoopContext._loop_contexts), 0)
+
+        # 1st context enter
+        context1.__enter__()
+
+        first_source_id = GLib.InterruptibleLoopContext._signal_source_id
+        self.assertFalse(first_source_id is None)
+        self.assertEqual(len(GLib.InterruptibleLoopContext._loop_contexts), 1)
+
+        # 2nd context enter
+        context2 = GLib.InterruptibleLoopContext(quit2)
+        context2.__enter__()
+
+        # Make sure the source does not change after entering the second context
+        self.assertEqual(GLib.InterruptibleLoopContext._signal_source_id,
+                         first_source_id)
+        self.assertEqual(len(GLib.InterruptibleLoopContext._loop_contexts), 2)
+
+        # 3rd context enter
+        context3 = GLib.InterruptibleLoopContext(quit3)
+        context3.__enter__()
+
+        self.assertEqual(len(GLib.InterruptibleLoopContext._loop_contexts), 3)
+
+        # Simulate a SIGINT, this will flag the context with _quit_by_sigint
+        # and call the quit3 callback
+        self.assertFalse(context3._quit_by_sigint)
+        GLib.InterruptibleLoopContext._glib_sigint_handler(None)
+        self.assertTrue(context3._quit_by_sigint)
+
+        # Exiting the 3rd context will raise a KeyboardInterrupt and
+        # pop itself off the global stack
+        self.assertRaises(KeyboardInterrupt, context3.__exit__, None, None, None)
+        self.assertEqual(len(GLib.InterruptibleLoopContext._loop_contexts), 2)
+
+        # Exit the 2nd loop without calling _glib_sigint_handler to simulate Ctrl+C
+        context2.__exit__(None, None, None)
+        self.assertEqual(len(GLib.InterruptibleLoopContext._loop_contexts), 1)
+
+        # Simulate Ctrl+C for 1st loop exit
+        self.assertFalse(context1._quit_by_sigint)
+        GLib.InterruptibleLoopContext._glib_sigint_handler(None)
+        self.assertTrue(context1._quit_by_sigint)
+
+        # Exiting the 1st loop after SIGINT, all contexts should be cleared and
+        # the signal source should be cleared out.
+        self.assertRaises(KeyboardInterrupt, context1.__exit__, None, None, None)
+        self.assertEqual(len(GLib.InterruptibleLoopContext._loop_contexts), 0)
+        self.assertEqual(GLib.InterruptibleLoopContext._signal_source_id,
+                         None)
+
+        # Finally test the results of quits_called
+        self.assertEqual(len(quits_called), 2)
+        self.assertTrue(1 in quits_called)
+        self.assertTrue(3 in quits_called)

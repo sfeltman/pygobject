@@ -494,33 +494,79 @@ for n in ['UNKNOWN_OPTION', 'BAD_VALUE', 'FAILED']:
     __all__.append('OPTION_ERROR_' + n)
 
 
+class InterruptibleLoopContext(object):
+    """
+    Context Manager for GLib/Gtk based loops.
+
+    Usage of this context manager will install a single GLib unix signal handler
+    and allow for multiple context managers to be nested using this single handler.
+    """
+
+    #: Global stack context loops. This is added to per InterruptibleLoopContext
+    #: instance and allows for context nesting using the same GLib signal handler.
+    _loop_contexts = []
+
+    #: Single source id for the unix signal handler.
+    _signal_source_id = None
+
+    @classmethod
+    def _glib_sigint_handler(cls, user_data):
+        context = cls._loop_contexts[-1]
+        context._quit_by_sigint = True
+        context._loop_exit_func()
+
+        # keep the handler around until we explicitly remove it
+        return True
+
+    def __init__(self, loop_exit_func):
+        self._loop_exit_func = loop_exit_func
+        self._quit_by_sigint = False
+
+    def __enter__(self):
+        # Only use unix_signal_add if this is not win32 and there has
+        # not already been one.
+        if sys.platform != 'win32' and not InterruptibleLoopContext._loop_contexts:
+            # Add a glib signal handler
+            source_id = GLib.unix_signal_add(GLib.PRIORITY_DEFAULT,
+                                             signal.SIGINT,
+                                             self._glib_sigint_handler,
+                                             None)
+            InterruptibleLoopContext._signal_source_id = source_id
+
+        InterruptibleLoopContext._loop_contexts.append(self)
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        context = InterruptibleLoopContext._loop_contexts.pop()
+        assert self == context
+
+        # if the context stack is empty and we have a GLib signal source,
+        # remove the source from GLib and clear out the variable.
+        if not InterruptibleLoopContext._loop_contexts and \
+                InterruptibleLoopContext._signal_source_id is not None:
+            GLib.source_remove(InterruptibleLoopContext._signal_source_id)
+            InterruptibleLoopContext._signal_source_id = None
+
+        if self._quit_by_sigint:
+            # caught by _glib_sigint_handler()
+            raise KeyboardInterrupt
+
+
+__all__.append('InterruptibleLoopContext')
+
+
 class MainLoop(GLib.MainLoop):
     # Backwards compatible constructor API
     def __new__(cls, context=None):
         return GLib.MainLoop.new(context, False)
 
-    # Retain classic pygobject behaviour of quitting main loops on SIGINT
     def __init__(self, context=None):
-        def _handler(loop):
-            loop.quit()
-            loop._quit_by_sigint = True
-        if sys.platform != 'win32':
-            # compatibility shim, keep around until we depend on glib 2.36
-            if hasattr(GLib, 'unix_signal_add'):
-                fn = GLib.unix_signal_add
-            else:
-                fn = GLib.unix_signal_add_full
-            self._signal_source = fn(GLib.PRIORITY_DEFAULT, signal.SIGINT, _handler, self)
-
-    def __del__(self):
-        if hasattr(self, '_signal_source'):
-            GLib.source_remove(self._signal_source)
+        super(MainLoop, self).__init__(context)
 
     def run(self):
-        super(MainLoop, self).run()
-        if hasattr(self, '_quit_by_sigint'):
-            # caught by _main_loop_sigint_handler()
-            raise KeyboardInterrupt
+        # Retain classic PyGObject behavior of quitting main loops on SIGINT
+        with InterruptibleLoopContext(self.quit):
+            super(MainLoop, self).run()
+
 
 MainLoop = override(MainLoop)
 __all__.append('MainLoop')
