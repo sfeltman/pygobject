@@ -6,6 +6,7 @@ import contextlib
 import unittest
 import time
 import sys
+import gc
 
 from compathelper import _unicode, _bytes
 
@@ -258,6 +259,56 @@ class TestGtk(unittest.TestCase):
                          Gtk.WindowType.TOPLEVEL)
         self.assertEqual(builder.get_object('testpop').get_property('type'),
                          Gtk.WindowType.POPUP)
+
+    def test_builder_tree_selection_ref_count(self):
+        builder = Gtk.Builder()
+        builder.add_from_string('''
+<interface>
+  <object class="GtkTreeView" id="treeview">
+    <child internal-child="selection">
+      <object class="GtkTreeSelection" id="selection">
+        <signal name="changed" handler="cb" swapped="no"/>
+      </object>
+    </child>
+  </object>
+</interface>
+''')
+
+        def cb(*args):
+            pass
+
+        callback_map = {"cb": cb}
+
+        initial_cb_ref_count = sys.getrefcount(cb)
+        initial_map_ref_count = sys.getrefcount(callback_map)
+
+        treeview = builder.get_object("treeview")
+        tv_sel = treeview.get_selection()
+
+        self.assertEqual(treeview.ref_count, 2)
+        self.assertEqual(tv_sel.ref_count, 3)
+
+        # selection_gref_count = tv_sel.ref_count
+        # treeview_gref_count = treeview.ref_count
+
+        builder.connect_signals(callback_map)
+
+        self.assertEqual(sys.getrefcount(callback_map), initial_map_ref_count)
+        self.assertEqual(sys.getrefcount(cb), initial_cb_ref_count + 1)
+
+        # treeview.destroy()
+        # treeview = None
+        # builder = None
+
+        gc.collect()
+
+        self.assertEqual(treeview.ref_count, 2)
+        treeview.destroy()
+        treeview = None
+        self.assertEqual(tv_sel.ref_count, 1)
+
+        self.assertEqual(sys.getrefcount(callback_map), initial_map_ref_count)
+        self.assertEqual(sys.getrefcount(cb), initial_cb_ref_count)
 
     def test_dialogs(self):
         self.assertEqual(Gtk.Dialog, gi.overrides.Gtk.Dialog)
