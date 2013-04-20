@@ -105,6 +105,27 @@ class Container(Gtk.Container, Widget):
 
     get_focus_chain = strip_boolean_result(Gtk.Container.get_focus_chain)
 
+    def child_get_property(self, child, property_name, value=None):
+        """
+        :Parameters:
+            child : Gtk.Widget
+                Child widget.
+            property_name : str
+                Name of container property on child.
+            value : GObject.Value
+                Optional Value object to fill in.
+
+        :Returns:
+            A Python interpreted value of the containers child property.
+        """
+        if value is None:
+            pspec = self.find_child_property(property_name)
+            value = GObject.Value()
+            value.init(pspec.value_type)
+
+        self.child_get_property(child, property_name, value)
+        return value.get_value()
+
 
 Container = override(Container)
 __all__.append('Container')

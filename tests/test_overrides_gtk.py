@@ -54,23 +54,6 @@ def realized(widget):
 
 @unittest.skipUnless(Gtk, 'Gtk not available')
 class TestGtk(unittest.TestCase):
-    def test_container(self):
-        box = Gtk.Box()
-        self.assertTrue(isinstance(box, Gtk.Box))
-        self.assertTrue(isinstance(box, Gtk.Container))
-        self.assertTrue(isinstance(box, Gtk.Widget))
-        self.assertTrue(box)
-        label = Gtk.Label()
-        label2 = Gtk.Label()
-        box.add(label)
-        box.add(label2)
-        self.assertTrue(label in box)
-        self.assertTrue(label2 in box)
-        self.assertEqual(len(box), 2)
-        self.assertTrue(box)
-        l = [x for x in box]
-        self.assertEqual(l, [label, label2])
-
     def test_actions(self):
         self.assertEqual(Gtk.Action, gi.overrides.Gtk.Action)
         self.assertRaises(TypeError, Gtk.Action)
@@ -654,6 +637,34 @@ class TestGtk(unittest.TestCase):
         # overridden function ignores its arguments
         GLib.timeout_add(100, Gtk.main_quit, 'hello')
         Gtk.main()
+
+
+@unittest.skipUnless(Gtk, 'Gtk not available')
+class TestContainer(unittest.TestCase):
+    def test_box_container(self):
+        box = Gtk.Box()
+        self.assertTrue(isinstance(box, Gtk.Box))
+        self.assertTrue(isinstance(box, Gtk.Container))
+        self.assertTrue(isinstance(box, Gtk.Widget))
+        self.assertTrue(box)
+        label = Gtk.Label()
+        label2 = Gtk.Label()
+        box.add(label)
+        box.add(label2)
+        self.assertTrue(label in box)
+        self.assertTrue(label2 in box)
+        self.assertEqual(len(box), 2)
+        self.assertTrue(box)
+        l = [x for x in box]
+        self.assertEqual(l, [label, label2])
+
+    def test_child_get_property(self):
+        box = Gtk.Box()
+        label = Gtk.Label()
+        box.add(label)
+
+        box.child_set_property(label, 'expand', True)
+        self.assertEqual(box.child_get_property(label, 'expand'), True)
 
 
 @unittest.skipUnless(Gtk, 'Gtk not available')
