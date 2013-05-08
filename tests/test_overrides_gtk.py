@@ -6,6 +6,8 @@ import contextlib
 import unittest
 import time
 import sys
+import os
+import signal
 
 from compathelper import _unicode, _bytes
 
@@ -654,6 +656,34 @@ class TestGtk(unittest.TestCase):
         # overridden function ignores its arguments
         GLib.timeout_add(100, Gtk.main_quit, 'hello')
         Gtk.main()
+
+    def test_gtk_main_keyboard_interrupt(self):
+        # Use SIGINT twice to exit nested Gtk.main calls.
+        pid = os.fork()
+        if pid == 0:
+            time.sleep(0.3)
+            os.kill(os.getppid(), signal.SIGINT)
+            time.sleep(0.3)
+            os.kill(os.getppid(), signal.SIGINT)
+            os._exit(0)
+
+        def main_within_main(user_data):
+            try:
+                Gtk.main()
+                self.fail('expected KeyboardInterrupt exception')
+            except KeyboardInterrupt:
+                pass
+
+        # Timeout should fire right when main loop starts
+        Gdk.threads_add_timeout(GLib.PRIORITY_DEFAULT, 0, main_within_main, None)
+
+        try:
+            Gtk.main()
+            self.fail('expected KeyboardInterrupt exception')
+        except KeyboardInterrupt:
+            pass
+
+        os.waitpid(pid, 0)
 
 
 @unittest.skipUnless(Gtk, 'Gtk not available')

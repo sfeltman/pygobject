@@ -21,6 +21,7 @@
 
 import sys
 from gi.repository import GObject
+from gi.repository import GLib
 from ..overrides import override, strip_boolean_result
 from ..module import get_introspection_module
 from gi import PyGIDeprecationWarning
@@ -1489,12 +1490,23 @@ if Gtk._version != '2.0':
     Menu = override(Menu)
     __all__.append('Menu')
 
+
+_Gtk_main = Gtk.main
 _Gtk_main_quit = Gtk.main_quit
+
+
+@override(Gtk.main)
+def main():
+    with GLib.InterruptibleLoopContext(_Gtk_main_quit):
+        return _Gtk_main()
 
 
 @override(Gtk.main_quit)
 def main_quit(*args):
     _Gtk_main_quit()
+
+__all__ += ['main', 'main_quit']
+
 
 stock_lookup = strip_boolean_result(Gtk.stock_lookup)
 __all__.append('stock_lookup')
