@@ -1680,3 +1680,26 @@ class TestTextBuffer(unittest.TestCase):
                                         None)
         self.assertEqual(start.get_offset(), 6)
         self.assertEqual(end.get_offset(), 11)
+
+
+class TestApplication(unittest.TestCase):
+    def test_sigint(self):
+        pid = os.fork()
+        if pid == 0:
+            time.sleep(0.5)
+            os.kill(os.getppid(), signal.SIGINT)
+            os._exit(0)
+
+        def on_activate(app):
+            pass
+
+        app = Gtk.Application(application_id='org.gnome.pygobject.test_overrides_gtk.TestApplication.test_sigint')
+        app.connect('activate', on_activate)
+        app.hold()  # Hold the app until the SIGINT comes in
+        try:
+            app.run([])
+            self.fail('expected KeyboardInterrupt exception')
+        except KeyboardInterrupt:
+            pass
+
+        os.waitpid(pid, 0)

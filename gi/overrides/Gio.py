@@ -237,3 +237,12 @@ class DBusProxy(Gio.DBusProxy):
 
 DBusProxy = override(DBusProxy)
 __all__.append('DBusProxy')
+
+
+class Application(Gio.Application):
+    def run(self, argv):
+        with GLib.InterruptibleLoopContext(self.quit):
+            return super(Application, self).run(argv)
+
+Application = override(Application)
+__all__.append('Application')

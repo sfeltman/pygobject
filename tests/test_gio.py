@@ -2,6 +2,9 @@
 # vim: tabstop=4 shiftwidth=4 expandtab
 
 import unittest
+import os
+import time
+import signal
 
 import gi.overrides
 from gi.repository import GLib, Gio
@@ -201,3 +204,26 @@ class TestGFile(unittest.TestCase):
         main_loop = GLib.MainLoop()
         main_loop.run()
         self.assertFalse(self.file.query_exists(None))
+
+
+class TestApplication(unittest.TestCase):
+    def test_sigint(self):
+        pid = os.fork()
+        if pid == 0:
+            time.sleep(0.5)
+            os.kill(os.getppid(), signal.SIGINT)
+            os._exit(0)
+
+        def on_activate(app):
+            pass
+
+        app = Gio.Application(application_id='org.gnome.pygobject.test_gio.TestApplication.test_sigint')
+        app.connect('activate', on_activate)
+        app.hold()  # Hold the app until the SIGINT comes in
+        try:
+            app.run([])
+            self.fail('expected KeyboardInterrupt exception')
+        except KeyboardInterrupt:
+            pass
+
+        os.waitpid(pid, 0)
