@@ -512,8 +512,15 @@ class InterruptibleLoopContext(object):
     @classmethod
     def _glib_sigint_handler(cls, user_data):
         context = cls._loop_contexts[-1]
-        context._quit_by_sigint = True
-        context._loop_exit_func()
+
+        # If there is a custom Python SIGINT handler installed call that
+        # instead of our own loop exit.
+        py_sigint_handler = signal.getsignal(signal.SIGINT)
+        if py_sigint_handler == signal.default_int_handler:
+            context._quit_by_sigint = True
+            context._loop_exit_func()
+        else:
+            py_sigint_handler(signal.SIGINT, None)
 
         # keep the handler around until we explicitly remove it
         return True

@@ -96,6 +96,31 @@ class TestMainLoop(unittest.TestCase):
         self.assertFalse(loop.is_running())
         os.waitpid(pid, 0)
 
+    def test_sigint_custom_python_handler(self):
+        pid = os.fork()
+        if pid == 0:
+            time.sleep(0.5)
+            os.kill(os.getppid(), signal.SIGINT)
+            os._exit(0)
+
+        loop = GLib.MainLoop()
+        loop_exit_called = []
+
+        def py_loop_exit(sig, frame):
+            loop_exit_called.append(True)
+            loop.quit()
+
+        # Set a custom Python signal handler that does not raise
+        signal.signal(signal.SIGINT, py_loop_exit)
+        loop.run()
+
+        self.assertEqual(loop_exit_called, [True])
+        self.assertFalse(loop.is_running())
+        os.waitpid(pid, 0)
+
+        # Set Python signal back to default
+        signal.signal(signal.SIGINT, signal.default_int_handler)
+
     def test_interruptible_loop_context_nesting(self):
         quits_called = []
 
