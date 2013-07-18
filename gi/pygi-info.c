@@ -27,6 +27,25 @@
 #include <pyglib-python-compat.h>
 
 
+/* functions generated using gperf */
+const char *
+pygi_python2_keyword_lookup(const char *str, unsigned int len);
+
+const char *
+pygi_python3_keyword_lookup(const char *str, unsigned int len);
+
+gboolean
+_pygi_is_python_keyword (const char *name)
+{
+#if PY_MAJOR_VERSION < 3
+    return pygi_python2_keyword_lookup (name, strlen (name)) != NULL;
+#elif PY_MAJOR_VERSION < 4
+    return pygi_python3_keyword_lookup (name, strlen (name)) != NULL;
+#else
+    #error Need keyword list for this major Python version
+#endif
+}
+
 /* _generate_doc_string
  *
  * C wrapper to call Python implemented "gi.docstring.generate_doc_string"
@@ -235,42 +254,6 @@ _base_info_richcompare (PyGIBaseInfo *self, PyObject *other, int op)
 }
 
 PYGLIB_DEFINE_TYPE("gi.BaseInfo", PyGIBaseInfo_Type, PyGIBaseInfo);
-
-gboolean
-_pygi_is_python_keyword (const gchar *name)
-{
-    /* It may be better to use keyword.iskeyword(); keep in sync with
-     * python -c 'import keyword; print(keyword.kwlist)' */
-#if PY_VERSION_HEX < 0x03000000
-    /* Python 2.x */
-    static const gchar* keywords[] = {"and", "as", "assert", "break", "class",
-        "continue", "def", "del", "elif", "else", "except", "exec", "finally",
-        "for", "from", "global", "if", "import", "in", "is", "lambda", "not",
-        "or", "pass", "print", "raise", "return", "try", "while", "with",
-        "yield", NULL};
-#elif PY_VERSION_HEX < 0x04000000
-    /* Python 3.x; note that we explicitly keep "print"; it is not a keyword
-     * any more, but we do not want to break API between Python versions */
-    static const gchar* keywords[] = {"False", "None", "True", "and", "as",
-        "assert", "break", "class", "continue", "def", "del", "elif", "else",
-        "except", "finally", "for", "from", "global", "if", "import", "in",
-        "is", "lambda", "nonlocal", "not", "or", "pass", "raise", "return",
-        "try", "while", "with", "yield",
-        "print", NULL};
-#else
-    #error Need keyword list for this major Python version
-#endif
-
-    const gchar **i;
-
-    for (i = keywords; *i != NULL; ++i) {
-        if (strcmp (name, *i) == 0) {
-            return TRUE;
-        }
-    }
-
-    return FALSE;
-}
 
 static PyObject *
 _wrap_g_base_info_get_type (PyGIBaseInfo *self)

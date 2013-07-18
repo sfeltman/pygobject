@@ -204,4 +204,10 @@ check.valgrindlog:
 check.valgrindxml:
 	cd tests && $(MAKE) check.valgrindxml
 
+# Run this if you add/remove Python keywords
+update-keywords:
+	$(AM_V_GEN)gperf < $(top_srcdir)/gi/python2-keywords.gperf > $(top_srcdir)/gi/python2-keywords.c
+	$(AM_V_GEN)gperf < $(top_srcdir)/gi/python3-keywords.gperf > $(top_srcdir)/gi/python3-keywords.c
+
+
 @GNOME_CODE_COVERAGE_RULES@

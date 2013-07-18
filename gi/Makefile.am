@@ -32,6 +32,10 @@ endif
 
 pygidir = $(pyexecdir)/gi
 
+EXTRA_DIST = \
+	python2-keywords.gperf \
+	python3-keywords.gperf
+
 pygi_LTLIBRARIES = _gi.la
 
 _gi_la_SOURCES = \
@@ -117,7 +121,9 @@ _gi_la_SOURCES = \
 	pygi-struct-marshal.c \
 	pygi-struct-marshal.h \
 	pygi-hashtable.c \
-	pygi-hashtable.h
+	pygi-hashtable.h \
+	python2-keywords.c \
+	python3-keywords.c
 _gi_la_CFLAGS = \
 	$(extension_cppflags) \
 	$(GLIB_CFLAGS) \
