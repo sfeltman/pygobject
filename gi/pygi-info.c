@@ -178,6 +178,7 @@ _base_info_dealloc (PyGIBaseInfo *self)
     if (self->cache != NULL)
         pygi_callable_cache_free ( (PyGICallableCache *) self->cache);
 
+    Py_CLEAR (self->py_name);
     Py_TYPE (self)->tp_free ((PyObject *)self);
 }
 
@@ -280,19 +281,22 @@ _wrap_g_base_info_get_type (PyGIBaseInfo *self)
 static PyObject *
 _wrap_g_base_info_get_name (PyGIBaseInfo *self)
 {
-    const gchar *name;
+    if (self->py_name == NULL) {
+        const gchar *name;
+        name = _safe_base_info_get_name (self->info);
 
-    name = _safe_base_info_get_name (self->info);
-
-    /* escape keywords */
-    if (_pygi_is_python_keyword (name)) {
-        gchar *escaped = g_strconcat (name, "_", NULL);
-        PyObject *obj = PYGLIB_PyUnicode_FromString (escaped);
-        g_free (escaped);
-        return obj;
+        /* escape keywords */
+        if (_pygi_is_python_keyword (name)) {
+            gchar *escaped = g_strconcat (name, "_", NULL);
+            self->py_name = PYGLIB_PyUnicode_FromString (escaped);
+            g_free (escaped);
+        } else {
+            self->py_name = PYGLIB_PyUnicode_FromString (name);
+        }
     }
 
-    return PYGLIB_PyUnicode_FromString (name);
+    Py_INCREF (self->py_name);
+    return self->py_name;
 }
 
 static PyObject *
@@ -764,6 +768,15 @@ _wrap_g_callable_info_can_throw_gerror (PyGIBaseInfo *self)
         Py_RETURN_FALSE;
 }
 
+static PyObject *
+_callable_info_get_name (PyGICallableInfo *self)
+{
+    if (self->py_unbound_info)
+        return _wrap_g_base_info_get_name ((PyGIBaseInfo *)self->py_unbound_info);
+    else
+        return _wrap_g_base_info_get_name ((PyGIBaseInfo *)self);
+}
+
 static PyMethodDef _PyGICallableInfo_methods[] = {
     { "invoke", (PyCFunction) _wrap_g_callable_info_invoke, METH_VARARGS | METH_KEYWORDS },
     { "get_arguments", (PyCFunction) _wrap_g_callable_info_get_arguments, METH_NOARGS },
@@ -773,7 +786,19 @@ static PyMethodDef _PyGICallableInfo_methods[] = {
     { "skip_return", (PyCFunction) _wrap_g_callable_info_skip_return, METH_NOARGS },
     { "get_return_attribute", (PyCFunction) _wrap_g_callable_info_get_return_attribute, METH_O },
     { "can_throw_gerror", (PyCFunction) _wrap_g_callable_info_can_throw_gerror, METH_NOARGS },
+    { "get_name", (PyCFunction) _callable_info_get_name, METH_NOARGS },
     { NULL, NULL, 0 }
+};
+
+static PyObject *
+_callable_info_attr_name(PyGICallableInfo *self, void *closure)
+{
+    return (PyObject *)_callable_info_get_name (self);
+}
+
+static PyGetSetDef _callable_info_getsets[] = {
+        { "__name__", (getter)_callable_info_attr_name, (setter)0, "Name", NULL},
+    { NULL, 0, 0 }
 };
 
 /* CallbackInfo */
@@ -2233,6 +2258,7 @@ _pygi_info_register_types (PyObject *m)
 
     _PyGI_REGISTER_TYPE (m, PyGICallableInfo_Type, CallableInfo,
                          PyGIBaseInfo_Type);
+    PyGICallableInfo_Type.tp_getset = _callable_info_getsets;
     PyGICallableInfo_Type.tp_call = (ternaryfunc) _callable_info_call;
     PyGICallableInfo_Type.tp_dealloc = (destructor) _callable_info_dealloc;
 

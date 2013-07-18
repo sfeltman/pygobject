@@ -42,6 +42,7 @@ typedef struct {
     GIBaseInfo *info;
     PyObject *inst_weakreflist;
     PyGICallableCache *cache;
+    PyObject *py_name;
 } PyGIBaseInfo;
 
 typedef struct {
