@@ -24,6 +24,7 @@ import codecs
 import os
 import sys
 import textwrap
+import traceback
 
 from gi.repository import GLib, GObject, Pango, GdkPixbuf, Gtk
 
@@ -86,8 +87,12 @@ class DemoTreeStore(Gtk.TreeStore):
                 else:
                     parent = None
 
-                demo = Demo.new_from_file(fullpath)
-                self.append(parent, (demo.title, demo, Pango.Style.NORMAL))
+                # Don't let a problem with one demo break the whole app
+                try:
+                    demo = Demo.new_from_file(fullpath)
+                    self.append(parent, (demo.title, demo, Pango.Style.NORMAL))
+                except Exception:
+                    traceback.print_exc()
 
     def _list_dir(self, path):
         demo_file_list = []
