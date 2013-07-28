@@ -69,9 +69,6 @@ class Widget(Gtk.Widget):
 
     translate_coordinates = strip_boolean_result(Gtk.Widget.translate_coordinates)
 
-    def render_icon(self, stock_id, size, detail=None):
-        return super(Widget, self).render_icon(stock_id, size, detail)
-
     def drag_dest_set_target_list(self, target_list):
         if not isinstance(target_list, Gtk.TargetList):
             target_list = Gtk.TargetList.new(_construct_target_list(target_list))
@@ -736,15 +733,6 @@ class TextIter(Gtk.TextIter):
     forward_search = strip_boolean_result(Gtk.TextIter.forward_search)
     backward_search = strip_boolean_result(Gtk.TextIter.backward_search)
 
-    def begins_tag(self, tag=None):
-        return super(TextIter, self).begins_tag(tag)
-
-    def ends_tag(self, tag=None):
-        return super(TextIter, self).ends_tag(tag)
-
-    def toggles_tag(self, tag=None):
-        return super(TextIter, self).toggles_tag(tag)
-
 TextIter = override(TextIter)
 __all__.append('TextIter')
 
@@ -876,9 +864,6 @@ class TreeModel(Gtk.TreeModel):
 
         return tuple(values)
 
-    def filter_new(self, root=None):
-        return super(TreeModel, self).filter_new(root)
-
     #
     # Signals supporting python iterables as tree paths
     #
@@ -905,14 +890,7 @@ __all__.append('TreeModel')
 
 
 class TreeSortable(Gtk.TreeSortable, ):
-
     get_sort_column_id = strip_boolean_result(Gtk.TreeSortable.get_sort_column_id, fail_ret=(None, None))
-
-    def set_sort_func(self, sort_column_id, sort_func, user_data=None):
-        super(TreeSortable, self).set_sort_func(sort_column_id, sort_func, user_data)
-
-    def set_default_sort_func(self, sort_func, user_data=None):
-        super(TreeSortable, self).set_default_sort_func(sort_func, user_data)
 
 TreeSortable = override(TreeSortable)
 __all__.append('TreeSortable')
@@ -1316,9 +1294,6 @@ class TreeViewColumn(Gtk.TreeViewColumn):
 
     cell_get_position = strip_boolean_result(Gtk.TreeViewColumn.cell_get_position)
 
-    def set_cell_data_func(self, cell_renderer, func, func_data=None):
-        super(TreeViewColumn, self).set_cell_data_func(cell_renderer, func, func_data)
-
     def set_attributes(self, cell_renderer, **attributes):
         Gtk.CellLayout.clear_attributes(self, cell_renderer)
 
@@ -1492,9 +1467,6 @@ __all__.append('Viewport')
 
 
 class TreeModelFilter(Gtk.TreeModelFilter):
-    def set_visible_func(self, func, data=None):
-        super(TreeModelFilter, self).set_visible_func(func, data)
-
     def set_value(self, iter, column, value):
         # Delegate to child model
         iter = self.convert_iter_to_child_iter(iter)
