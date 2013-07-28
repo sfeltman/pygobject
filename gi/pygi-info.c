@@ -652,6 +652,20 @@ _wrap_g_arg_info_may_be_null (PyGIBaseInfo *self)
 	    g_arg_info_may_be_null ((GIArgInfo*)self->info) );
 }
 
+static PyObject *
+_wrap_g_arg_info_get_closure (PyGIBaseInfo *self)
+{
+    return PyLong_FromLong (
+	    g_arg_info_get_closure ((GIArgInfo*)self->info) );
+}
+
+static PyObject *
+_wrap_g_arg_info_get_destroy (PyGIBaseInfo *self)
+{
+    return PyLong_FromLong (
+	    g_arg_info_get_destroy ((GIArgInfo*)self->info) );
+}
+
 /* _g_arg_get_pytype_hint
  *
  * Returns new value reference to a string hinting at the python type
@@ -706,6 +720,8 @@ static PyMethodDef _PyGIArgInfo_methods[] = {
     { "is_return_value", (PyCFunction) _wrap_g_arg_info_is_return_value, METH_NOARGS },
     { "is_optional", (PyCFunction) _wrap_g_arg_info_is_optional, METH_NOARGS },
     { "may_be_null", (PyCFunction) _wrap_g_arg_info_may_be_null, METH_NOARGS },
+    { "get_closure", (PyCFunction) _wrap_g_arg_info_get_closure, METH_NOARGS },
+    { "get_destroy", (PyCFunction) _wrap_g_arg_info_get_destroy, METH_NOARGS },
     { "get_pytype_hint", (PyCFunction) _g_arg_get_pytype_hint, METH_NOARGS },
     { NULL, NULL, 0 }
 };
