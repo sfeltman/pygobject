@@ -221,7 +221,13 @@ _pygi_closure_assign_pyobj_to_out_argument (gpointer out_arg, PyObject *object,
         }
 
         default:
-           *((gpointer *) out_arg) = arg.v_pointer;
+            if (g_type_info_get_array_type (type_info) == GI_ARRAY_TYPE_C) {
+                GArray *temp = (GArray *) arg.v_pointer;
+                *((gpointer *) out_arg) = temp->data;
+                g_array_free(temp, FALSE);
+            } else {
+                *((gpointer *) out_arg) = arg.v_pointer;
+            }
            break;
       }
 }

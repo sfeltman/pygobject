@@ -835,7 +835,11 @@ _pygi_argument_to_array (GIArgument  *arg,
                     g_arg_info_load_type (&length_arg_info, &length_type_info);
 
                     if (args != NULL) {
-                        if (!gi_argument_to_gssize (args[length_arg_pos],
+                        GIArgument *p_length_arg = args[length_arg_pos];
+                        if (g_arg_info_get_direction (&length_arg_info) != GI_DIRECTION_IN) {
+                            p_length_arg = (GIArgument *)p_length_arg->v_pointer;
+                        }
+                        if (!gi_argument_to_gssize (p_length_arg,
                                                     g_type_info_get_tag (&length_type_info),
                                                     &length))
                             return NULL;
