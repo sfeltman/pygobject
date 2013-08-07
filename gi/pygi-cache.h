@@ -176,6 +176,9 @@ struct _PyGICallableCache
     GSList *arg_name_list; /* for keyword arg matching */
     GHashTable *arg_name_hash;
 
+    /* Index of user_data arg that can eat extra args passed to a callable. */
+    gboolean user_data_eats_vaargs;
+
     /* Number of in args passed to g_function_info_invoke.
      * This is used for the length of PyGIInvokeState.in_args */
     gssize n_from_py_args;

@@ -170,7 +170,7 @@ _py_args_combine_and_check_length (PyGICallableCache *cache,
         return py_args;
     }
 
-    if (n_expected_args < n_py_args) {
+    if (cache->user_data_eats_vaargs < 0 && n_expected_args < n_py_args) {
         PyErr_Format (PyExc_TypeError,
                       "%.200s() takes exactly %d %sargument%s (%zd given)",
                       function_name,
@@ -178,6 +178,13 @@ _py_args_combine_and_check_length (PyGICallableCache *cache,
                       n_py_kwargs > 0 ? "non-keyword " : "",
                       n_expected_args == 1 ? "" : "s",
                       n_py_args);
+        return NULL;
+    }
+
+    if (cache->user_data_eats_vaargs >= 0 && n_py_kwargs > 0 && n_expected_args < n_py_args) {
+        PyErr_Format (PyExc_TypeError,
+                      "%.200s() cannot use variable user data arguments with keyword arguments",
+                      function_name);
         return NULL;
     }
 
