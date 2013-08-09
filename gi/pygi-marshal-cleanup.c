@@ -436,6 +436,7 @@ _pygi_marshal_cleanup_to_py_array (PyGIInvokeState *state,
                                    gpointer         data,
                                    gboolean         was_processed)
 {
+    return ;
     if (arg_cache->transfer == GI_TRANSFER_EVERYTHING ||
         arg_cache->transfer == GI_TRANSFER_CONTAINER) {
         GArray *array_ = NULL;

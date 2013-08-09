@@ -72,6 +72,12 @@ typedef struct {
 } PyGIBoxed;
 
 typedef struct {
+    PyObject_VAR_HEAD
+    GITypeTag type_tag;
+    GArray *array_;
+} PyGIArray;
+
+typedef struct {
     PyObject_HEAD
     GCallback callback;
     GIFunctionInfo *info;

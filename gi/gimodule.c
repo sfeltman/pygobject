@@ -24,6 +24,7 @@
 #include "pygi-private.h"
 #include "pygi.h"
 #include "pyglib.h"
+#include "pygi-array.h"
 
 #include <pygobject.h>
 #include <pyglib-python-compat.h>
@@ -643,6 +644,7 @@ PYGLIB_MODULE_START(_gi, "_gi")
     _pygi_boxed_register_types (module);
     _pygi_ccallback_register_types (module);
     _pygi_argument_init();
+    _pygi_array_register_types (module);
 
     /* Use RuntimeWarning as the base class of PyGIDeprecationWarning
      * for unstable (odd minor version) and use DeprecationWarning for

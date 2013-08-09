@@ -34,6 +34,7 @@
 #include "pygi-marshal-cleanup.h"
 #include "pygi-marshal-to-py.h"
 #include "pygi-argument.h"
+#include "pygi-array.h"
 
 static gboolean
 gi_argument_to_c_long (GIArgument *arg_in,
@@ -266,6 +267,7 @@ _pygi_marshal_to_py_basic_type_cache_adapter (PyGIInvokeState   *state,
                                             arg_cache->transfer);
 }
 
+
 PyObject *
 _pygi_marshal_to_py_array (PyGIInvokeState   *state,
                            PyGICallableCache *callable_cache,
@@ -322,6 +324,13 @@ _pygi_marshal_to_py_array (PyGIInvokeState   *state,
         array_->len = len;
     } else {
         array_ = arg->v_pointer;
+    }
+
+    py_obj = _pygi_array_new_from_garray (array_,
+                                          seq_cache->item_cache->type_tag,
+                                          arg_cache->transfer);
+    if (py_obj) {
+        return PyMemoryView_FromObject (py_obj);
     }
 
     if (seq_cache->item_cache->type_tag == GI_TYPE_TAG_UINT8) {

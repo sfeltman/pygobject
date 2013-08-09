@@ -5,6 +5,7 @@ import unittest
 import os.path
 import warnings
 import subprocess
+import collections
 
 from gi.repository import GLib
 from gi import PyGIDeprecationWarning
@@ -58,7 +59,7 @@ class TestGLib(unittest.TestCase):
 
         # this is locale dependent, so we cannot completely verify the result
         res = GLib.filename_from_utf8(_unicode('aäb'))
-        self.assertTrue(isinstance(res, bytes))
+        self.assertTrue(isinstance(res, collections.Sequence))
         self.assertGreaterEqual(len(res), 3)
 
         # with explicit length argument

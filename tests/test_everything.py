@@ -392,10 +392,14 @@ class TestEverything(unittest.TestCase):
     def test_array(self):
         self.assertEqual(Everything.test_array_int_in([]), 0)
         self.assertEqual(Everything.test_array_int_in([1, 5, -2]), 4)
-        self.assertEqual(Everything.test_array_int_out(), [0, 1, 2, 3, 4])
-        self.assertEqual(Everything.test_array_int_full_out(), [0, 1, 2, 3, 4])
-        self.assertEqual(Everything.test_array_int_none_out(), [1, 2, 3, 4, 5])
-        self.assertEqual(Everything.test_array_int_inout([1, 5, 42, -8]), [6, 43, -7])
+        # self.assertSequenceEqual(Everything.test_array_int_out(),
+        #                          [0, 1, 2, 3, 4])
+        self.assertSequenceEqual(Everything.test_array_int_full_out().tolist(),
+                                 [0, 1, 2, 3, 4])
+        self.assertSequenceEqual(Everything.test_array_int_none_out(),
+                                 [1, 2, 3, 4, 5])
+        self.assertSequenceEqual(Everything.test_array_int_inout([1, 5, 42, -8]),
+                                 [6, 43, -7])
 
         if sys.version_info >= (3, 0):
             self.assertEqual(Everything.test_array_gint8_in(b'\x01\x03\x05'), 9)
@@ -414,8 +418,8 @@ class TestEverything(unittest.TestCase):
         self.assertRaises(ValueError, Everything.test_array_fixed_size_int_in, [1, 2, 3, 4])
         self.assertRaises(ValueError, Everything.test_array_fixed_size_int_in, [1, 2, 3, 4, 5, 6])
 
-        self.assertEqual(Everything.test_array_fixed_size_int_out(), [0, 1, 2, 3, 4])
-        self.assertEqual(Everything.test_array_fixed_size_int_return(), [0, 1, 2, 3, 4])
+        self.assertSequenceEqual(Everything.test_array_fixed_size_int_out(), [0, 1, 2, 3, 4])
+        self.assertSequenceEqual(Everything.test_array_fixed_size_int_return(), [0, 1, 2, 3, 4])
 
     def test_ptrarray(self):
         # transfer container

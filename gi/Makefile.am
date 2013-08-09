@@ -75,7 +75,9 @@ _gi_la_SOURCES = \
 	pygi-marshal-to-py.c \
 	pygi-marshal-to-py.h \
 	pygi-marshal-cleanup.c \
-	pygi-marshal-cleanup.h
+	pygi-marshal-cleanup.h \
+	pygi-array.c \
+	pygi-array.h
 _gi_la_CFLAGS = \
 	$(GI_CFLAGS)
 _gi_la_CPPFLAGS = \
