@@ -24,6 +24,8 @@ from __future__ import absolute_import
 from pkgutil import extend_path
 __path__ = extend_path(__path__, __name__)
 
+from collections import namedtuple
+
 from ._gi import _API
 from ._gi import Repository
 from ._gi import PyGIDeprecationWarning
@@ -43,6 +45,13 @@ _overridesdir = os.path.join(os.path.dirname(__file__), 'overrides')
 
 version_info = gi._gobject.pygobject_version[:]
 __version__ = "{0}.{1}.{2}".format(*version_info)
+
+
+BufferInfo = namedtuple('BufferInfo', ['buf',
+                                       'len',
+                                       'itemsize',
+                                       'readonly',
+                                       'format'])
 
 
 def check_version(version):

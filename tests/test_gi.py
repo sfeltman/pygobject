@@ -1108,6 +1108,18 @@ class TestGByteArray(unittest.TestCase):
         GIMarshallingTests.bytearray_none_in(b'\x00\x31\xFF\x33')
 
 
+class TestBufferInfo(unittest.TestCase):
+    class CustomByteArray(GLib.Bytes):
+        pass
+
+    def test(self):
+        def getbufferinfo(obj):
+            return gi.BufferInfo('data', obj.len, 1, True, 'B')
+
+        ba = TestBufferInfo.CustomByteArray.new_take(b'\x01\x02\xFF')
+        ba.__pygi_getbufferinfo__ = getbufferinfo
+
+
 class TestGList(unittest.TestCase):
 
     def test_glist_int_none_return(self):

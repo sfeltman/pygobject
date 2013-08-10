@@ -326,12 +326,14 @@ _pygi_marshal_to_py_array (PyGIInvokeState   *state,
         array_ = arg->v_pointer;
     }
 
+    /*
     py_obj = _pygi_array_new_from_garray (array_,
                                           seq_cache->item_cache->type_tag,
                                           arg_cache->transfer);
     if (py_obj) {
         return PyMemoryView_FromObject (py_obj);
     }
+    */
 
     if (seq_cache->item_cache->type_tag == GI_TYPE_TAG_UINT8) {
         if (arg->v_pointer == NULL) {
