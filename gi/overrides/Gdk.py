@@ -38,12 +38,6 @@ class Color(Gdk.Color):
         self.green = green
         self.blue = blue
 
-    def __new__(cls, *args, **kwargs):
-        return Gdk.Color.__new__(cls)
-
-    def __eq__(self, other):
-        return self.equal(other)
-
     def __repr__(self):
         return '<Gdk.Color(red=%d, green=%d, blue=%d)>' % (self.red, self.green, self.blue)
 
@@ -81,12 +75,6 @@ if Gdk._version == '3.0':
             self.blue = blue
             self.alpha = alpha
 
-        def __new__(cls, *args, **kwargs):
-            return Gdk.RGBA.__new__(cls)
-
-        def __eq__(self, other):
-            return self.equal(other)
-
         def __repr__(self):
             return '<Gdk.Color(red=%f, green=%f, blue=%f, alpha=%f)>' % (self.red, self.green, self.blue, self.alpha)
 
@@ -123,9 +111,6 @@ if Gdk._version == '2.0':
             self.y = y
             self.width = width
             self.height = height
-
-        def __new__(cls, *args, **kwargs):
-            return Gdk.Rectangle.__new__(cls)
 
         def __repr__(self):
             return '<Gdk.Rectangle(x=%d, y=%d, width=%d, height=%d)>' % (self.x, self.y, self.height, self.width)
@@ -201,9 +186,6 @@ class Event(Gdk.Event):
 
     if Gdk._version == '2.0':
         _UNION_MEMBERS[Gdk.EventType.NO_EXPOSE] = 'no_expose'
-
-    def __new__(cls, *args, **kwargs):
-        return Gdk.Event.__new__(cls)
 
     def __getattr__(self, name):
         real_event = getattr(self, '_UNION_MEMBERS').get(self.type)
@@ -315,9 +297,6 @@ class Cursor(Gdk.Cursor):
             raise ValueError("Wrong number of parameters")
 
         return _constructor(*args, **kwds)
-
-    def __init__(self, *args, **kwargs):
-        Gdk.Cursor.__init__(self)
 
 Cursor = override(Cursor)
 __all__.append('Cursor')
