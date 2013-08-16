@@ -718,6 +718,86 @@ _pygi_marshal_from_py_basic_type_cache_adapter (PyGIInvokeState   *state,
                                              arg_cache->transfer);
 }
 
+
+static gboolean
+_pygi_marshal_from_py_array_insert_item (GArray      *array_,
+                                         int          i,
+                                         GIArgument  *item,
+                                         GIArrayType  array_type,
+                                         GITypeTag    item_type_tag,
+                                         GIInfoType   item_info_type,
+                                         GType        item_g_type,
+                                         gssize       item_size,
+                                         gboolean     item_is_pointer,
+                                         gboolean    *needs_cleanup)
+{
+    *needs_cleanup = FALSE;
+    /* FIXME: it is much more efficent to have seperate marshaller
+     *        for ptr arrays than doing the evaluation
+     *        and casting each loop iteration
+     */
+    if (array_type == GI_ARRAY_TYPE_PTR_ARRAY) {
+        g_ptr_array_add((GPtrArray *)array_, item->v_pointer);
+    } else if (item_type_tag == GI_TYPE_TAG_INTERFACE) {
+
+        switch (item_info_type) {
+            case GI_INFO_TYPE_UNION:
+            case GI_INFO_TYPE_STRUCT:
+            {
+                gboolean is_boxed = g_type_is_a (item_g_type, G_TYPE_BOXED);
+                gboolean is_gvalue = item_g_type == G_TYPE_VALUE;
+                gboolean is_gvariant = item_g_type == G_TYPE_VARIANT;
+
+                if (is_gvariant) {
+                    /* Item size will always be that of a pointer,
+                     * since GVariants are opaque hence always passed by ref */
+                    g_assert (item_size == sizeof (gpointer));
+                    g_array_insert_val (array_, i, item->v_pointer);
+                } else if (is_gvalue) {
+                    // GValue* dest = &g_array_index (array_, GValue, i);
+                    GValue* dest = (GValue*) (array_->data + (i * item_size));
+                    memset (dest, 0, item_size);
+                    if (item->v_pointer != NULL) {
+                        g_value_init (dest, G_VALUE_TYPE ((GValue*) item->v_pointer));
+                        g_value_copy ((GValue*) item->v_pointer, dest);
+                    }
+                    /* we free the original copy already, the new one is a plain struct
+                     * in an array. _pygi_marshal_cleanup_from_py_array() does not free it again */
+                    *needs_cleanup = TRUE;
+                } else if (!is_boxed) {
+                    /* HACK: Gdk.Atom is merely an integer wrapped in a pointer,
+                     * so we must not dereference it; just copy the pointer
+                     * value, and don't attempt to free it. TODO: find out
+                     * if there are other data types with similar behaviour
+                     * and generalize. */
+                    if (item_is_pointer) {
+                        g_assert (item_size == sizeof (item->v_pointer));
+                        memcpy (array_->data + (i * item_size), &item->v_pointer, item_size);
+                    } else {
+                        memcpy (array_->data + (i * item_size), item->v_pointer, item_size);
+                        *needs_cleanup = TRUE;
+                    }
+                } else if (is_boxed && !item_is_pointer) {
+                    /* The array elements are not expected to be pointers, but the
+                     * elements obtained are boxed pointers themselves, so insert
+                     * the pointed to data.
+                     */
+                    g_array_insert_vals (array_, i, item->v_pointer, 1);
+                } else {
+                    g_array_insert_val (array_, i, *item);
+                }
+                break;
+            }
+            default:
+                g_array_insert_val (array_, i, *item);
+        }
+    } else {
+        g_array_insert_val (array_, i, *item);
+    }
+
+    return TRUE;
+}
+
 gboolean
 _pygi_marshal_from_py_array (PyGIInvokeState   *state,
                              PyGICallableCache *callable_cache,
@@ -783,112 +863,51 @@ _pygi_marshal_from_py_array (PyGIInvokeState   *state,
             array_->data[length] = '\0';
         }
         goto array_success;
-    }
 
-    from_py_marshaller = sequence_cache->item_cache->from_py_marshaller;
-    for (i = 0; i < length; i++) {
-        GIArgument item;
-        PyObject *py_item = PySequence_GetItem (py_arg, i);
-        if (py_item == NULL)
-            goto err;
+    } else {
+        PyGIArgCache *item_arg_cache = sequence_cache->item_cache;
+        PyGIMarshalCleanupFunc cleanup_func = item_arg_cache->from_py_cleanup;
+        GIInfoType info_type = GI_INFO_TYPE_INVALID;
+        GType item_g_type = G_TYPE_INVALID;
 
-        if (!from_py_marshaller ( state,
-                                  callable_cache,
-                                  sequence_cache->item_cache,
-                                  py_item,
-                                 &item))
-            goto err;
-
-        /* FIXME: it is much more efficent to have seperate marshaller
-         *        for ptr arrays than doing the evaluation
-         *        and casting each loop iteration
-         */
-        if (is_ptr_array) {
-            g_ptr_array_add((GPtrArray *)array_, item.v_pointer);
-        } else if (sequence_cache->item_cache->type_tag == GI_TYPE_TAG_INTERFACE) {
-            PyGIInterfaceCache *item_iface_cache = (PyGIInterfaceCache *) sequence_cache->item_cache;
+        if (item_arg_cache->type_tag == GI_TYPE_TAG_INTERFACE) {
+            PyGIInterfaceCache *item_iface_cache = (PyGIInterfaceCache *) item_arg_cache;
+            item_g_type = item_iface_cache->g_type;
             GIBaseInfo *base_info = (GIBaseInfo *) item_iface_cache->interface_info;
-            GIInfoType info_type = g_base_info_get_type (base_info);
-
-            switch (info_type) {
-                case GI_INFO_TYPE_UNION:
-                case GI_INFO_TYPE_STRUCT:
-                {
-                    PyGIArgCache *item_arg_cache = (PyGIArgCache *)item_iface_cache;
-                    PyGIMarshalCleanupFunc from_py_cleanup = item_arg_cache->from_py_cleanup;
-                    gboolean is_boxed = g_type_is_a (item_iface_cache->g_type, G_TYPE_BOXED);
-                    gboolean is_gvalue = item_iface_cache->g_type == G_TYPE_VALUE;
-                    gboolean is_gvariant = item_iface_cache->g_type == G_TYPE_VARIANT;
-                    
-                    if (is_gvariant) {
-                        /* Item size will always be that of a pointer,
-                         * since GVariants are opaque hence always passed by ref */
-                        g_assert (item_size == sizeof (item.v_pointer));
-                        g_array_insert_val (array_, i, item.v_pointer);
-                    } else if (is_gvalue) {
-                        GValue* dest = (GValue*) (array_->data + (i * item_size));
-                        memset (dest, 0, item_size);
-                        if (item.v_pointer != NULL) {
-                            g_value_init (dest, G_VALUE_TYPE ((GValue*) item.v_pointer));
-                            g_value_copy ((GValue*) item.v_pointer, dest);
-                        }
-                        /* we free the original copy already, the new one is a plain struct
-                         * in an array. _pygi_marshal_cleanup_from_py_array() does not free it again */
-                        if (from_py_cleanup)
-                            from_py_cleanup (state, item_arg_cache, item.v_pointer, TRUE);
-                    } else if (!is_boxed) {
-                        /* HACK: Gdk.Atom is merely an integer wrapped in a pointer,
-                         * so we must not dereference it; just copy the pointer
-                         * value, and don't attempt to free it. TODO: find out
-                         * if there are other data types with similar behaviour
-                         * and generalize. */
-                        if (g_strcmp0 (item_iface_cache->type_name, "Gdk.Atom") == 0) {
-                            g_assert (item_size == sizeof (item.v_pointer));
-                            memcpy (array_->data + (i * item_size), &item.v_pointer, item_size);
-                        } else {
-                            memcpy (array_->data + (i * item_size), item.v_pointer, item_size);
-
-                            if (from_py_cleanup)
-                                from_py_cleanup (state, item_arg_cache, item.v_pointer, TRUE);
-                        }
-                    } else if (is_boxed && !item_iface_cache->arg_cache.is_pointer) {
-                        /* The array elements are not expected to be pointers, but the
-                         * elements obtained are boxed pointers themselves, so insert
-                         * the pointed to data.
-                         */
-                        g_array_insert_vals (array_, i, item.v_pointer, 1);
-                    } else {
-                        g_array_insert_val (array_, i, item);
-                    }
-                    break;
-                }
-                default:
-                    g_array_insert_val (array_, i, item);
-            }
-        } else {
-            g_array_insert_val (array_, i, item);
+            info_type = g_base_info_get_type (base_info);
         }
-        continue;
-err:
-        if (sequence_cache->item_cache->from_py_cleanup != NULL) {
-            gsize j;
-            PyGIMarshalCleanupFunc cleanup_func =
-                sequence_cache->item_cache->from_py_cleanup;
+        from_py_marshaller = item_arg_cache->from_py_marshaller;
 
-            for(j = 0; j < i; j++) {
-                cleanup_func (state,
-                              sequence_cache->item_cache,
-                              g_array_index (array_, gpointer, j),
-                              TRUE);
+        for (i = 0; i < length; i++) {
+            GIArgument item;
+            gboolean needs_cleanup;
+            PyObject *py_item = PySequence_GetItem (py_arg, i);
+            if (py_item == NULL)
+                goto err;
+
+            if (!from_py_marshaller ( state,
+                                      callable_cache,
+                                      item_arg_cache,
+                                      py_item,
+                                     &item))
+                goto err;
+
+
+
+            if (!_pygi_marshal_from_py_array_insert_item (array_, i, &item,
+                                                         sequence_cache->array_type,
+                                                         item_arg_cache->type_tag,
+                                                         info_type,
+                                                         item_g_type,
+                                                         item_size,
+                                                         item_arg_cache->is_pointer,
+                                                         &needs_cleanup)) {
+                goto err;
             }
-        }
 
-        if (is_ptr_array)
-            g_ptr_array_free ( ( GPtrArray *)array_, TRUE);
-        else
-            g_array_free (array_, TRUE);
-        _PyGI_ERROR_PREFIX ("Item %i: ", i);
-        return FALSE;
+            if (needs_cleanup && cleanup_func != NULL)
+                cleanup_func (state, item_arg_cache, item.v_pointer, TRUE);
+        }
     }
 
 array_success:
@@ -930,6 +949,28 @@ array_success:
     }
 
     return TRUE;
+
+err:
+    if (sequence_cache->item_cache->from_py_cleanup != NULL) {
+        gsize j;
+        PyGIMarshalCleanupFunc
+            cleanup_func = sequence_cache->item_cache->from_py_cleanup;
+
+        for(j = 0; j < i; j++) {
+            cleanup_func (state,
+                          sequence_cache->item_cache,
+                          g_array_index (array_, gpointer, j),
+                          TRUE);
+        }
+    }
+
+    if (is_ptr_array)
+        g_ptr_array_free ( ( GPtrArray *)array_, TRUE);
+    else
+        g_array_free (array_, TRUE);
+    _PyGI_ERROR_PREFIX ("Item %i: ", i);
+    return FALSE;
+
 }
 
 gboolean
