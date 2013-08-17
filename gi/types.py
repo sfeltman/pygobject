@@ -51,6 +51,23 @@ class MetaClassHelper(object):
         for method_info in cls.__info__.get_methods():
             setattr(cls, method_info.__name__, method_info)
 
+            op = method_info.get_attribute('meta.operator')
+            if op == 'new':
+                cls.__new__ = method_info
+            elif op == 'new_generic':
+                cls.__new__ = method_info
+                cls.__pygi_new_generic__ = method_info
+            elif op == 'equal':
+                cls.__eq__ = method_info
+            elif op == 'hash':
+                cls.__hash__ = method_info
+            elif op == 'string':
+                cls.__str__ = method_info
+            elif op == 'length':
+                cls.__len__ = method_info
+            elif op == 'contains':
+                cls.__contains__ = method
+
     def _setup_fields(cls):
         for field_info in cls.__info__.get_fields():
             name = field_info.get_name().replace('-', '_')
@@ -184,6 +201,12 @@ class GObjectMeta(_gobject.GObjectMeta, MetaClassHelper):
         if is_python_defined:
             cls._setup_vfuncs()
         elif is_gi_defined:
+            # Must set new before filling out methods
+            if hasattr(cls, '__pygi_new_generic__'):
+                cls.__new__ = cls.__pygi_new_generic__
+            else:
+                cls.__pygi_new_generic__ = cls.__new__
+
             cls._setup_methods()
             cls._setup_constants()
             cls._setup_native_vfuncs()

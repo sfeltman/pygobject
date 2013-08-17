@@ -188,12 +188,47 @@ _wrap_g_base_info_get_container (PyGIBaseInfo *self)
     return _pygi_info_new (info);
 }
 
+static PyObject *
+_wrap_g_base_info_get_attribute (PyGIBaseInfo *self, PyObject *py_name)
+{
+    char *name;
+    const char *value;
+
+    if (!PYGLIB_PyUnicode_Check (py_name)) {
+        PyErr_SetString(PyExc_TypeError, "name argument must be string");
+        return NULL;
+    }
+
+    name = PYGLIB_PyUnicode_AsString (py_name);
+    value = g_base_info_get_attribute (self->info, name);
+    if (value == NULL)
+        Py_RETURN_NONE;
+
+    return PYGLIB_PyUnicode_FromString (value);
+}
+
+static PyObject *
+_wrap_g_base_info_get_attributes (PyGIBaseInfo *self)
+{
+    GIAttributeIter iter = { 0, };
+    char *name;
+    char *value;
+    PyObject *attrs = PyDict_New ();
+
+    while (g_base_info_iterate_attributes (self->info, &iter, &name, &value)) {
+        PyDict_SetItemString (attrs, name, PYGLIB_PyUnicode_FromString (value));
+    }
+
+    return attrs;
+}
 
 static PyMethodDef _PyGIBaseInfo_methods[] = {
     { "get_name", (PyCFunction) _wrap_g_base_info_get_name, METH_NOARGS },
     { "get_name_unescaped", (PyCFunction) _wrap_g_base_info_get_name_unescaped, METH_NOARGS },
     { "get_namespace", (PyCFunction) _wrap_g_base_info_get_namespace, METH_NOARGS },
     { "get_container", (PyCFunction) _wrap_g_base_info_get_container, METH_NOARGS },
+    { "get_attribute", (PyCFunction) _wrap_g_base_info_get_attribute, METH_O },
+    { "get_attributes", (PyCFunction) _wrap_g_base_info_get_attributes, METH_NOARGS },
     { NULL, NULL, 0 }
 };
 
@@ -456,7 +491,9 @@ _function_info_call (PyGICallableInfo *self, PyObject *args, PyObject *kwargs)
          * implementing the constructor and not on sub-classes.
          */
         flags = g_function_info_get_flags ( (GIFunctionInfo*) self->base.info);
-        if (flags & GI_FUNCTION_IS_CONSTRUCTOR) {
+        if (flags & GI_FUNCTION_IS_CONSTRUCTOR &&
+                g_strcmp0 (g_base_info_get_attribute (self->base.info, "meta.operator"),
+                           "new_generic")) {
             PyObject *py_str_name;
             const gchar *str_name;
             GIBaseInfo *container_info = g_base_info_get_container (self->base.info);
