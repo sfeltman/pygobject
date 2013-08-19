@@ -913,6 +913,11 @@ _pygi_argument_from_object (PyObject   *object,
             GArray *array;
             GITransfer item_transfer;
             Py_ssize_t i;
+            GIArrayType array_type;
+            GITypeTag item_type_tag;
+            GIInfoType item_info_type = GI_INFO_TYPE_INVALID;
+            GType item_g_type = G_TYPE_INVALID;
+            gboolean item_is_pointer = FALSE;
 
             if (object == Py_None) {
                 arg.v_pointer = NULL;
@@ -935,13 +940,12 @@ _pygi_argument_from_object (PyObject   *object,
             }
 
             is_zero_terminated = g_type_info_is_zero_terminated (type_info);
-            item_type_info = g_type_info_get_param_type (type_info, 0);
 
             /* we handle arrays that are really strings specially, see below */
-            if (g_type_info_get_tag (item_type_info) == GI_TYPE_TAG_UINT8)
-               item_size = 1;
-            else
-               item_size = sizeof (GIArgument);
+            item_type_info = g_type_info_get_param_type (type_info, 0);
+            item_size = _pygi_g_type_info_size (item_type_info);
+            item_is_pointer = g_type_info_is_pointer (item_type_info);
+            item_type_tag = g_type_info_get_tag (item_type_info);
 
             array = g_array_sized_new (is_zero_terminated, FALSE, item_size, length);
             if (array == NULL) {
@@ -950,7 +954,7 @@ _pygi_argument_from_object (PyObject   *object,
                 break;
             }
 
-            if (g_type_info_get_tag (item_type_info) == GI_TYPE_TAG_UINT8 &&
+            if (item_type_tag == GI_TYPE_TAG_UINT8 &&
                 PYGLIB_PyBytes_Check(object)) {
 
                 memcpy(array->data, PYGLIB_PyBytes_AsString(object), length);
@@ -958,12 +962,18 @@ _pygi_argument_from_object (PyObject   *object,
                 goto array_success;
             }
 
-
+            array_type = g_type_info_get_array_type (type_info);
             item_transfer = transfer == GI_TRANSFER_CONTAINER ? GI_TRANSFER_NOTHING : transfer;
+
+            if (item_type_tag == GI_TYPE_TAG_INTERFACE) {
+                GIInterfaceInfo *interface_info = g_type_info_get_interface (item_type_info);
+                item_g_type = g_registered_type_info_get_g_type ( (GIRegisteredTypeInfo *)interface_info);
+            }
 
             for (i = 0; i < length; i++) {
                 PyObject *py_item;
                 GIArgument item;
+                gboolean needs_cleanup = FALSE;
 
                 py_item = PySequence_GetItem (object, i);
                 if (py_item == NULL) {
@@ -978,8 +988,16 @@ _pygi_argument_from_object (PyObject   *object,
                     goto array_item_error;
                 }
 
-                g_array_insert_val (array, i, item);
-                continue;
+                if (_pygi_marshal_from_py_array_insert_item (array, i, &item,
+                                                             array_type,
+                                                             item_type_tag,
+                                                             item_info_type,
+                                                             item_g_type,
+                                                             item_size,
+                                                             item_is_pointer,
+                                                             &needs_cleanup)) {
+                    continue;
+                }
 
 array_item_error:
                 /* Free everything we have converted so far. */

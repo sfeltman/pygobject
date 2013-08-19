@@ -719,7 +719,7 @@ _pygi_marshal_from_py_basic_type_cache_adapter (PyGIInvokeState   *state,
 }
 
 
-static gboolean
+gboolean
 _pygi_marshal_from_py_array_insert_item (GArray      *array_,
                                          int          i,
                                          GIArgument  *item,
@@ -867,14 +867,14 @@ _pygi_marshal_from_py_array (PyGIInvokeState   *state,
     } else {
         PyGIArgCache *item_arg_cache = sequence_cache->item_cache;
         PyGIMarshalCleanupFunc cleanup_func = item_arg_cache->from_py_cleanup;
-        GIInfoType info_type = GI_INFO_TYPE_INVALID;
+        GIInfoType item_info_type = GI_INFO_TYPE_INVALID;
         GType item_g_type = G_TYPE_INVALID;
 
         if (item_arg_cache->type_tag == GI_TYPE_TAG_INTERFACE) {
             PyGIInterfaceCache *item_iface_cache = (PyGIInterfaceCache *) item_arg_cache;
-            item_g_type = item_iface_cache->g_type;
             GIBaseInfo *base_info = (GIBaseInfo *) item_iface_cache->interface_info;
-            info_type = g_base_info_get_type (base_info);
+            item_g_type = item_iface_cache->g_type;
+            item_info_type = g_base_info_get_type (base_info);
         }
         from_py_marshaller = item_arg_cache->from_py_marshaller;
 
@@ -897,7 +897,7 @@ _pygi_marshal_from_py_array (PyGIInvokeState   *state,
             if (!_pygi_marshal_from_py_array_insert_item (array_, i, &item,
                                                          sequence_cache->array_type,
                                                          item_arg_cache->type_tag,
-                                                         info_type,
+                                                         item_info_type,
                                                          item_g_type,
                                                          item_size,
                                                          item_arg_cache->is_pointer,
