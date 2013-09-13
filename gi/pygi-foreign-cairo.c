@@ -24,13 +24,21 @@
 #include <cairo.h>
 #include <Python.h>
 
-#if PY_VERSION_HEX < 0x03000000
-#include <pycairo.h>
-static Pycairo_CAPI_t *Pycairo_CAPI;
-#else
-#include <pycairo/py3cairo.h>
-#endif
+#define USE_CAIROCFFI 1
 
+#if USE_CAIROCFFI
+#    include "cairocffi.h"
+#else
+#    if PY_VERSION_HEX < 0x03000000
+#        include <pycairo.h>
+         static Pycairo_CAPI_t *Pycairo_CAPI;
+#    else
+#        include <pycairo/py3cairo.h>
+#    endif
+#    define PycairoSurface_ToSurface(value) (((PycairoSurface*) value)->surface)
+#    define PycairoPath_ToPath(value)       (((PycairoPath*) value)->path)
+#    define PycairoFontOptions_ToFontOptions(value) (((PycairoFontOptions*) value)->font_options)
+#endif
 
 #include "pygi-foreign.h"
 
@@ -84,7 +92,7 @@ cairo_surface_to_arg (PyObject        *value,
 
     g_assert (transfer == GI_TRANSFER_NOTHING);
 
-    surface = ( (PycairoSurface*) value)->surface;
+    surface = PycairoSurface_ToSurface (value);
     if (!surface) {
         PyErr_SetString (PyExc_ValueError, "Surface instance wrapping a NULL surface");
         return NULL;
@@ -123,7 +131,7 @@ cairo_path_to_arg (PyObject        *value,
 
     g_assert (transfer == GI_TRANSFER_NOTHING);
 
-    path = ( (PycairoPath*) value)->path;
+    path = PycairoPath_ToPath (value);
     if (!path) {
         PyErr_SetString (PyExc_ValueError, "Path instance wrapping a NULL path");
         return NULL;
@@ -159,7 +167,7 @@ cairo_font_options_to_arg (PyObject        *value,
 
     g_assert (transfer == GI_TRANSFER_NOTHING);
 
-    font_options = ( (PycairoFontOptions*) value)->font_options;
+    font_options = PycairoFontOptions_ToFontOptions (value);
     if (!font_options) {
         PyErr_SetString (PyExc_ValueError, "FontOptions instance wrapping a NULL font_options");
         return NULL;
@@ -194,8 +202,10 @@ PYGLIB_MODULE_START(_gi_cairo, "_gi_cairo")
     import_cairo();
 #endif
 
+#if !USE_CAIROCFFI
     if (Pycairo_CAPI == NULL)
         return PYGLIB_MODULE_ERROR_RETURN;
+#endif
 
     pygi_register_foreign_struct ("cairo",
                                   "Context",

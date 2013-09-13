@@ -83,7 +83,7 @@ pygi_struct_foreign_lookup (GIBaseInfo *base_info)
         g_free (module_name);
 
         if (module == NULL)
-            PyErr_Clear ();
+            return NULL;
         else {
             Py_DECREF (module);
             result = do_lookup (namespace, name);

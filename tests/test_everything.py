@@ -9,7 +9,8 @@ import warnings
 import sys
 
 try:
-    import cairo
+    import cairocffi as cairo
+    cairo.install_as_pycairo()
     has_cairo = True
     from gi.repository import Regress as Everything
 except ImportError:
