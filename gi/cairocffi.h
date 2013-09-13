@@ -35,6 +35,8 @@
 
 #include <cairo.h>
 
+static PyObject *_cairocffi = NULL;
+static PyObject *_ffi = NULL;
 
 /* There are no C structs defined in cairocffi, so fake an API using PyObjects */
 #define PycairoContext        PyObject
@@ -119,21 +121,39 @@ static PyObject *PycairoXlibSurface_ClassPtr = NULL;
 
 static void *
 _cairocffi_pyobject_as_ptr(PyObject *obj) {
-    return PyLong_AsVoidPtr (PyObject_GetAttrString (obj, "_pointer"));
+    // int(ffi.cast('uintptr_t', obj._pointer))
+    PyObject *pyptr = PyObject_GetAttrString (obj, "_pointer");
+    PyObject *pylong = PyObject_CallMethod (_ffi, "cast",
+                                           "sO", "uintptr_t", pyptr);
+    Py_DECREF (pyptr);
+
+    /* int(pylong) */
+    pyptr = PyObject_CallFunction(&PyLong_Type, "O", pylong);
+    Py_DECREF (pylong);
+    void *ptr = PyLong_AsVoidPtr (pyptr);
+    Py_DECREF (pyptr);
+    return ptr;
 }
 
 static PyObject *
 _cairocffi_pyobject_from_ptr(const void *ptr, PyObject *pyclass)
 {
-    PyObject *pyptr = PyLong_FromVoidPtr ((void *)ptr);
-    PyObject *res = PyObject_CallMethod ((PyObject *)pyclass, "_from_pointer",
-                                         "Oi", pyptr, 1);
+    // ffi.cast('void *', int(ptr))
+    PyObject *pylong = PyLong_FromVoidPtr ((void *)ptr);
+    PyObject *pyptr = PyObject_CallMethod (_ffi, "cast",
+                                           "sO", "void *", pylong);
+    Py_DECREF (pylong);
+    if (pyptr == NULL)
+        return NULL;
+
+    PyObject *res = PyObject_CallMethod (pyclass, "_from_pointer",
+                                         "OO", pyptr, Py_True);
     Py_DECREF (pyptr);
     return res;
 }
 
 /* get C object out of the Python wrapper */
-#define PycairoContext_GET(obj)    (_cairocffi_pyobject_as_ptr (obj))
+#define PycairoContext_GET(obj)    ((cairo_t *)_cairocffi_pyobject_as_ptr (obj))
 
 static PyObject *
 PycairoContext_FromContext (cairo_t *ctx, PyTypeObject *type, PyObject *base) {
@@ -199,53 +219,72 @@ Pycairo_Check_Status (cairo_status_t status) {
     return 1;
 }
 
-static void
+static int
 import_cairo(void)
 {
-    PyObject *cairocffi = PyImport_ImportModule("cairocffi");
-    if (cairocffi == NULL)
-        return;
+    if (_cairocffi == NULL) {
+        _cairocffi = PyImport_ImportModule("cairocffi");
+        if (_cairocffi == NULL)
+            return -1;
 
-    PyObject *res = PyObject_CallMethod (cairocffi, "install_as_pycairo", NULL);
-    if (res == NULL)
-        return;
+        PyObject *res = PyObject_CallMethod (_cairocffi, "install_as_pycairo", NULL);
+        if (res == NULL) {
+            Py_DECREF (_cairocffi);
+            return -1;
+        }
+        Py_DECREF (res);
 
-    PycairoContext_ClassPtr        = PyObject_GetAttrString (cairocffi, "Context");
-    PycairoFontFace_ClassPtr       = PyObject_GetAttrString (cairocffi, "FontFace");
-    PycairoToyFontFace_ClassPtr    = PyObject_GetAttrString (cairocffi, "ToyFontFace");
-    PycairoFontOptions_ClassPtr    = PyObject_GetAttrString (cairocffi, "FontOptions");
-    PycairoMatrix_ClassPtr         = PyObject_GetAttrString (cairocffi, "Matrix");
-    PycairoPath_ClassPtr           = NULL; //PyObject_GetAttrString (cairocffi, "Path");
-    PycairoPattern_ClassPtr        = PyObject_GetAttrString (cairocffi, "Pattern");
-    PycairoSolidPattern_ClassPtr   = PyObject_GetAttrString (cairocffi, "SolidPattern");
-    PycairoSurfacePattern_ClassPtr = PyObject_GetAttrString (cairocffi, "SurfacePattern");
-    PycairoGradient_ClassPtr       = PyObject_GetAttrString (cairocffi, "Gradient");
-    PycairoLinearGradient_ClassPtr = PyObject_GetAttrString (cairocffi, "LinearGradient");
-    PycairoRadialGradient_ClassPtr = PyObject_GetAttrString (cairocffi, "RadialGradient");
-    PycairoScaledFont_ClassPtr     = PyObject_GetAttrString (cairocffi, "ScaledFont");
-    PycairoSurface_ClassPtr        = PyObject_GetAttrString (cairocffi, "Surface");
-    PycairoImageSurface_ClassPtr   = PyObject_GetAttrString (cairocffi, "ImageSurface");
-    PycairoRecordingSurface_ClassPtr = PyObject_GetAttrString (cairocffi, "RecordingSurface");
+        _ffi = PyObject_GetAttrString (_cairocffi, "ffi");
+        if (_ffi == NULL) {
+            Py_DECREF (_ffi);
+            return -1;
+        }
+
+    } else {
+        /* already imported */
+        return 0;
+    }
+
+    PycairoContext_ClassPtr        = PyObject_GetAttrString (_cairocffi, "Context");
+    PycairoFontFace_ClassPtr       = PyObject_GetAttrString (_cairocffi, "FontFace");
+    PycairoToyFontFace_ClassPtr    = PyObject_GetAttrString (_cairocffi, "ToyFontFace");
+    PycairoFontOptions_ClassPtr    = PyObject_GetAttrString (_cairocffi, "FontOptions");
+    PycairoMatrix_ClassPtr         = PyObject_GetAttrString (_cairocffi, "Matrix");
+    PycairoPath_ClassPtr           = NULL; //PyObject_GetAttrString (_cairocffi, "Path");
+    PycairoPattern_ClassPtr        = PyObject_GetAttrString (_cairocffi, "Pattern");
+    PycairoSolidPattern_ClassPtr   = PyObject_GetAttrString (_cairocffi, "SolidPattern");
+    PycairoSurfacePattern_ClassPtr = PyObject_GetAttrString (_cairocffi, "SurfacePattern");
+    PycairoGradient_ClassPtr       = PyObject_GetAttrString (_cairocffi, "Gradient");
+    PycairoLinearGradient_ClassPtr = PyObject_GetAttrString (_cairocffi, "LinearGradient");
+    PycairoRadialGradient_ClassPtr = PyObject_GetAttrString (_cairocffi, "RadialGradient");
+    PycairoScaledFont_ClassPtr     = PyObject_GetAttrString (_cairocffi, "ScaledFont");
+    PycairoSurface_ClassPtr        = PyObject_GetAttrString (_cairocffi, "Surface");
+    PycairoImageSurface_ClassPtr   = PyObject_GetAttrString (_cairocffi, "ImageSurface");
+    PycairoRecordingSurface_ClassPtr = PyObject_GetAttrString (_cairocffi, "RecordingSurface");
 
 #if CAIRO_HAS_PDF_SURFACE
-    PycairoPDFSurface_ClassPtr     = PyObject_GetAttrString (cairocffi, "PDFSurface");
+    PycairoPDFSurface_ClassPtr     = PyObject_GetAttrString (_cairocffi, "PDFSurface");
 #endif
 
 #if CAIRO_HAS_PS_SURFACE
-    PycairoPSSurface_ClassPtr      = PyObject_GetAttrString (cairocffi, "PSSurface");
+    PycairoPSSurface_ClassPtr      = PyObject_GetAttrString (_cairocffi, "PSSurface");
 #endif
 
 #if CAIRO_HAS_SVG_SURFACE
-    PycairoSVGSurface_ClassPtr     = PyObject_GetAttrString (cairocffi, "SVGSurface");
+    PycairoSVGSurface_ClassPtr     = PyObject_GetAttrString (_cairocffi, "SVGSurface");
 #endif
 
 #if CAIRO_HAS_WIN32_SURFACE
-    PycairoWin32Surface_ClassPtr   = PyObject_GetAttrString (cairocffi, "Win32Surface");
+    PycairoWin32Surface_ClassPtr   = PyObject_GetAttrString (_cairocffi, "Win32Surface");
 #endif
 
 #if CAIRO_HAS_XLIB_SURFACE
-    PycairoXlibSurface_ClassPtr    = NULL; //PyObject_GetAttrString (cairocffi, "XlibSurface");
+    PycairoXlibSurface_ClassPtr    = NULL; //PyObject_GetAttrString (_cairocffi, "XlibSurface");
 #endif
+
+    if (PyErr_Occurred())
+        return -1;
+    return 0;
 }
 
 #if PY_VERSION_HEX < 0x03000000
