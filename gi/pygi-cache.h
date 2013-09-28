@@ -51,6 +51,12 @@ typedef void (*PyGIMarshalCleanupFunc) (PyGIInvokeState *state,
                                         gpointer         data,
                                         gboolean         was_processed);
 
+typedef void (*PyGIMarshalCleanupFunc) (PyGIInvokeState *state,
+                                        PyGIArgCache    *arg_cache,
+                                        PyObject        *py_arg, /* always NULL for to_py cleanup */
+                                        gpointer         data,
+                                        gboolean         was_processed);
+
 /* Argument meta types denote how we process the argument:
  *  - PYGI_META_ARG_TYPE_PARENT - parents may or may not have children
  *    but are always processed via the normal marshaller for their
@@ -64,10 +70,10 @@ typedef void (*PyGIMarshalCleanupFunc) (PyGIInvokeState *state,
  *    python parameters passed to the invoker
  */
 typedef enum {
-    PYGI_META_ARG_TYPE_PARENT,
-    PYGI_META_ARG_TYPE_CHILD,
-    PYGI_META_ARG_TYPE_CHILD_WITH_PYARG,
-    PYGI_META_ARG_TYPE_CLOSURE,
+    PYGI_META_ARG_TYPE_PARENT = 0,
+    PYGI_META_ARG_TYPE_CHILD = 1,
+    PYGI_META_ARG_TYPE_CHILD_WITH_PYARG = 2,
+    PYGI_META_ARG_TYPE_CLOSURE = 3,
 } PyGIMetaArgType;
 
 /*
@@ -103,14 +109,18 @@ struct _PyGIArgCache
 {
     const gchar *arg_name;
 
-    PyGIMetaArgType meta_type;
-    gboolean is_pointer;
-    gboolean is_caller_allocates;
-    gboolean is_skipped;
-    gboolean allow_none;
-    gboolean has_default;
+    unsigned meta_type : 2;  /* PyGIMetaArgType */
+    unsigned direction : 2;  /* PyGIDirection */
 
-    PyGIDirection direction;
+    unsigned is_pointer : 1;
+    unsigned is_caller_allocates : 1;
+    unsigned is_skipped : 1;
+    unsigned allow_none : 1;
+    unsigned has_default : 1;
+
+    gint8 c_arg_index;
+    gint8 py_arg_index;
+
     GITransfer transfer;
     GITypeTag type_tag;
     GITypeInfo *type_info;
@@ -122,9 +132,6 @@ struct _PyGIArgCache
     PyGIMarshalCleanupFunc to_py_cleanup;
 
     GDestroyNotify destroy_notify;
-
-    gssize c_arg_index;
-    gssize py_arg_index;
 
     /* Set when has_default is true. */
     GIArgument default_value;
