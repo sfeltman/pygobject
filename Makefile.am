@@ -204,4 +204,8 @@ check.valgrindlog:
 check.valgrindxml:
 	cd tests && $(MAKE) check.valgrindxml
 
+codegen:
+	`$(top_builddir)/tools/pygi-codegen GIRepository -t "$(top_builddir)/gi/codegen/cpython.template.h" -o "$(top_builddir)/gi/pygirepository.h"`
+	`$(top_builddir)/tools/pygi-codegen GIRepository -t "$(top_builddir)/gi/codegen/cpython.template.c" -o "$(top_builddir)/gi/pygirepository.c"`
+
 @GNOME_CODE_COVERAGE_RULES@

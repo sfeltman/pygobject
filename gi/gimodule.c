@@ -29,6 +29,7 @@
 #include "pyglib.h"
 #include "pygi-error.h"
 #include "pygi-foreign.h"
+#include "pygirepository.h"
 
 #include <pyglib-python-compat.h>
 
@@ -635,6 +636,7 @@ PYGLIB_MODULE_START(_gi, "_gi")
     PyObject *api;
     PyObject *_glib_module;
     PyObject *_gobject_module;
+    // PyObject *pygirepo;
 
     /* Always enable Python threads since we cannot predict which GI repositories
      * might accept Python callbacks run within non-Python threads or might trigger
@@ -670,6 +672,13 @@ PYGLIB_MODULE_START(_gi, "_gi")
 
     pygi_foreign_init ();
     pygi_error_register_types (module);
+    /*
+    pygirepo = girepository_create_module ();
+    if (pygirepo == NULL)
+        return NULL;
+    PyModule_AddObject (module, "_girepository", pygirepo);
+    */
+
     _pygi_repository_register_types (module);
     _pygi_info_register_types (module);
     _pygi_struct_register_types (module);

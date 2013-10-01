@@ -3,7 +3,8 @@ PLATFORM_VERSION = 3.0
 SUBDIRS = \
 	repository \
 	overrides \
-	_gobject
+	_gobject \
+	codegen
 
 extension_cppflags = \
 	$(PYTHON_INCLUDES) \
@@ -67,6 +68,9 @@ _gi_la_SOURCES = \
 	gimodule.c \
 	pygi-repository.c \
 	pygi-repository.h \
+	pygirepository.c \
+	pygirepository.h \
+	pygirepository-custom.h \
 	pygi-info.c \
 	pygi-info.h \
 	pygi-foreign.c \

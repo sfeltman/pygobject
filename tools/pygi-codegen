@@ -1,0 +1,7 @@
+#!/usr/bin/env python3
+
+import sys
+import gi.codegen.codegen
+
+if __name__ == '__main__':
+    raise SystemExit(gi.codegen.codegen.main(sys.argv))
