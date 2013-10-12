@@ -107,6 +107,8 @@ _gi_la_SOURCES = \
 	pygi-arg-garray.h \
 	pygi-arg-gerror.c \
 	pygi-arg-gerror.h \
+	pygi-arg-callback.c \
+	pygi-arg-callback.h \
 	pygi-arg-ghashtable.c \
 	pygi-arg-ghashtable.h
 _gi_la_CFLAGS = \
