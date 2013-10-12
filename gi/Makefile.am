@@ -103,6 +103,8 @@ _gi_la_SOURCES = \
 	pygi-arg-basictype.h \
 	pygi-arg-glist.c \
 	pygi-arg-glist.h \
+	pygi-arg-garray.c \
+	pygi-arg-garray.h \
 	pygi-arg-ghashtable.c \
 	pygi-arg-ghashtable.h
 _gi_la_CFLAGS = \
