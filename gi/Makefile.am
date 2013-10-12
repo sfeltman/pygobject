@@ -101,6 +101,8 @@ _gi_la_SOURCES = \
 	pygi-marshal-cleanup.h \
 	pygi-arg-basictype.c \
 	pygi-arg-basictype.h \
+	pygi-arg-glist.c \
+	pygi-arg-glist.h \
 	pygi-arg-ghashtable.c \
 	pygi-arg-ghashtable.h
 _gi_la_CFLAGS = \
