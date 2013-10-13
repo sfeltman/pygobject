@@ -111,6 +111,8 @@ _gi_la_SOURCES = \
 	pygi-arg-gobject.h \
 	pygi-arg-callback.c \
 	pygi-arg-callback.h \
+	pygi-arg-struct.c \
+	pygi-arg-struct.h \
 	pygi-arg-ghashtable.c \
 	pygi-arg-ghashtable.h
 _gi_la_CFLAGS = \

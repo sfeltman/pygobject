@@ -34,6 +34,7 @@
 #include "pygi-marshal-from-py.h"
 #include "pygi-marshal-to-py.h"
 #include "pygi-arg-basictype.h"
+#include "pygi-arg-struct.h"
 #include "pygi-arg-gobject.h"
 
 
