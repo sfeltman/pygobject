@@ -93,10 +93,6 @@ _gi_la_SOURCES = \
 	pygi-invoke-state-struct.h \
 	pygi-cache.h \
 	pygi-cache.c \
-	pygi-marshal-from-py.c \
-	pygi-marshal-from-py.h \
-	pygi-marshal-to-py.c \
-	pygi-marshal-to-py.h \
 	pygi-marshal-cleanup.c \
 	pygi-marshal-cleanup.h \
 	pygi-arg-basictype.c \
@@ -113,6 +109,8 @@ _gi_la_SOURCES = \
 	pygi-arg-callback.h \
 	pygi-arg-struct.c \
 	pygi-arg-struct.h \
+	pygi-arg-enum-flags.c \
+	pygi-arg-enum-flags.h \
 	pygi-arg-ghashtable.c \
 	pygi-arg-ghashtable.h
 _gi_la_CFLAGS = \
