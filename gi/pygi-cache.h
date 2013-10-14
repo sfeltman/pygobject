@@ -33,29 +33,38 @@ G_BEGIN_DECLS
 typedef struct _PyGICallableCache PyGICallableCache;
 typedef struct _PyGIArgCache PyGIArgCache;
 
-typedef gboolean (*PyGIMarshalFromPyFunc) (PyGIInvokeState   *state,
-                                           PyGICallableCache *callable_cache,
-                                           PyGIArgCache      *arg_cache,
-                                           PyObject          *py_arg,
-                                           GIArgument        *arg,
-                                           gpointer          *cleanup_data);
+typedef gboolean (*PyGIMarshalFromPyFunc)          (PyGIInvokeState   *state,
+                                                    PyGICallableCache *callable_cache,
+                                                    PyGIArgCache      *arg_cache,
+                                                    PyObject          *py_arg,
+                                                    GIArgument        *arg,
+                                                    gpointer          *cleanup_data);
 
-typedef PyObject *(*PyGIMarshalToPyFunc) (PyGIInvokeState   *state,
-                                          PyGICallableCache *callable_cache,
-                                          PyGIArgCache      *arg_cache,
-                                          GIArgument        *arg);
+typedef gboolean (*PyGIMarshalFromPyWithChildFunc) (PyGIInvokeState   *state,
+                                                    PyGICallableCache *callable_cache,
+                                                    PyGIArgCache      *arg_cache,
+                                                    PyObject          *py_arg,
+                                                    GIArgument        *arg,
+                                                    gpointer          *cleanup_data);
 
-typedef void (*PyGIMarshalCleanupFunc) (PyGIInvokeState *state,
-                                        PyGIArgCache    *arg_cache,
-                                        PyObject        *py_arg, /* always NULL for to_py cleanup */
-                                        gpointer         data,
-                                        gboolean         was_processed);
+typedef PyObject *(*PyGIMarshalToPyFunc)           (PyGIInvokeState   *state,
+                                                    PyGICallableCache *callable_cache,
+                                                    PyGIArgCache      *arg_cache,
+                                                    GIArgument        *arg);
 
-typedef void (*PyGIMarshalCleanupFunc) (PyGIInvokeState *state,
-                                        PyGIArgCache    *arg_cache,
-                                        PyObject        *py_arg, /* always NULL for to_py cleanup */
-                                        gpointer         data,
-                                        gboolean         was_processed);
+typedef PyObject *(*PyGIMarshalToPyWithChildFunc)  (PyGIInvokeState   *state,
+                                                    PyGICallableCache *callable_cache,
+                                                    PyGIArgCache      *arg_cache,
+                                                    GIArgument        *arg);
+
+typedef void (*PyGIMarshalChildArgSetup)           (PyGIArgCache      *arg_cache,
+                                                    PyGIArgCache     **aux_args);
+
+typedef void (*PyGIMarshalCleanupFunc)             (PyGIInvokeState   *state,
+                                                    PyGIArgCache      *arg_cache,
+                                                    PyObject          *py_arg, /* always NULL for to_py cleanup */
+                                                    gpointer           data,
+                                                    gboolean           was_processed);
 
 /* Argument meta types denote how we process the argument:
  *  - PYGI_META_ARG_TYPE_PARENT - parents may or may not have children
@@ -104,27 +113,49 @@ typedef enum {
     PYGI_DIRECTION_BIDIRECTIONAL = PYGI_DIRECTION_TO_PYTHON | PYGI_DIRECTION_FROM_PYTHON
  } PyGIDirection;
 
+ typedef enum {
+     PYGI_CHILD_ARG_0   = 1 << 0,
+     PYGI_CHILD_ARG_1   = 1 << 1,
+} PyGIChildArgFlags;
+
+#define PYGI_CHILD_ARG_MAX 2
 
 struct _PyGIArgCache
 {
     const gchar *arg_name;
 
-    unsigned meta_type : 2;  /* PyGIMetaArgType */
-    unsigned direction : 2;  /* PyGIDirection */
+    unsigned meta_type : 2;      /* PyGIMetaArgType */
+    unsigned direction : 2;      /* PyGIDirection */
+    unsigned child_arg_mask : 2; /* PyGIChildArgFlags */
 
     unsigned is_pointer : 1;
     unsigned is_caller_allocates : 1;
     unsigned is_skipped : 1;
     unsigned allow_none : 1;
     unsigned has_default : 1;
+    unsigned supports_child_args : 1;
 
     gint8 c_arg_index;
     gint8 py_arg_index;
+
+    union {
+        gint8 child_arg_indices[2];
+        struct {
+            gint8 child_arg_idx_0;
+            gint8 child_arg_idx_1;
+        };
+    };
 
     GITransfer transfer;
     GITypeTag type_tag;
     GITypeInfo *type_info;
 
+    /* Indices of child arguments marshaled by this argument. */
+    PyGIMarshalChildArgSetup child_arg_setup;
+
+    /* Note when supports_child_args is TRUE, marshaling functions must be of type:
+     * PyGIMarshalFromPyWithChildFunc and PyGIMarshalToPyWithChildFunc
+     */
     PyGIMarshalFromPyFunc from_py_marshaller;
     PyGIMarshalToPyFunc to_py_marshaller;
 
@@ -147,7 +178,6 @@ typedef struct _PyGIArgGArray
 {
     PyGISequenceCache seq_cache;
     gssize fixed_size;
-    gssize len_arg_index;
     gboolean is_zero_terminated;
     gsize item_size;
     GIArrayType array_type;
@@ -207,6 +237,15 @@ pygi_arg_base_setup (PyGIArgCache *arg_cache,
                      GITransfer    transfer,
                      PyGIDirection direction);
 
+void
+pygi_arg_base_set_child_arg (PyGIArgCache *arg_cache, gint index, gint value);
+
+gint
+pygi_arg_base_get_child_arg (PyGIArgCache *arg_cache, gint index);
+
+#define pygi_arg_base_has_child_arg(arg_cache, index) \
+            (arg_cache->child_arg_mask & (1 << index))
+
 gboolean
 pygi_arg_interface_setup (PyGIInterfaceCache *iface_cache,
                           GITypeInfo         *type_info,
@@ -251,6 +290,15 @@ PyGICallableCache *_pygi_callable_cache_new (GICallableInfo *callable_info,
 inline static PyGIArgCache *
 _pygi_callable_cache_get_arg (PyGICallableCache *cache, guint index) {
     return (PyGIArgCache *) g_ptr_array_index (cache->args_cache, index);
+}
+
+inline static PyGIArgCache *
+pygi_callable_cache_get_arg_child (PyGICallableCache *cache,
+                                   PyGIArgCache *arg_cache,
+                                   guint child_index) {
+    if (pygi_arg_base_has_child_arg (arg_cache, child_index))
+        return _pygi_callable_cache_get_arg (cache, pygi_arg_base_get_child_arg (arg_cache, child_index));
+    return NULL;
 }
 
 inline static void

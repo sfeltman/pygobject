@@ -23,12 +23,12 @@
 #include "pygi-arg-callback.h"
 #include "pygi-private.h"
 
+#define USER_DATA_INDEX 0
+#define DESTROY_NOTIFY_INDEX 1
 
 typedef struct _PyGICallbackCache
 {
     PyGIArgCache arg_cache;
-    gssize user_data_index;
-    gssize destroy_notify_index;
     GIScopeType scope;
     GIInterfaceInfo *interface_info;
 } PyGICallbackCache;
@@ -105,8 +105,8 @@ _pygi_marshal_from_py_interface_callback (PyGIInvokeState   *state,
 
     callback_cache = (PyGICallbackCache *)arg_cache;
 
-    if (callback_cache->user_data_index > 0) {
-        user_data_cache = _pygi_callable_cache_get_arg (callable_cache, callback_cache->user_data_index);
+    user_data_cache = pygi_callable_cache_get_arg_child (callable_cache, arg_cache, USER_DATA_INDEX);
+    if (user_data_cache != NULL) {
         if (user_data_cache->py_arg_index < state->n_py_in_args) {
             /* py_user_data is a borrowed reference. */
             py_user_data = PyTuple_GetItem (state->py_in_args, user_data_cache->py_arg_index);
@@ -151,10 +151,7 @@ _pygi_marshal_from_py_interface_callback (PyGIInvokeState   *state,
      * explicit information and setup a dummy notification to avoid a crash
      * later on in _pygi_destroy_notify_callback_closure.
      */
-    if (callback_cache->destroy_notify_index > 0) {
-        destroy_cache = _pygi_callable_cache_get_arg (callable_cache, callback_cache->destroy_notify_index);
-    }
-
+    destroy_cache = pygi_callable_cache_get_arg_child (callable_cache, arg_cache, DESTROY_NOTIFY_INDEX);
     if (destroy_cache) {
         if (user_data_cache != NULL) {
             PyGICClosure *destroy_notify = _pygi_destroy_notify_create ();
@@ -217,34 +214,32 @@ _pygi_marshal_cleanup_from_py_interface_callback (PyGIInvokeState *state,
     }
 }
 
-static void
-_arg_cache_from_py_interface_callback_setup (PyGIArgCache *arg_cache,
-                                             PyGICallableCache *callable_cache)
+void
+pygi_arg_callback_setup_child_args (PyGIArgCache *arg_cache,
+                                    PyGICallableCache *callable_cache)
 {
-    PyGICallbackCache *callback_cache = (PyGICallbackCache *)arg_cache;
-    if (callback_cache->user_data_index >= 0) {
+    if (pygi_arg_base_has_child_arg (arg_cache, USER_DATA_INDEX)) {
         PyGIArgCache *user_data_arg_cache = _arg_cache_alloc ();
         user_data_arg_cache->meta_type = PYGI_META_ARG_TYPE_CHILD_WITH_PYARG;
         user_data_arg_cache->direction = PYGI_DIRECTION_FROM_PYTHON;
         user_data_arg_cache->has_default = TRUE; /* always allow user data with a NULL default. */
-        _pygi_callable_cache_set_arg (callable_cache, callback_cache->user_data_index,
+        _pygi_callable_cache_set_arg (callable_cache,
+                                      pygi_arg_base_get_child_arg (arg_cache, USER_DATA_INDEX),
                                       user_data_arg_cache);
     }
 
-    if (callback_cache->destroy_notify_index >= 0) {
+    if (pygi_arg_base_has_child_arg (arg_cache, DESTROY_NOTIFY_INDEX)) {
         PyGIArgCache *destroy_arg_cache = _arg_cache_alloc ();
         destroy_arg_cache->meta_type = PYGI_META_ARG_TYPE_CHILD;
         destroy_arg_cache->direction = PYGI_DIRECTION_FROM_PYTHON;
-        _pygi_callable_cache_set_arg (callable_cache, callback_cache->destroy_notify_index,
+        _pygi_callable_cache_set_arg (callable_cache,
+                                      pygi_arg_base_get_child_arg (arg_cache, DESTROY_NOTIFY_INDEX),
                                       destroy_arg_cache);
     }
-    arg_cache->from_py_marshaller = _pygi_marshal_from_py_interface_callback;
-    arg_cache->from_py_cleanup = _pygi_marshal_cleanup_from_py_interface_callback;
 }
 
-
 static gboolean
-pygi_arg_callback_setup_from_info (PyGICallbackCache  *arg_cache,
+pygi_arg_callback_setup_from_info (PyGIArgCache       *arg_cache,
                                    GITypeInfo         *type_info,
                                    GIArgInfo          *arg_info,   /* may be null */
                                    GITransfer          transfer,
@@ -252,9 +247,7 @@ pygi_arg_callback_setup_from_info (PyGICallbackCache  *arg_cache,
                                    GIInterfaceInfo    *iface_info,
                                    PyGICallableCache  *callable_cache)
 {
-    gssize child_offset = 0;
-
-    if (!pygi_arg_base_setup ((PyGIArgCache *)arg_cache,
+    if (!pygi_arg_base_setup (arg_cache,
                               type_info,
                               arg_info,
                               transfer,
@@ -262,29 +255,28 @@ pygi_arg_callback_setup_from_info (PyGICallbackCache  *arg_cache,
         return FALSE;
     }
 
+    arg_cache->supports_child_args = TRUE;
+
     if (direction & PYGI_DIRECTION_TO_PYTHON) {
-        ((PyGIArgCache *)arg_cache)->to_py_marshaller = _pygi_marshal_to_py_interface_callback;
+        arg_cache->to_py_marshaller = _pygi_marshal_to_py_interface_callback;
     }
 
-    if (callable_cache != NULL)
-        child_offset =
-            (callable_cache->function_type == PYGI_FUNCTION_TYPE_METHOD ||
-                 callable_cache->function_type == PYGI_FUNCTION_TYPE_VFUNC) ? 1: 0;
+    arg_cache->destroy_notify = (GDestroyNotify)_callback_cache_free_func;
 
-    ( (PyGIArgCache *)arg_cache)->destroy_notify = (GDestroyNotify)_callback_cache_free_func;
+    pygi_arg_base_set_child_arg (arg_cache, USER_DATA_INDEX,
+                                 g_arg_info_get_closure (arg_info));
 
-    arg_cache->user_data_index = g_arg_info_get_closure (arg_info);
-    if (arg_cache->user_data_index != -1)
-        arg_cache->user_data_index += child_offset;
-    arg_cache->destroy_notify_index = g_arg_info_get_destroy (arg_info);
-    if (arg_cache->destroy_notify_index != -1)
-        arg_cache->destroy_notify_index += child_offset;
-    arg_cache->scope = g_arg_info_get_scope (arg_info);
+    pygi_arg_base_set_child_arg (arg_cache, DESTROY_NOTIFY_INDEX,
+                                 g_arg_info_get_destroy (arg_info));
+
+    ((PyGICallbackCache *)arg_cache)->scope = g_arg_info_get_scope (arg_info);
     g_base_info_ref( (GIBaseInfo *)iface_info);
-    arg_cache->interface_info = iface_info;
+    ((PyGICallbackCache *)arg_cache)->interface_info = iface_info;
 
-    if (direction & PYGI_DIRECTION_FROM_PYTHON)
-        _arg_cache_from_py_interface_callback_setup ((PyGIArgCache *)arg_cache, callable_cache);
+    if (direction & PYGI_DIRECTION_FROM_PYTHON) {
+        arg_cache->from_py_marshaller = _pygi_marshal_from_py_interface_callback;
+        arg_cache->from_py_cleanup = _pygi_marshal_cleanup_from_py_interface_callback;
+    }
 
     return TRUE;
 }
@@ -298,13 +290,13 @@ pygi_arg_callback_new_from_info  (GITypeInfo        *type_info,
                                   PyGICallableCache *callable_cache)
 {
     gboolean res = FALSE;
-    PyGICallbackCache *callback_cache;
+    PyGIArgCache *arg_cache;
 
-    callback_cache = g_slice_new0 (PyGICallbackCache);
-    if (callback_cache == NULL)
+    arg_cache = (PyGIArgCache *)g_slice_new0 (PyGICallbackCache);
+    if (arg_cache == NULL)
         return NULL;
 
-    res = pygi_arg_callback_setup_from_info (callback_cache,
+    res = pygi_arg_callback_setup_from_info (arg_cache,
                                              type_info,
                                              arg_info,
                                              transfer,
@@ -312,9 +304,9 @@ pygi_arg_callback_new_from_info  (GITypeInfo        *type_info,
                                              iface_info,
                                              callable_cache);
     if (res) {
-        return (PyGIArgCache *)callback_cache;
+        return arg_cache;
     } else {
-        _pygi_arg_cache_free ((PyGIArgCache *)callback_cache);
+        _pygi_arg_cache_free (arg_cache);
         return NULL;
     }
 }

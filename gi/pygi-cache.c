@@ -94,6 +94,31 @@ pygi_arg_base_setup (PyGIArgCache *arg_cache,
 }
 
 void
+pygi_arg_base_set_child_arg (PyGIArgCache *arg_cache, gint index, gint value)
+{
+    g_assert (index < PYGI_CHILD_ARG_MAX);
+
+    if (value >= 0) {
+        arg_cache->child_arg_indices[index] = value;
+        arg_cache->child_arg_mask |= 1 << index;
+    } else {
+        arg_cache->child_arg_mask &= ~(1 << index);
+    }
+}
+
+gint
+pygi_arg_base_get_child_arg (PyGIArgCache *arg_cache, gint index)
+{
+    g_assert (index < PYGI_CHILD_ARG_MAX);
+
+    if (pygi_arg_base_has_child_arg (arg_cache, index)) {
+        return arg_cache->child_arg_indices[index];
+    } else {
+        return -1;
+    }
+}
+
+void
 _pygi_arg_cache_free (PyGIArgCache *cache)
 {
     if (cache == NULL)
@@ -265,12 +290,31 @@ _arg_cache_new_for_interface (GIInterfaceInfo   *iface_info,
 
     switch (info_type) {
         case GI_INFO_TYPE_CALLBACK:
-            return pygi_arg_callback_new_from_info (type_info,
+        {
+            PyGIArgCache *arg_cache =
+                   pygi_arg_callback_new_from_info (type_info,
                                                     arg_info,
                                                     transfer,
                                                     direction,
                                                     iface_info,
                                                     callable_cache);
+
+            /* Temporary: adjust child arg indices for methods and vfuncs */
+            if (callable_cache != NULL) {
+                gssize child_offset =
+                    (callable_cache->function_type == PYGI_FUNCTION_TYPE_METHOD ||
+                     callable_cache->function_type == PYGI_FUNCTION_TYPE_VFUNC) ? 1: 0;
+                if (pygi_arg_base_has_child_arg (arg_cache, 0))
+                    arg_cache->child_arg_idx_0 += child_offset;
+                if (pygi_arg_base_has_child_arg (arg_cache, 1))
+                    arg_cache->child_arg_idx_1 += child_offset;
+            }
+
+            pygi_arg_callback_setup_child_args (arg_cache, callable_cache);
+
+            return arg_cache;
+
+        }
         case GI_INFO_TYPE_OBJECT:
         case GI_INFO_TYPE_INTERFACE:
             return pygi_arg_gobject_new_from_info (type_info,
@@ -350,6 +394,17 @@ _arg_cache_new (GITypeInfo *type_info,
                                                           direction);
                if (arg_cache == NULL)
                    return NULL;
+
+               /* Temporary: adjust child arg indices for methods and vfuncs */
+               if (callable_cache != NULL) {
+                   gssize child_offset =
+                       (callable_cache->function_type == PYGI_FUNCTION_TYPE_METHOD ||
+                        callable_cache->function_type == PYGI_FUNCTION_TYPE_VFUNC) ? 1: 0;
+                   if (pygi_arg_base_has_child_arg (arg_cache, 0))
+                       arg_cache->child_arg_idx_0 += child_offset;
+                   if (pygi_arg_base_has_child_arg (arg_cache, 1))
+                       arg_cache->child_arg_idx_1 += child_offset;
+               }
 
                pygi_arg_garray_len_arg_setup (arg_cache,
                                               type_info,

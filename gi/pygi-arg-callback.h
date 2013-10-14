@@ -34,6 +34,10 @@ PyGIArgCache *pygi_arg_callback_new_from_info  (GITypeInfo        *type_info,
                                                 GIInterfaceInfo   *iface_info,
                                                 PyGICallableCache *callable_cache);
 
+void pygi_arg_callback_setup_child_args (PyGIArgCache *arg_cache,
+                                         PyGICallableCache *callable_cache);
+
+
 G_END_DECLS
 
 #endif /*__PYGI_ARG_CALLBACK_H__*/
