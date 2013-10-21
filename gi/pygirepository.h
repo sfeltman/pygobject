@@ -10,14 +10,6 @@
 #include <Python.h>
 #include "pygirepository-custom.h"
 
-extern PyTypeObject PyGIRepositoryArgument_Type;
-
-typedef struct {
-    PyObject_HEAD
-    void *obj;
-    #define PyGIRepositoryArgument_get(obj) (obj->obj)
-} PyGIRepositoryArgument;
-
 extern PyTypeObject PyGIRepositoryArrayType_Type;
 
 typedef struct {
@@ -28,16 +20,16 @@ extern PyTypeObject PyGIRepositoryAttributeIter_Type;
 
 typedef struct {
     PyObject_HEAD
-    void *obj;
-    #define PyGIRepositoryAttributeIter_get(obj) (obj->obj)
+    void* obj;
+    #define PyGIRepositoryAttributeIter_get(obj) (((PyGIRepositoryAttributeIter*)obj)->obj)
 } PyGIRepositoryAttributeIter;
 
 extern PyTypeObject PyGIRepositoryBaseInfo_Type;
 
 typedef struct {
     PyObject_HEAD
-    GIBaseInfo *obj;
-    #define PyGIRepositoryBaseInfo_get(obj) (obj->obj)
+    GIBaseInfo* obj;
+    #define PyGIRepositoryBaseInfo_get(obj) (((PyGIRepositoryBaseInfo*)obj)->obj)
     GType gtype;
 } PyGIRepositoryBaseInfo;
 
@@ -69,8 +61,8 @@ extern PyTypeObject PyGIRepositoryRepository_Type;
 
 typedef struct {
     PyObject_HEAD
-    GIRepository *obj;
-    #define PyGIRepositoryRepository_get(obj) (obj->obj)
+    GIRepository* obj;
+    #define PyGIRepositoryRepository_get(obj) (((PyGIRepositoryRepository*)obj)->obj)
     GType gtype;
 } PyGIRepositoryRepository;
 
@@ -78,8 +70,8 @@ extern PyTypeObject PyGIRepositoryRepositoryClass_Type;
 
 typedef struct {
     PyObject_HEAD
-    void *obj;
-    #define PyGIRepositoryRepositoryClass_get(obj) (obj->obj)
+    void* obj;
+    #define PyGIRepositoryRepositoryClass_get(obj) (((PyGIRepositoryRepositoryClass*)obj)->obj)
 } PyGIRepositoryRepositoryClass;
 
 extern PyTypeObject PyGIRepositoryRepositoryError_Type;
@@ -98,8 +90,8 @@ extern PyTypeObject PyGIRepositoryRepositoryPrivate_Type;
 
 typedef struct {
     PyObject_HEAD
-    void *obj;
-    #define PyGIRepositoryRepositoryPrivate_get(obj) (obj->obj)
+    void* obj;
+    #define PyGIRepositoryRepositoryPrivate_get(obj) (((PyGIRepositoryRepositoryPrivate*)obj)->obj)
 } PyGIRepositoryRepositoryPrivate;
 
 extern PyTypeObject PyGIRepositoryScopeType_Type;
@@ -124,16 +116,16 @@ extern PyTypeObject PyGIRepositoryTypelib_Type;
 
 typedef struct {
     PyObject_HEAD
-    void *obj;
-    #define PyGIRepositoryTypelib_get(obj) (obj->obj)
+    void* obj;
+    #define PyGIRepositoryTypelib_get(obj) (((PyGIRepositoryTypelib*)obj)->obj)
 } PyGIRepositoryTypelib;
 
 extern PyTypeObject PyGIRepositoryUnresolvedInfo_Type;
 
 typedef struct {
     PyObject_HEAD
-    void *obj;
-    #define PyGIRepositoryUnresolvedInfo_get(obj) (obj->obj)
+    void* obj;
+    #define PyGIRepositoryUnresolvedInfo_get(obj) (((PyGIRepositoryUnresolvedInfo*)obj)->obj)
 } PyGIRepositoryUnresolvedInfo;
 
 extern PyTypeObject PyGIRepositoryVFuncInfoFlags_Type;
@@ -142,12 +134,20 @@ typedef struct {
     PyObject_HEAD
 } PyGIRepositoryVFuncInfoFlags;
 
+extern PyTypeObject PyGIRepository_Argument_Type;
+
+typedef struct {
+    PyObject_HEAD
+    void* obj;
+    #define PyGIRepository_Argument_get(obj) (((PyGIRepository_Argument*)obj)->obj)
+} PyGIRepository_Argument;
+
 extern PyTypeObject PyGIRepository_BaseInfoStub_Type;
 
 typedef struct {
     PyObject_HEAD
-    void *obj;
-    #define PyGIRepository_BaseInfoStub_get(obj) (obj->obj)
+    void* obj;
+    #define PyGIRepository_BaseInfoStub_get(obj) (((PyGIRepository_BaseInfoStub*)obj)->obj)
 } PyGIRepository_BaseInfoStub;
 
 extern PyTypeObject PyGIRepositorynvokeError_Type;

@@ -123,63 +123,7 @@ pygi_codegen_flags_repr (PyObject *self)
 #endif
 
 
-
-static PyMethodDef PyGIRepositoryArgument_methods[] = {
-    #ifdef PY_GI_REPOSITORY_ARGUMENT_METHODS_CUSTOM_ENTRIES
-        PY_GI_REPOSITORY_ARGUMENT_METHODS_CUSTOM_ENTRIES
-    #endif
-    { NULL, NULL, 0 }
-};
-
-
-PyTypeObject PyGIRepositoryArgument_Type = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-
-    /* .tp_name = */ "GIRepository.Argument",
-    /* .tp_size = */ sizeof(PyGIRepositoryArgument),
-    /* .tp_itemsize = */ 0,
-    /* .tp_dealloc = */ NULL,
-    /* .tp_print = */ NULL,
-    /* .tp_getattr = */ NULL,
-    /* .tp_setattr = */ NULL,
-    /* .tp_compare = */ NULL,
-    /* .tp_repr = */ (reprfunc)NULL,
-    /* .tp_as_number = */ NULL,
-    /* .tp_as_sequence = */ NULL,
-    /* .tp_as_mapping = */ NULL,
-    /* .tp_hash = */ NULL,
-    /* .tp_call = */ NULL,
-    /* .tp_str = */ NULL,
-    /* .tp_getattro = */ NULL,
-    /* .tp_setattro = */ NULL,
-    /* .tp_as_buffer = */ NULL,
-    /* .tp_flags = */ (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE),
-    /* .tp_doc = */ NULL,
-    /* .tp_traverse = */ NULL,
-    /* .tp_clear = */ NULL,
-    /* .tp_richcompare = */ NULL,
-    /* .tp_weaklistoffset = */ 0,
-    /* .tp_iter = */ NULL,
-    /* .tp_iternext = */ NULL,
-    /* .tp_methods = */ PyGIRepositoryArgument_methods,
-    /* .tp_members = */ NULL,
-    /* .tp_getset = */ NULL,
-    /* .tp_base = */ &PyType_Type,
-    /* .tp_dict = */ NULL,
-    /* .tp_descr_get = */ NULL,
-    /* .tp_descr_set = */ NULL,
-    /* .tp_dictoffset = */ 0,
-    /* .tp_init = */ NULL,
-    /* .tp_alloc = */ NULL,
-    /* .tp_new = */ NULL,
-    /* .tp_free = */ NULL,
-    /* .tp_is_gc = */ NULL,
-    /* .tp_bases = */ NULL,
-    /* .tp_mro = */ NULL,
-    /* .tp_cache = */ NULL,
-    /* .tp_subclasses = */ NULL,
-    /* .tp_weaklist = */ NULL,
-};
+/* ========== GIRepository.ArrayType ========== */
 
 
 static PyMethodDef PyGIRepositoryArrayType_methods[] = {
@@ -192,52 +136,27 @@ static PyMethodDef PyGIRepositoryArrayType_methods[] = {
 
 PyTypeObject PyGIRepositoryArrayType_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-
     /* .tp_name = */ "GIRepository.ArrayType",
     /* .tp_size = */ sizeof(PyGIRepositoryArrayType),
-    /* .tp_itemsize = */ 0,
-    /* .tp_dealloc = */ NULL,
-    /* .tp_print = */ NULL,
-    /* .tp_getattr = */ NULL,
-    /* .tp_setattr = */ NULL,
-    /* .tp_compare = */ NULL,
-    /* .tp_repr = */ (reprfunc)pygi_codegen_enum_repr,
-    /* .tp_as_number = */ NULL,
-    /* .tp_as_sequence = */ NULL,
-    /* .tp_as_mapping = */ NULL,
-    /* .tp_hash = */ NULL,
-    /* .tp_call = */ NULL,
-    /* .tp_str = */ NULL,
-    /* .tp_getattro = */ NULL,
-    /* .tp_setattro = */ NULL,
-    /* .tp_as_buffer = */ NULL,
-    /* .tp_flags = */ (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE),
-    /* .tp_doc = */ NULL,
-    /* .tp_traverse = */ NULL,
-    /* .tp_clear = */ NULL,
-    /* .tp_richcompare = */ NULL,
-    /* .tp_weaklistoffset = */ 0,
-    /* .tp_iter = */ NULL,
-    /* .tp_iternext = */ NULL,
-    /* .tp_methods = */ PyGIRepositoryArrayType_methods,
-    /* .tp_members = */ NULL,
-    /* .tp_getset = */ NULL,
-    /* .tp_base = */ &PyLong_Type,
-    /* .tp_dict = */ NULL,
-    /* .tp_descr_get = */ NULL,
-    /* .tp_descr_set = */ NULL,
-    /* .tp_dictoffset = */ 0,
-    /* .tp_init = */ NULL,
-    /* .tp_alloc = */ NULL,
-    /* .tp_new = */ NULL,
-    /* .tp_free = */ NULL,
-    /* .tp_is_gc = */ NULL,
-    /* .tp_bases = */ NULL,
-    /* .tp_mro = */ NULL,
-    /* .tp_cache = */ NULL,
-    /* .tp_subclasses = */ NULL,
-    /* .tp_weaklist = */ NULL,
 };
+
+/* ========== GIRepository.AttributeIter ========== */
+
+static int
+attributeiter_from_py (PyObject *obj, void* *value)
+{
+    *value = PyGIRepositoryAttributeIter_get (obj);
+    return 1;
+}
+
+static PyObject *
+attributeiter_to_py (void* value)
+{
+    PyGIRepositoryAttributeIter *obj;
+    obj = PyObject_New(PyGIRepositoryAttributeIter, &PyGIRepositoryAttributeIter_Type);
+    obj->obj = value;
+    return (PyObject *) obj;
+}
 
 
 static PyMethodDef PyGIRepositoryAttributeIter_methods[] = {
@@ -250,52 +169,27 @@ static PyMethodDef PyGIRepositoryAttributeIter_methods[] = {
 
 PyTypeObject PyGIRepositoryAttributeIter_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-
     /* .tp_name = */ "GIRepository.AttributeIter",
     /* .tp_size = */ sizeof(PyGIRepositoryAttributeIter),
-    /* .tp_itemsize = */ 0,
-    /* .tp_dealloc = */ NULL,
-    /* .tp_print = */ NULL,
-    /* .tp_getattr = */ NULL,
-    /* .tp_setattr = */ NULL,
-    /* .tp_compare = */ NULL,
-    /* .tp_repr = */ (reprfunc)NULL,
-    /* .tp_as_number = */ NULL,
-    /* .tp_as_sequence = */ NULL,
-    /* .tp_as_mapping = */ NULL,
-    /* .tp_hash = */ NULL,
-    /* .tp_call = */ NULL,
-    /* .tp_str = */ NULL,
-    /* .tp_getattro = */ NULL,
-    /* .tp_setattro = */ NULL,
-    /* .tp_as_buffer = */ NULL,
-    /* .tp_flags = */ (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE),
-    /* .tp_doc = */ NULL,
-    /* .tp_traverse = */ NULL,
-    /* .tp_clear = */ NULL,
-    /* .tp_richcompare = */ NULL,
-    /* .tp_weaklistoffset = */ 0,
-    /* .tp_iter = */ NULL,
-    /* .tp_iternext = */ NULL,
-    /* .tp_methods = */ PyGIRepositoryAttributeIter_methods,
-    /* .tp_members = */ NULL,
-    /* .tp_getset = */ NULL,
-    /* .tp_base = */ &PyType_Type,
-    /* .tp_dict = */ NULL,
-    /* .tp_descr_get = */ NULL,
-    /* .tp_descr_set = */ NULL,
-    /* .tp_dictoffset = */ 0,
-    /* .tp_init = */ NULL,
-    /* .tp_alloc = */ NULL,
-    /* .tp_new = */ NULL,
-    /* .tp_free = */ NULL,
-    /* .tp_is_gc = */ NULL,
-    /* .tp_bases = */ NULL,
-    /* .tp_mro = */ NULL,
-    /* .tp_cache = */ NULL,
-    /* .tp_subclasses = */ NULL,
-    /* .tp_weaklist = */ NULL,
 };
+
+/* ========== GIRepository.BaseInfo ========== */
+
+static int
+baseinfo_from_py (PyObject *obj, GIBaseInfo* *value)
+{
+    *value = PyGIRepositoryBaseInfo_get (obj);
+    return 1;
+}
+
+static PyObject *
+baseinfo_to_py (GIBaseInfo* value)
+{
+    PyGIRepositoryBaseInfo *obj;
+    obj = PyObject_New(PyGIRepositoryBaseInfo, &PyGIRepositoryBaseInfo_Type);
+    obj->obj = value;
+    return (PyObject *) obj;
+}
 
 
 static PyObject *
@@ -308,7 +202,7 @@ pyg_base_info_equal (PyGIRepositoryBaseInfo *self, PyObject *args, PyObject *kwa
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:equal", kwlist,
-                                      gibaseinfo_from_py, &info2))
+                                      baseinfo_from_py, &info2))
         return NULL;
 
     res = g_base_info_equal (self->obj, info2);
@@ -342,7 +236,7 @@ pyg_base_info_get_container (PyGIRepositoryBaseInfo *self)
     GIBaseInfo* res;
     PyObject *py_res = NULL;
     res = g_base_info_get_container (self->obj);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -372,10 +266,10 @@ pyg_base_info_get_namespace (PyGIRepositoryBaseInfo *self)
 static PyObject *
 pyg_base_info_get_type (PyGIRepositoryBaseInfo *self)
 {
-    void* res;
+    unsigned int res;
     PyObject *py_res = NULL;
     res = g_base_info_get_type (self->obj);
-    py_res = Py_BuildValue ("O&", res);
+    py_res = Py_BuildValue ("I", res);
     return py_res;
 }
 
@@ -386,7 +280,7 @@ pyg_base_info_get_typelib (PyGIRepositoryBaseInfo *self)
     void* res;
     PyObject *py_res = NULL;
     res = g_base_info_get_typelib (self->obj);
-    py_res = Py_BuildValue ("O&", res);
+    py_res = Py_BuildValue ("O&", typelib_to_py, &res);
     return py_res;
 }
 
@@ -414,7 +308,7 @@ pyg_base_info_iterate_attributes (PyGIRepositoryBaseInfo *self, PyObject *args, 
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&ss:iterate_attributes", kwlist,
-                                      pygi_codegen_interface_converter, &iterator, &name, &value))
+                                      attributeiter_from_py, &iterator, &name, &value))
         return NULL;
 
     res = g_base_info_iterate_attributes (self->obj, iterator, name, value);
@@ -442,52 +336,11 @@ static PyMethodDef PyGIRepositoryBaseInfo_methods[] = {
 
 PyTypeObject PyGIRepositoryBaseInfo_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-
     /* .tp_name = */ "GIRepository.BaseInfo",
     /* .tp_size = */ sizeof(PyGIRepositoryBaseInfo),
-    /* .tp_itemsize = */ 0,
-    /* .tp_dealloc = */ NULL,
-    /* .tp_print = */ NULL,
-    /* .tp_getattr = */ NULL,
-    /* .tp_setattr = */ NULL,
-    /* .tp_compare = */ NULL,
-    /* .tp_repr = */ (reprfunc)NULL,
-    /* .tp_as_number = */ NULL,
-    /* .tp_as_sequence = */ NULL,
-    /* .tp_as_mapping = */ NULL,
-    /* .tp_hash = */ NULL,
-    /* .tp_call = */ NULL,
-    /* .tp_str = */ NULL,
-    /* .tp_getattro = */ NULL,
-    /* .tp_setattro = */ NULL,
-    /* .tp_as_buffer = */ NULL,
-    /* .tp_flags = */ (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE),
-    /* .tp_doc = */ NULL,
-    /* .tp_traverse = */ NULL,
-    /* .tp_clear = */ NULL,
-    /* .tp_richcompare = */ NULL,
-    /* .tp_weaklistoffset = */ 0,
-    /* .tp_iter = */ NULL,
-    /* .tp_iternext = */ NULL,
-    /* .tp_methods = */ PyGIRepositoryBaseInfo_methods,
-    /* .tp_members = */ NULL,
-    /* .tp_getset = */ NULL,
-    /* .tp_base = */ &PyType_Type,
-    /* .tp_dict = */ NULL,
-    /* .tp_descr_get = */ NULL,
-    /* .tp_descr_set = */ NULL,
-    /* .tp_dictoffset = */ 0,
-    /* .tp_init = */ NULL,
-    /* .tp_alloc = */ NULL,
-    /* .tp_new = */ NULL,
-    /* .tp_free = */ NULL,
-    /* .tp_is_gc = */ NULL,
-    /* .tp_bases = */ NULL,
-    /* .tp_mro = */ NULL,
-    /* .tp_cache = */ NULL,
-    /* .tp_subclasses = */ NULL,
-    /* .tp_weaklist = */ NULL,
 };
+
+/* ========== GIRepository.Direction ========== */
 
 
 static PyMethodDef PyGIRepositoryDirection_methods[] = {
@@ -500,52 +353,11 @@ static PyMethodDef PyGIRepositoryDirection_methods[] = {
 
 PyTypeObject PyGIRepositoryDirection_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-
     /* .tp_name = */ "GIRepository.Direction",
     /* .tp_size = */ sizeof(PyGIRepositoryDirection),
-    /* .tp_itemsize = */ 0,
-    /* .tp_dealloc = */ NULL,
-    /* .tp_print = */ NULL,
-    /* .tp_getattr = */ NULL,
-    /* .tp_setattr = */ NULL,
-    /* .tp_compare = */ NULL,
-    /* .tp_repr = */ (reprfunc)pygi_codegen_enum_repr,
-    /* .tp_as_number = */ NULL,
-    /* .tp_as_sequence = */ NULL,
-    /* .tp_as_mapping = */ NULL,
-    /* .tp_hash = */ NULL,
-    /* .tp_call = */ NULL,
-    /* .tp_str = */ NULL,
-    /* .tp_getattro = */ NULL,
-    /* .tp_setattro = */ NULL,
-    /* .tp_as_buffer = */ NULL,
-    /* .tp_flags = */ (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE),
-    /* .tp_doc = */ NULL,
-    /* .tp_traverse = */ NULL,
-    /* .tp_clear = */ NULL,
-    /* .tp_richcompare = */ NULL,
-    /* .tp_weaklistoffset = */ 0,
-    /* .tp_iter = */ NULL,
-    /* .tp_iternext = */ NULL,
-    /* .tp_methods = */ PyGIRepositoryDirection_methods,
-    /* .tp_members = */ NULL,
-    /* .tp_getset = */ NULL,
-    /* .tp_base = */ &PyLong_Type,
-    /* .tp_dict = */ NULL,
-    /* .tp_descr_get = */ NULL,
-    /* .tp_descr_set = */ NULL,
-    /* .tp_dictoffset = */ 0,
-    /* .tp_init = */ NULL,
-    /* .tp_alloc = */ NULL,
-    /* .tp_new = */ NULL,
-    /* .tp_free = */ NULL,
-    /* .tp_is_gc = */ NULL,
-    /* .tp_bases = */ NULL,
-    /* .tp_mro = */ NULL,
-    /* .tp_cache = */ NULL,
-    /* .tp_subclasses = */ NULL,
-    /* .tp_weaklist = */ NULL,
 };
+
+/* ========== GIRepository.FieldInfoFlags ========== */
 
 
 static PyMethodDef PyGIRepositoryFieldInfoFlags_methods[] = {
@@ -558,52 +370,11 @@ static PyMethodDef PyGIRepositoryFieldInfoFlags_methods[] = {
 
 PyTypeObject PyGIRepositoryFieldInfoFlags_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-
     /* .tp_name = */ "GIRepository.FieldInfoFlags",
     /* .tp_size = */ sizeof(PyGIRepositoryFieldInfoFlags),
-    /* .tp_itemsize = */ 0,
-    /* .tp_dealloc = */ NULL,
-    /* .tp_print = */ NULL,
-    /* .tp_getattr = */ NULL,
-    /* .tp_setattr = */ NULL,
-    /* .tp_compare = */ NULL,
-    /* .tp_repr = */ (reprfunc)pygi_codegen_enum_repr,
-    /* .tp_as_number = */ NULL,
-    /* .tp_as_sequence = */ NULL,
-    /* .tp_as_mapping = */ NULL,
-    /* .tp_hash = */ NULL,
-    /* .tp_call = */ NULL,
-    /* .tp_str = */ NULL,
-    /* .tp_getattro = */ NULL,
-    /* .tp_setattro = */ NULL,
-    /* .tp_as_buffer = */ NULL,
-    /* .tp_flags = */ (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE),
-    /* .tp_doc = */ NULL,
-    /* .tp_traverse = */ NULL,
-    /* .tp_clear = */ NULL,
-    /* .tp_richcompare = */ NULL,
-    /* .tp_weaklistoffset = */ 0,
-    /* .tp_iter = */ NULL,
-    /* .tp_iternext = */ NULL,
-    /* .tp_methods = */ PyGIRepositoryFieldInfoFlags_methods,
-    /* .tp_members = */ NULL,
-    /* .tp_getset = */ NULL,
-    /* .tp_base = */ &PyLong_Type,
-    /* .tp_dict = */ NULL,
-    /* .tp_descr_get = */ NULL,
-    /* .tp_descr_set = */ NULL,
-    /* .tp_dictoffset = */ 0,
-    /* .tp_init = */ NULL,
-    /* .tp_alloc = */ NULL,
-    /* .tp_new = */ NULL,
-    /* .tp_free = */ NULL,
-    /* .tp_is_gc = */ NULL,
-    /* .tp_bases = */ NULL,
-    /* .tp_mro = */ NULL,
-    /* .tp_cache = */ NULL,
-    /* .tp_subclasses = */ NULL,
-    /* .tp_weaklist = */ NULL,
 };
+
+/* ========== GIRepository.FunctionInfoFlags ========== */
 
 
 static PyMethodDef PyGIRepositoryFunctionInfoFlags_methods[] = {
@@ -616,52 +387,11 @@ static PyMethodDef PyGIRepositoryFunctionInfoFlags_methods[] = {
 
 PyTypeObject PyGIRepositoryFunctionInfoFlags_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-
     /* .tp_name = */ "GIRepository.FunctionInfoFlags",
     /* .tp_size = */ sizeof(PyGIRepositoryFunctionInfoFlags),
-    /* .tp_itemsize = */ 0,
-    /* .tp_dealloc = */ NULL,
-    /* .tp_print = */ NULL,
-    /* .tp_getattr = */ NULL,
-    /* .tp_setattr = */ NULL,
-    /* .tp_compare = */ NULL,
-    /* .tp_repr = */ (reprfunc)pygi_codegen_enum_repr,
-    /* .tp_as_number = */ NULL,
-    /* .tp_as_sequence = */ NULL,
-    /* .tp_as_mapping = */ NULL,
-    /* .tp_hash = */ NULL,
-    /* .tp_call = */ NULL,
-    /* .tp_str = */ NULL,
-    /* .tp_getattro = */ NULL,
-    /* .tp_setattro = */ NULL,
-    /* .tp_as_buffer = */ NULL,
-    /* .tp_flags = */ (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE),
-    /* .tp_doc = */ NULL,
-    /* .tp_traverse = */ NULL,
-    /* .tp_clear = */ NULL,
-    /* .tp_richcompare = */ NULL,
-    /* .tp_weaklistoffset = */ 0,
-    /* .tp_iter = */ NULL,
-    /* .tp_iternext = */ NULL,
-    /* .tp_methods = */ PyGIRepositoryFunctionInfoFlags_methods,
-    /* .tp_members = */ NULL,
-    /* .tp_getset = */ NULL,
-    /* .tp_base = */ &PyLong_Type,
-    /* .tp_dict = */ NULL,
-    /* .tp_descr_get = */ NULL,
-    /* .tp_descr_set = */ NULL,
-    /* .tp_dictoffset = */ 0,
-    /* .tp_init = */ NULL,
-    /* .tp_alloc = */ NULL,
-    /* .tp_new = */ NULL,
-    /* .tp_free = */ NULL,
-    /* .tp_is_gc = */ NULL,
-    /* .tp_bases = */ NULL,
-    /* .tp_mro = */ NULL,
-    /* .tp_cache = */ NULL,
-    /* .tp_subclasses = */ NULL,
-    /* .tp_weaklist = */ NULL,
 };
+
+/* ========== GIRepository.InfoType ========== */
 
 
 static PyMethodDef PyGIRepositoryInfoType_methods[] = {
@@ -674,52 +404,27 @@ static PyMethodDef PyGIRepositoryInfoType_methods[] = {
 
 PyTypeObject PyGIRepositoryInfoType_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-
     /* .tp_name = */ "GIRepository.InfoType",
     /* .tp_size = */ sizeof(PyGIRepositoryInfoType),
-    /* .tp_itemsize = */ 0,
-    /* .tp_dealloc = */ NULL,
-    /* .tp_print = */ NULL,
-    /* .tp_getattr = */ NULL,
-    /* .tp_setattr = */ NULL,
-    /* .tp_compare = */ NULL,
-    /* .tp_repr = */ (reprfunc)pygi_codegen_enum_repr,
-    /* .tp_as_number = */ NULL,
-    /* .tp_as_sequence = */ NULL,
-    /* .tp_as_mapping = */ NULL,
-    /* .tp_hash = */ NULL,
-    /* .tp_call = */ NULL,
-    /* .tp_str = */ NULL,
-    /* .tp_getattro = */ NULL,
-    /* .tp_setattro = */ NULL,
-    /* .tp_as_buffer = */ NULL,
-    /* .tp_flags = */ (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE),
-    /* .tp_doc = */ NULL,
-    /* .tp_traverse = */ NULL,
-    /* .tp_clear = */ NULL,
-    /* .tp_richcompare = */ NULL,
-    /* .tp_weaklistoffset = */ 0,
-    /* .tp_iter = */ NULL,
-    /* .tp_iternext = */ NULL,
-    /* .tp_methods = */ PyGIRepositoryInfoType_methods,
-    /* .tp_members = */ NULL,
-    /* .tp_getset = */ NULL,
-    /* .tp_base = */ &PyLong_Type,
-    /* .tp_dict = */ NULL,
-    /* .tp_descr_get = */ NULL,
-    /* .tp_descr_set = */ NULL,
-    /* .tp_dictoffset = */ 0,
-    /* .tp_init = */ NULL,
-    /* .tp_alloc = */ NULL,
-    /* .tp_new = */ NULL,
-    /* .tp_free = */ NULL,
-    /* .tp_is_gc = */ NULL,
-    /* .tp_bases = */ NULL,
-    /* .tp_mro = */ NULL,
-    /* .tp_cache = */ NULL,
-    /* .tp_subclasses = */ NULL,
-    /* .tp_weaklist = */ NULL,
 };
+
+/* ========== GIRepository.Repository ========== */
+
+static int
+repository_from_py (PyObject *obj, GIRepository* *value)
+{
+    *value = PyGIRepositoryRepository_get (obj);
+    return 1;
+}
+
+static PyObject *
+repository_to_py (GIRepository* value)
+{
+    PyGIRepositoryRepository *obj;
+    obj = PyObject_New(PyGIRepositoryRepository, &PyGIRepositoryRepository_Type);
+    obj->obj = value;
+    return (PyObject *) obj;
+}
 
 
 static PyObject *
@@ -765,7 +470,7 @@ pyg_irepository_get_default (PyGIRepositoryRepository *self)
     GIRepository* res;
     PyObject *py_res = NULL;
     res = g_irepository_get_default ();
-    py_res = Py_BuildValue ("O&", girepository_to_py, &res);
+    py_res = Py_BuildValue ("O&", repository_to_py, &res);
     return py_res;
 }
 
@@ -834,7 +539,7 @@ pyg_irepository_find_by_error_domain (PyGIRepositoryRepository *self, PyObject *
         return NULL;
 
     res = g_irepository_find_by_error_domain (self->obj, domain);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -863,7 +568,7 @@ pyg_irepository_find_by_name (PyGIRepositoryRepository *self, PyObject *args, Py
         return NULL;
 
     res = g_irepository_find_by_name (self->obj, namespace_, name);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -911,7 +616,7 @@ pyg_irepository_get_info (PyGIRepositoryRepository *self, PyObject *args, PyObje
         return NULL;
 
     res = g_irepository_get_info (self->obj, namespace_, index);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -1029,11 +734,11 @@ pyg_irepository_load_typelib (PyGIRepositoryRepository *self, PyObject *args, Py
     PyObject *py_res = NULL;
     GError *error = NULL;
     void* typelib;
-    void* flags;
+    unsigned int flags;
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
-                                      "O&O&:load_typelib", kwlist,
-                                      pygi_codegen_interface_converter, &typelib, pygi_codegen_interface_converter, &flags))
+                                      "O&I:load_typelib", kwlist,
+                                      typelib_from_py, &typelib, &flags))
         return NULL;
 
     res = g_irepository_load_typelib (self->obj, typelib, flags, &error);
@@ -1057,11 +762,11 @@ pyg_irepository_require (PyGIRepositoryRepository *self, PyObject *args, PyObjec
     GError *error = NULL;
     const char* namespace_;
     const char* version;
-    void* flags;
+    unsigned int flags;
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
-                                      "ssO&:require", kwlist,
-                                      &namespace_, &version, pygi_codegen_interface_converter, &flags))
+                                      "ssI:require", kwlist,
+                                      &namespace_, &version, &flags))
         return NULL;
 
     res = g_irepository_require (self->obj, namespace_, version, flags, &error);
@@ -1071,7 +776,7 @@ pyg_irepository_require (PyGIRepositoryRepository *self, PyObject *args, PyObjec
         g_error_free (error);
         return NULL;
     }
-    py_res = Py_BuildValue ("O&", res);
+    py_res = Py_BuildValue ("O&", typelib_to_py, &res);
     return py_res;
 }
 
@@ -1086,11 +791,11 @@ pyg_irepository_require_private (PyGIRepositoryRepository *self, PyObject *args,
     const char* typelib_dir;
     const char* namespace_;
     const char* version;
-    void* flags;
+    unsigned int flags;
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
-                                      "sssO&:require_private", kwlist,
-                                      &typelib_dir, &namespace_, &version, pygi_codegen_interface_converter, &flags))
+                                      "sssI:require_private", kwlist,
+                                      &typelib_dir, &namespace_, &version, &flags))
         return NULL;
 
     res = g_irepository_require_private (self->obj, typelib_dir, namespace_, version, flags, &error);
@@ -1100,7 +805,7 @@ pyg_irepository_require_private (PyGIRepositoryRepository *self, PyObject *args,
         g_error_free (error);
         return NULL;
     }
-    py_res = Py_BuildValue ("O&", res);
+    py_res = Py_BuildValue ("O&", typelib_to_py, &res);
     return py_res;
 }
 
@@ -1137,52 +842,27 @@ static PyMethodDef PyGIRepositoryRepository_methods[] = {
 
 PyTypeObject PyGIRepositoryRepository_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-
     /* .tp_name = */ "GIRepository.Repository",
     /* .tp_size = */ sizeof(PyGIRepositoryRepository),
-    /* .tp_itemsize = */ 0,
-    /* .tp_dealloc = */ NULL,
-    /* .tp_print = */ NULL,
-    /* .tp_getattr = */ NULL,
-    /* .tp_setattr = */ NULL,
-    /* .tp_compare = */ NULL,
-    /* .tp_repr = */ (reprfunc)NULL,
-    /* .tp_as_number = */ NULL,
-    /* .tp_as_sequence = */ NULL,
-    /* .tp_as_mapping = */ NULL,
-    /* .tp_hash = */ NULL,
-    /* .tp_call = */ NULL,
-    /* .tp_str = */ NULL,
-    /* .tp_getattro = */ NULL,
-    /* .tp_setattro = */ NULL,
-    /* .tp_as_buffer = */ NULL,
-    /* .tp_flags = */ (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE),
-    /* .tp_doc = */ NULL,
-    /* .tp_traverse = */ NULL,
-    /* .tp_clear = */ NULL,
-    /* .tp_richcompare = */ NULL,
-    /* .tp_weaklistoffset = */ 0,
-    /* .tp_iter = */ NULL,
-    /* .tp_iternext = */ NULL,
-    /* .tp_methods = */ PyGIRepositoryRepository_methods,
-    /* .tp_members = */ NULL,
-    /* .tp_getset = */ NULL,
-    /* .tp_base = */ &PyType_Type,
-    /* .tp_dict = */ NULL,
-    /* .tp_descr_get = */ NULL,
-    /* .tp_descr_set = */ NULL,
-    /* .tp_dictoffset = */ 0,
-    /* .tp_init = */ NULL,
-    /* .tp_alloc = */ NULL,
-    /* .tp_new = */ NULL,
-    /* .tp_free = */ NULL,
-    /* .tp_is_gc = */ NULL,
-    /* .tp_bases = */ NULL,
-    /* .tp_mro = */ NULL,
-    /* .tp_cache = */ NULL,
-    /* .tp_subclasses = */ NULL,
-    /* .tp_weaklist = */ NULL,
 };
+
+/* ========== GIRepository.RepositoryClass ========== */
+
+static int
+repositoryclass_from_py (PyObject *obj, void* *value)
+{
+    *value = PyGIRepositoryRepositoryClass_get (obj);
+    return 1;
+}
+
+static PyObject *
+repositoryclass_to_py (void* value)
+{
+    PyGIRepositoryRepositoryClass *obj;
+    obj = PyObject_New(PyGIRepositoryRepositoryClass, &PyGIRepositoryRepositoryClass_Type);
+    obj->obj = value;
+    return (PyObject *) obj;
+}
 
 
 static PyMethodDef PyGIRepositoryRepositoryClass_methods[] = {
@@ -1195,52 +875,11 @@ static PyMethodDef PyGIRepositoryRepositoryClass_methods[] = {
 
 PyTypeObject PyGIRepositoryRepositoryClass_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-
     /* .tp_name = */ "GIRepository.RepositoryClass",
     /* .tp_size = */ sizeof(PyGIRepositoryRepositoryClass),
-    /* .tp_itemsize = */ 0,
-    /* .tp_dealloc = */ NULL,
-    /* .tp_print = */ NULL,
-    /* .tp_getattr = */ NULL,
-    /* .tp_setattr = */ NULL,
-    /* .tp_compare = */ NULL,
-    /* .tp_repr = */ (reprfunc)NULL,
-    /* .tp_as_number = */ NULL,
-    /* .tp_as_sequence = */ NULL,
-    /* .tp_as_mapping = */ NULL,
-    /* .tp_hash = */ NULL,
-    /* .tp_call = */ NULL,
-    /* .tp_str = */ NULL,
-    /* .tp_getattro = */ NULL,
-    /* .tp_setattro = */ NULL,
-    /* .tp_as_buffer = */ NULL,
-    /* .tp_flags = */ (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE),
-    /* .tp_doc = */ NULL,
-    /* .tp_traverse = */ NULL,
-    /* .tp_clear = */ NULL,
-    /* .tp_richcompare = */ NULL,
-    /* .tp_weaklistoffset = */ 0,
-    /* .tp_iter = */ NULL,
-    /* .tp_iternext = */ NULL,
-    /* .tp_methods = */ PyGIRepositoryRepositoryClass_methods,
-    /* .tp_members = */ NULL,
-    /* .tp_getset = */ NULL,
-    /* .tp_base = */ &PyType_Type,
-    /* .tp_dict = */ NULL,
-    /* .tp_descr_get = */ NULL,
-    /* .tp_descr_set = */ NULL,
-    /* .tp_dictoffset = */ 0,
-    /* .tp_init = */ NULL,
-    /* .tp_alloc = */ NULL,
-    /* .tp_new = */ NULL,
-    /* .tp_free = */ NULL,
-    /* .tp_is_gc = */ NULL,
-    /* .tp_bases = */ NULL,
-    /* .tp_mro = */ NULL,
-    /* .tp_cache = */ NULL,
-    /* .tp_subclasses = */ NULL,
-    /* .tp_weaklist = */ NULL,
 };
+
+/* ========== GIRepository.RepositoryError ========== */
 
 
 static PyMethodDef PyGIRepositoryRepositoryError_methods[] = {
@@ -1253,52 +892,11 @@ static PyMethodDef PyGIRepositoryRepositoryError_methods[] = {
 
 PyTypeObject PyGIRepositoryRepositoryError_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-
     /* .tp_name = */ "GIRepository.RepositoryError",
     /* .tp_size = */ sizeof(PyGIRepositoryRepositoryError),
-    /* .tp_itemsize = */ 0,
-    /* .tp_dealloc = */ NULL,
-    /* .tp_print = */ NULL,
-    /* .tp_getattr = */ NULL,
-    /* .tp_setattr = */ NULL,
-    /* .tp_compare = */ NULL,
-    /* .tp_repr = */ (reprfunc)pygi_codegen_enum_repr,
-    /* .tp_as_number = */ NULL,
-    /* .tp_as_sequence = */ NULL,
-    /* .tp_as_mapping = */ NULL,
-    /* .tp_hash = */ NULL,
-    /* .tp_call = */ NULL,
-    /* .tp_str = */ NULL,
-    /* .tp_getattro = */ NULL,
-    /* .tp_setattro = */ NULL,
-    /* .tp_as_buffer = */ NULL,
-    /* .tp_flags = */ (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE),
-    /* .tp_doc = */ NULL,
-    /* .tp_traverse = */ NULL,
-    /* .tp_clear = */ NULL,
-    /* .tp_richcompare = */ NULL,
-    /* .tp_weaklistoffset = */ 0,
-    /* .tp_iter = */ NULL,
-    /* .tp_iternext = */ NULL,
-    /* .tp_methods = */ PyGIRepositoryRepositoryError_methods,
-    /* .tp_members = */ NULL,
-    /* .tp_getset = */ NULL,
-    /* .tp_base = */ &PyLong_Type,
-    /* .tp_dict = */ NULL,
-    /* .tp_descr_get = */ NULL,
-    /* .tp_descr_set = */ NULL,
-    /* .tp_dictoffset = */ 0,
-    /* .tp_init = */ NULL,
-    /* .tp_alloc = */ NULL,
-    /* .tp_new = */ NULL,
-    /* .tp_free = */ NULL,
-    /* .tp_is_gc = */ NULL,
-    /* .tp_bases = */ NULL,
-    /* .tp_mro = */ NULL,
-    /* .tp_cache = */ NULL,
-    /* .tp_subclasses = */ NULL,
-    /* .tp_weaklist = */ NULL,
 };
+
+/* ========== GIRepository.RepositoryLoadFlags ========== */
 
 
 static PyMethodDef PyGIRepositoryRepositoryLoadFlags_methods[] = {
@@ -1311,52 +909,27 @@ static PyMethodDef PyGIRepositoryRepositoryLoadFlags_methods[] = {
 
 PyTypeObject PyGIRepositoryRepositoryLoadFlags_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-
     /* .tp_name = */ "GIRepository.RepositoryLoadFlags",
     /* .tp_size = */ sizeof(PyGIRepositoryRepositoryLoadFlags),
-    /* .tp_itemsize = */ 0,
-    /* .tp_dealloc = */ NULL,
-    /* .tp_print = */ NULL,
-    /* .tp_getattr = */ NULL,
-    /* .tp_setattr = */ NULL,
-    /* .tp_compare = */ NULL,
-    /* .tp_repr = */ (reprfunc)pygi_codegen_enum_repr,
-    /* .tp_as_number = */ NULL,
-    /* .tp_as_sequence = */ NULL,
-    /* .tp_as_mapping = */ NULL,
-    /* .tp_hash = */ NULL,
-    /* .tp_call = */ NULL,
-    /* .tp_str = */ NULL,
-    /* .tp_getattro = */ NULL,
-    /* .tp_setattro = */ NULL,
-    /* .tp_as_buffer = */ NULL,
-    /* .tp_flags = */ (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE),
-    /* .tp_doc = */ NULL,
-    /* .tp_traverse = */ NULL,
-    /* .tp_clear = */ NULL,
-    /* .tp_richcompare = */ NULL,
-    /* .tp_weaklistoffset = */ 0,
-    /* .tp_iter = */ NULL,
-    /* .tp_iternext = */ NULL,
-    /* .tp_methods = */ PyGIRepositoryRepositoryLoadFlags_methods,
-    /* .tp_members = */ NULL,
-    /* .tp_getset = */ NULL,
-    /* .tp_base = */ &PyLong_Type,
-    /* .tp_dict = */ NULL,
-    /* .tp_descr_get = */ NULL,
-    /* .tp_descr_set = */ NULL,
-    /* .tp_dictoffset = */ 0,
-    /* .tp_init = */ NULL,
-    /* .tp_alloc = */ NULL,
-    /* .tp_new = */ NULL,
-    /* .tp_free = */ NULL,
-    /* .tp_is_gc = */ NULL,
-    /* .tp_bases = */ NULL,
-    /* .tp_mro = */ NULL,
-    /* .tp_cache = */ NULL,
-    /* .tp_subclasses = */ NULL,
-    /* .tp_weaklist = */ NULL,
 };
+
+/* ========== GIRepository.RepositoryPrivate ========== */
+
+static int
+repositoryprivate_from_py (PyObject *obj, void* *value)
+{
+    *value = PyGIRepositoryRepositoryPrivate_get (obj);
+    return 1;
+}
+
+static PyObject *
+repositoryprivate_to_py (void* value)
+{
+    PyGIRepositoryRepositoryPrivate *obj;
+    obj = PyObject_New(PyGIRepositoryRepositoryPrivate, &PyGIRepositoryRepositoryPrivate_Type);
+    obj->obj = value;
+    return (PyObject *) obj;
+}
 
 
 static PyMethodDef PyGIRepositoryRepositoryPrivate_methods[] = {
@@ -1369,52 +942,11 @@ static PyMethodDef PyGIRepositoryRepositoryPrivate_methods[] = {
 
 PyTypeObject PyGIRepositoryRepositoryPrivate_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-
     /* .tp_name = */ "GIRepository.RepositoryPrivate",
     /* .tp_size = */ sizeof(PyGIRepositoryRepositoryPrivate),
-    /* .tp_itemsize = */ 0,
-    /* .tp_dealloc = */ NULL,
-    /* .tp_print = */ NULL,
-    /* .tp_getattr = */ NULL,
-    /* .tp_setattr = */ NULL,
-    /* .tp_compare = */ NULL,
-    /* .tp_repr = */ (reprfunc)NULL,
-    /* .tp_as_number = */ NULL,
-    /* .tp_as_sequence = */ NULL,
-    /* .tp_as_mapping = */ NULL,
-    /* .tp_hash = */ NULL,
-    /* .tp_call = */ NULL,
-    /* .tp_str = */ NULL,
-    /* .tp_getattro = */ NULL,
-    /* .tp_setattro = */ NULL,
-    /* .tp_as_buffer = */ NULL,
-    /* .tp_flags = */ (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE),
-    /* .tp_doc = */ NULL,
-    /* .tp_traverse = */ NULL,
-    /* .tp_clear = */ NULL,
-    /* .tp_richcompare = */ NULL,
-    /* .tp_weaklistoffset = */ 0,
-    /* .tp_iter = */ NULL,
-    /* .tp_iternext = */ NULL,
-    /* .tp_methods = */ PyGIRepositoryRepositoryPrivate_methods,
-    /* .tp_members = */ NULL,
-    /* .tp_getset = */ NULL,
-    /* .tp_base = */ &PyType_Type,
-    /* .tp_dict = */ NULL,
-    /* .tp_descr_get = */ NULL,
-    /* .tp_descr_set = */ NULL,
-    /* .tp_dictoffset = */ 0,
-    /* .tp_init = */ NULL,
-    /* .tp_alloc = */ NULL,
-    /* .tp_new = */ NULL,
-    /* .tp_free = */ NULL,
-    /* .tp_is_gc = */ NULL,
-    /* .tp_bases = */ NULL,
-    /* .tp_mro = */ NULL,
-    /* .tp_cache = */ NULL,
-    /* .tp_subclasses = */ NULL,
-    /* .tp_weaklist = */ NULL,
 };
+
+/* ========== GIRepository.ScopeType ========== */
 
 
 static PyMethodDef PyGIRepositoryScopeType_methods[] = {
@@ -1427,52 +959,11 @@ static PyMethodDef PyGIRepositoryScopeType_methods[] = {
 
 PyTypeObject PyGIRepositoryScopeType_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-
     /* .tp_name = */ "GIRepository.ScopeType",
     /* .tp_size = */ sizeof(PyGIRepositoryScopeType),
-    /* .tp_itemsize = */ 0,
-    /* .tp_dealloc = */ NULL,
-    /* .tp_print = */ NULL,
-    /* .tp_getattr = */ NULL,
-    /* .tp_setattr = */ NULL,
-    /* .tp_compare = */ NULL,
-    /* .tp_repr = */ (reprfunc)pygi_codegen_enum_repr,
-    /* .tp_as_number = */ NULL,
-    /* .tp_as_sequence = */ NULL,
-    /* .tp_as_mapping = */ NULL,
-    /* .tp_hash = */ NULL,
-    /* .tp_call = */ NULL,
-    /* .tp_str = */ NULL,
-    /* .tp_getattro = */ NULL,
-    /* .tp_setattro = */ NULL,
-    /* .tp_as_buffer = */ NULL,
-    /* .tp_flags = */ (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE),
-    /* .tp_doc = */ NULL,
-    /* .tp_traverse = */ NULL,
-    /* .tp_clear = */ NULL,
-    /* .tp_richcompare = */ NULL,
-    /* .tp_weaklistoffset = */ 0,
-    /* .tp_iter = */ NULL,
-    /* .tp_iternext = */ NULL,
-    /* .tp_methods = */ PyGIRepositoryScopeType_methods,
-    /* .tp_members = */ NULL,
-    /* .tp_getset = */ NULL,
-    /* .tp_base = */ &PyLong_Type,
-    /* .tp_dict = */ NULL,
-    /* .tp_descr_get = */ NULL,
-    /* .tp_descr_set = */ NULL,
-    /* .tp_dictoffset = */ 0,
-    /* .tp_init = */ NULL,
-    /* .tp_alloc = */ NULL,
-    /* .tp_new = */ NULL,
-    /* .tp_free = */ NULL,
-    /* .tp_is_gc = */ NULL,
-    /* .tp_bases = */ NULL,
-    /* .tp_mro = */ NULL,
-    /* .tp_cache = */ NULL,
-    /* .tp_subclasses = */ NULL,
-    /* .tp_weaklist = */ NULL,
 };
+
+/* ========== GIRepository.Transfer ========== */
 
 
 static PyMethodDef PyGIRepositoryTransfer_methods[] = {
@@ -1485,52 +976,11 @@ static PyMethodDef PyGIRepositoryTransfer_methods[] = {
 
 PyTypeObject PyGIRepositoryTransfer_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-
     /* .tp_name = */ "GIRepository.Transfer",
     /* .tp_size = */ sizeof(PyGIRepositoryTransfer),
-    /* .tp_itemsize = */ 0,
-    /* .tp_dealloc = */ NULL,
-    /* .tp_print = */ NULL,
-    /* .tp_getattr = */ NULL,
-    /* .tp_setattr = */ NULL,
-    /* .tp_compare = */ NULL,
-    /* .tp_repr = */ (reprfunc)pygi_codegen_enum_repr,
-    /* .tp_as_number = */ NULL,
-    /* .tp_as_sequence = */ NULL,
-    /* .tp_as_mapping = */ NULL,
-    /* .tp_hash = */ NULL,
-    /* .tp_call = */ NULL,
-    /* .tp_str = */ NULL,
-    /* .tp_getattro = */ NULL,
-    /* .tp_setattro = */ NULL,
-    /* .tp_as_buffer = */ NULL,
-    /* .tp_flags = */ (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE),
-    /* .tp_doc = */ NULL,
-    /* .tp_traverse = */ NULL,
-    /* .tp_clear = */ NULL,
-    /* .tp_richcompare = */ NULL,
-    /* .tp_weaklistoffset = */ 0,
-    /* .tp_iter = */ NULL,
-    /* .tp_iternext = */ NULL,
-    /* .tp_methods = */ PyGIRepositoryTransfer_methods,
-    /* .tp_members = */ NULL,
-    /* .tp_getset = */ NULL,
-    /* .tp_base = */ &PyLong_Type,
-    /* .tp_dict = */ NULL,
-    /* .tp_descr_get = */ NULL,
-    /* .tp_descr_set = */ NULL,
-    /* .tp_dictoffset = */ 0,
-    /* .tp_init = */ NULL,
-    /* .tp_alloc = */ NULL,
-    /* .tp_new = */ NULL,
-    /* .tp_free = */ NULL,
-    /* .tp_is_gc = */ NULL,
-    /* .tp_bases = */ NULL,
-    /* .tp_mro = */ NULL,
-    /* .tp_cache = */ NULL,
-    /* .tp_subclasses = */ NULL,
-    /* .tp_weaklist = */ NULL,
 };
+
+/* ========== GIRepository.TypeTag ========== */
 
 
 static PyMethodDef PyGIRepositoryTypeTag_methods[] = {
@@ -1543,52 +993,27 @@ static PyMethodDef PyGIRepositoryTypeTag_methods[] = {
 
 PyTypeObject PyGIRepositoryTypeTag_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-
     /* .tp_name = */ "GIRepository.TypeTag",
     /* .tp_size = */ sizeof(PyGIRepositoryTypeTag),
-    /* .tp_itemsize = */ 0,
-    /* .tp_dealloc = */ NULL,
-    /* .tp_print = */ NULL,
-    /* .tp_getattr = */ NULL,
-    /* .tp_setattr = */ NULL,
-    /* .tp_compare = */ NULL,
-    /* .tp_repr = */ (reprfunc)pygi_codegen_enum_repr,
-    /* .tp_as_number = */ NULL,
-    /* .tp_as_sequence = */ NULL,
-    /* .tp_as_mapping = */ NULL,
-    /* .tp_hash = */ NULL,
-    /* .tp_call = */ NULL,
-    /* .tp_str = */ NULL,
-    /* .tp_getattro = */ NULL,
-    /* .tp_setattro = */ NULL,
-    /* .tp_as_buffer = */ NULL,
-    /* .tp_flags = */ (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE),
-    /* .tp_doc = */ NULL,
-    /* .tp_traverse = */ NULL,
-    /* .tp_clear = */ NULL,
-    /* .tp_richcompare = */ NULL,
-    /* .tp_weaklistoffset = */ 0,
-    /* .tp_iter = */ NULL,
-    /* .tp_iternext = */ NULL,
-    /* .tp_methods = */ PyGIRepositoryTypeTag_methods,
-    /* .tp_members = */ NULL,
-    /* .tp_getset = */ NULL,
-    /* .tp_base = */ &PyLong_Type,
-    /* .tp_dict = */ NULL,
-    /* .tp_descr_get = */ NULL,
-    /* .tp_descr_set = */ NULL,
-    /* .tp_dictoffset = */ 0,
-    /* .tp_init = */ NULL,
-    /* .tp_alloc = */ NULL,
-    /* .tp_new = */ NULL,
-    /* .tp_free = */ NULL,
-    /* .tp_is_gc = */ NULL,
-    /* .tp_bases = */ NULL,
-    /* .tp_mro = */ NULL,
-    /* .tp_cache = */ NULL,
-    /* .tp_subclasses = */ NULL,
-    /* .tp_weaklist = */ NULL,
 };
+
+/* ========== GIRepository.Typelib ========== */
+
+static int
+typelib_from_py (PyObject *obj, void* *value)
+{
+    *value = PyGIRepositoryTypelib_get (obj);
+    return 1;
+}
+
+static PyObject *
+typelib_to_py (void* value)
+{
+    PyGIRepositoryTypelib *obj;
+    obj = PyObject_New(PyGIRepositoryTypelib, &PyGIRepositoryTypelib_Type);
+    obj->obj = value;
+    return (PyObject *) obj;
+}
 
 
 static PyObject *
@@ -1632,52 +1057,27 @@ static PyMethodDef PyGIRepositoryTypelib_methods[] = {
 
 PyTypeObject PyGIRepositoryTypelib_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-
     /* .tp_name = */ "GIRepository.Typelib",
     /* .tp_size = */ sizeof(PyGIRepositoryTypelib),
-    /* .tp_itemsize = */ 0,
-    /* .tp_dealloc = */ NULL,
-    /* .tp_print = */ NULL,
-    /* .tp_getattr = */ NULL,
-    /* .tp_setattr = */ NULL,
-    /* .tp_compare = */ NULL,
-    /* .tp_repr = */ (reprfunc)NULL,
-    /* .tp_as_number = */ NULL,
-    /* .tp_as_sequence = */ NULL,
-    /* .tp_as_mapping = */ NULL,
-    /* .tp_hash = */ NULL,
-    /* .tp_call = */ NULL,
-    /* .tp_str = */ NULL,
-    /* .tp_getattro = */ NULL,
-    /* .tp_setattro = */ NULL,
-    /* .tp_as_buffer = */ NULL,
-    /* .tp_flags = */ (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE),
-    /* .tp_doc = */ NULL,
-    /* .tp_traverse = */ NULL,
-    /* .tp_clear = */ NULL,
-    /* .tp_richcompare = */ NULL,
-    /* .tp_weaklistoffset = */ 0,
-    /* .tp_iter = */ NULL,
-    /* .tp_iternext = */ NULL,
-    /* .tp_methods = */ PyGIRepositoryTypelib_methods,
-    /* .tp_members = */ NULL,
-    /* .tp_getset = */ NULL,
-    /* .tp_base = */ &PyType_Type,
-    /* .tp_dict = */ NULL,
-    /* .tp_descr_get = */ NULL,
-    /* .tp_descr_set = */ NULL,
-    /* .tp_dictoffset = */ 0,
-    /* .tp_init = */ NULL,
-    /* .tp_alloc = */ NULL,
-    /* .tp_new = */ NULL,
-    /* .tp_free = */ NULL,
-    /* .tp_is_gc = */ NULL,
-    /* .tp_bases = */ NULL,
-    /* .tp_mro = */ NULL,
-    /* .tp_cache = */ NULL,
-    /* .tp_subclasses = */ NULL,
-    /* .tp_weaklist = */ NULL,
 };
+
+/* ========== GIRepository.UnresolvedInfo ========== */
+
+static int
+unresolvedinfo_from_py (PyObject *obj, void* *value)
+{
+    *value = PyGIRepositoryUnresolvedInfo_get (obj);
+    return 1;
+}
+
+static PyObject *
+unresolvedinfo_to_py (void* value)
+{
+    PyGIRepositoryUnresolvedInfo *obj;
+    obj = PyObject_New(PyGIRepositoryUnresolvedInfo, &PyGIRepositoryUnresolvedInfo_Type);
+    obj->obj = value;
+    return (PyObject *) obj;
+}
 
 
 static PyMethodDef PyGIRepositoryUnresolvedInfo_methods[] = {
@@ -1690,52 +1090,11 @@ static PyMethodDef PyGIRepositoryUnresolvedInfo_methods[] = {
 
 PyTypeObject PyGIRepositoryUnresolvedInfo_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-
     /* .tp_name = */ "GIRepository.UnresolvedInfo",
     /* .tp_size = */ sizeof(PyGIRepositoryUnresolvedInfo),
-    /* .tp_itemsize = */ 0,
-    /* .tp_dealloc = */ NULL,
-    /* .tp_print = */ NULL,
-    /* .tp_getattr = */ NULL,
-    /* .tp_setattr = */ NULL,
-    /* .tp_compare = */ NULL,
-    /* .tp_repr = */ (reprfunc)NULL,
-    /* .tp_as_number = */ NULL,
-    /* .tp_as_sequence = */ NULL,
-    /* .tp_as_mapping = */ NULL,
-    /* .tp_hash = */ NULL,
-    /* .tp_call = */ NULL,
-    /* .tp_str = */ NULL,
-    /* .tp_getattro = */ NULL,
-    /* .tp_setattro = */ NULL,
-    /* .tp_as_buffer = */ NULL,
-    /* .tp_flags = */ (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE),
-    /* .tp_doc = */ NULL,
-    /* .tp_traverse = */ NULL,
-    /* .tp_clear = */ NULL,
-    /* .tp_richcompare = */ NULL,
-    /* .tp_weaklistoffset = */ 0,
-    /* .tp_iter = */ NULL,
-    /* .tp_iternext = */ NULL,
-    /* .tp_methods = */ PyGIRepositoryUnresolvedInfo_methods,
-    /* .tp_members = */ NULL,
-    /* .tp_getset = */ NULL,
-    /* .tp_base = */ &PyType_Type,
-    /* .tp_dict = */ NULL,
-    /* .tp_descr_get = */ NULL,
-    /* .tp_descr_set = */ NULL,
-    /* .tp_dictoffset = */ 0,
-    /* .tp_init = */ NULL,
-    /* .tp_alloc = */ NULL,
-    /* .tp_new = */ NULL,
-    /* .tp_free = */ NULL,
-    /* .tp_is_gc = */ NULL,
-    /* .tp_bases = */ NULL,
-    /* .tp_mro = */ NULL,
-    /* .tp_cache = */ NULL,
-    /* .tp_subclasses = */ NULL,
-    /* .tp_weaklist = */ NULL,
 };
+
+/* ========== GIRepository.VFuncInfoFlags ========== */
 
 
 static PyMethodDef PyGIRepositoryVFuncInfoFlags_methods[] = {
@@ -1748,52 +1107,60 @@ static PyMethodDef PyGIRepositoryVFuncInfoFlags_methods[] = {
 
 PyTypeObject PyGIRepositoryVFuncInfoFlags_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-
     /* .tp_name = */ "GIRepository.VFuncInfoFlags",
     /* .tp_size = */ sizeof(PyGIRepositoryVFuncInfoFlags),
-    /* .tp_itemsize = */ 0,
-    /* .tp_dealloc = */ NULL,
-    /* .tp_print = */ NULL,
-    /* .tp_getattr = */ NULL,
-    /* .tp_setattr = */ NULL,
-    /* .tp_compare = */ NULL,
-    /* .tp_repr = */ (reprfunc)pygi_codegen_enum_repr,
-    /* .tp_as_number = */ NULL,
-    /* .tp_as_sequence = */ NULL,
-    /* .tp_as_mapping = */ NULL,
-    /* .tp_hash = */ NULL,
-    /* .tp_call = */ NULL,
-    /* .tp_str = */ NULL,
-    /* .tp_getattro = */ NULL,
-    /* .tp_setattro = */ NULL,
-    /* .tp_as_buffer = */ NULL,
-    /* .tp_flags = */ (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE),
-    /* .tp_doc = */ NULL,
-    /* .tp_traverse = */ NULL,
-    /* .tp_clear = */ NULL,
-    /* .tp_richcompare = */ NULL,
-    /* .tp_weaklistoffset = */ 0,
-    /* .tp_iter = */ NULL,
-    /* .tp_iternext = */ NULL,
-    /* .tp_methods = */ PyGIRepositoryVFuncInfoFlags_methods,
-    /* .tp_members = */ NULL,
-    /* .tp_getset = */ NULL,
-    /* .tp_base = */ &PyLong_Type,
-    /* .tp_dict = */ NULL,
-    /* .tp_descr_get = */ NULL,
-    /* .tp_descr_set = */ NULL,
-    /* .tp_dictoffset = */ 0,
-    /* .tp_init = */ NULL,
-    /* .tp_alloc = */ NULL,
-    /* .tp_new = */ NULL,
-    /* .tp_free = */ NULL,
-    /* .tp_is_gc = */ NULL,
-    /* .tp_bases = */ NULL,
-    /* .tp_mro = */ NULL,
-    /* .tp_cache = */ NULL,
-    /* .tp_subclasses = */ NULL,
-    /* .tp_weaklist = */ NULL,
 };
+
+/* ========== GIRepository._Argument ========== */
+
+static int
+_argument_from_py (PyObject *obj, void* *value)
+{
+    *value = PyGIRepository_Argument_get (obj);
+    return 1;
+}
+
+static PyObject *
+_argument_to_py (void* value)
+{
+    PyGIRepository_Argument *obj;
+    obj = PyObject_New(PyGIRepository_Argument, &PyGIRepository_Argument_Type);
+    obj->obj = value;
+    return (PyObject *) obj;
+}
+
+
+static PyMethodDef PyGIRepository_Argument_methods[] = {
+    #ifdef PY_GI_REPOSITORY__ARGUMENT_METHODS_CUSTOM_ENTRIES
+        PY_GI_REPOSITORY__ARGUMENT_METHODS_CUSTOM_ENTRIES
+    #endif
+    { NULL, NULL, 0 }
+};
+
+
+PyTypeObject PyGIRepository_Argument_Type = {
+    PyVarObject_HEAD_INIT(NULL, 0)
+    /* .tp_name = */ "GIRepository._Argument",
+    /* .tp_size = */ sizeof(PyGIRepository_Argument),
+};
+
+/* ========== GIRepository._BaseInfoStub ========== */
+
+static int
+_baseinfostub_from_py (PyObject *obj, void* *value)
+{
+    *value = PyGIRepository_BaseInfoStub_get (obj);
+    return 1;
+}
+
+static PyObject *
+_baseinfostub_to_py (void* value)
+{
+    PyGIRepository_BaseInfoStub *obj;
+    obj = PyObject_New(PyGIRepository_BaseInfoStub, &PyGIRepository_BaseInfoStub_Type);
+    obj->obj = value;
+    return (PyObject *) obj;
+}
 
 
 static PyMethodDef PyGIRepository_BaseInfoStub_methods[] = {
@@ -1806,52 +1173,11 @@ static PyMethodDef PyGIRepository_BaseInfoStub_methods[] = {
 
 PyTypeObject PyGIRepository_BaseInfoStub_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-
     /* .tp_name = */ "GIRepository._BaseInfoStub",
     /* .tp_size = */ sizeof(PyGIRepository_BaseInfoStub),
-    /* .tp_itemsize = */ 0,
-    /* .tp_dealloc = */ NULL,
-    /* .tp_print = */ NULL,
-    /* .tp_getattr = */ NULL,
-    /* .tp_setattr = */ NULL,
-    /* .tp_compare = */ NULL,
-    /* .tp_repr = */ (reprfunc)NULL,
-    /* .tp_as_number = */ NULL,
-    /* .tp_as_sequence = */ NULL,
-    /* .tp_as_mapping = */ NULL,
-    /* .tp_hash = */ NULL,
-    /* .tp_call = */ NULL,
-    /* .tp_str = */ NULL,
-    /* .tp_getattro = */ NULL,
-    /* .tp_setattro = */ NULL,
-    /* .tp_as_buffer = */ NULL,
-    /* .tp_flags = */ (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE),
-    /* .tp_doc = */ NULL,
-    /* .tp_traverse = */ NULL,
-    /* .tp_clear = */ NULL,
-    /* .tp_richcompare = */ NULL,
-    /* .tp_weaklistoffset = */ 0,
-    /* .tp_iter = */ NULL,
-    /* .tp_iternext = */ NULL,
-    /* .tp_methods = */ PyGIRepository_BaseInfoStub_methods,
-    /* .tp_members = */ NULL,
-    /* .tp_getset = */ NULL,
-    /* .tp_base = */ &PyType_Type,
-    /* .tp_dict = */ NULL,
-    /* .tp_descr_get = */ NULL,
-    /* .tp_descr_set = */ NULL,
-    /* .tp_dictoffset = */ 0,
-    /* .tp_init = */ NULL,
-    /* .tp_alloc = */ NULL,
-    /* .tp_new = */ NULL,
-    /* .tp_free = */ NULL,
-    /* .tp_is_gc = */ NULL,
-    /* .tp_bases = */ NULL,
-    /* .tp_mro = */ NULL,
-    /* .tp_cache = */ NULL,
-    /* .tp_subclasses = */ NULL,
-    /* .tp_weaklist = */ NULL,
 };
+
+/* ========== GIRepository.nvokeError ========== */
 
 
 static PyMethodDef PyGIRepositorynvokeError_methods[] = {
@@ -1864,51 +1190,8 @@ static PyMethodDef PyGIRepositorynvokeError_methods[] = {
 
 PyTypeObject PyGIRepositorynvokeError_Type = {
     PyVarObject_HEAD_INIT(NULL, 0)
-
     /* .tp_name = */ "GIRepository.nvokeError",
     /* .tp_size = */ sizeof(PyGIRepositorynvokeError),
-    /* .tp_itemsize = */ 0,
-    /* .tp_dealloc = */ NULL,
-    /* .tp_print = */ NULL,
-    /* .tp_getattr = */ NULL,
-    /* .tp_setattr = */ NULL,
-    /* .tp_compare = */ NULL,
-    /* .tp_repr = */ (reprfunc)pygi_codegen_enum_repr,
-    /* .tp_as_number = */ NULL,
-    /* .tp_as_sequence = */ NULL,
-    /* .tp_as_mapping = */ NULL,
-    /* .tp_hash = */ NULL,
-    /* .tp_call = */ NULL,
-    /* .tp_str = */ NULL,
-    /* .tp_getattro = */ NULL,
-    /* .tp_setattro = */ NULL,
-    /* .tp_as_buffer = */ NULL,
-    /* .tp_flags = */ (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE),
-    /* .tp_doc = */ NULL,
-    /* .tp_traverse = */ NULL,
-    /* .tp_clear = */ NULL,
-    /* .tp_richcompare = */ NULL,
-    /* .tp_weaklistoffset = */ 0,
-    /* .tp_iter = */ NULL,
-    /* .tp_iternext = */ NULL,
-    /* .tp_methods = */ PyGIRepositorynvokeError_methods,
-    /* .tp_members = */ NULL,
-    /* .tp_getset = */ NULL,
-    /* .tp_base = */ &PyLong_Type,
-    /* .tp_dict = */ NULL,
-    /* .tp_descr_get = */ NULL,
-    /* .tp_descr_set = */ NULL,
-    /* .tp_dictoffset = */ 0,
-    /* .tp_init = */ NULL,
-    /* .tp_alloc = */ NULL,
-    /* .tp_new = */ NULL,
-    /* .tp_free = */ NULL,
-    /* .tp_is_gc = */ NULL,
-    /* .tp_bases = */ NULL,
-    /* .tp_mro = */ NULL,
-    /* .tp_cache = */ NULL,
-    /* .tp_subclasses = */ NULL,
-    /* .tp_weaklist = */ NULL,
 };
 
 
@@ -1922,7 +1205,7 @@ pyg_arg_info_get_closure (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:arg_info_get_closure", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_arg_info_get_closure (info);
@@ -1941,7 +1224,7 @@ pyg_arg_info_get_destroy (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:arg_info_get_destroy", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_arg_info_get_destroy (info);
@@ -1954,17 +1237,17 @@ static PyObject *
 pyg_arg_info_get_direction (PyObject *self, PyObject *args, PyObject *kwargs)
 {
     static char *kwlist[] = { "info", NULL };
-    void* res;
+    unsigned int res;
     PyObject *py_res = NULL;
     GIBaseInfo* info;
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:arg_info_get_direction", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_arg_info_get_direction (info);
-    py_res = Py_BuildValue ("O&", res);
+    py_res = Py_BuildValue ("I", res);
     return py_res;
 }
 
@@ -1973,17 +1256,17 @@ static PyObject *
 pyg_arg_info_get_ownership_transfer (PyObject *self, PyObject *args, PyObject *kwargs)
 {
     static char *kwlist[] = { "info", NULL };
-    void* res;
+    unsigned int res;
     PyObject *py_res = NULL;
     GIBaseInfo* info;
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:arg_info_get_ownership_transfer", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_arg_info_get_ownership_transfer (info);
-    py_res = Py_BuildValue ("O&", res);
+    py_res = Py_BuildValue ("I", res);
     return py_res;
 }
 
@@ -1992,17 +1275,17 @@ static PyObject *
 pyg_arg_info_get_scope (PyObject *self, PyObject *args, PyObject *kwargs)
 {
     static char *kwlist[] = { "info", NULL };
-    void* res;
+    unsigned int res;
     PyObject *py_res = NULL;
     GIBaseInfo* info;
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:arg_info_get_scope", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_arg_info_get_scope (info);
-    py_res = Py_BuildValue ("O&", res);
+    py_res = Py_BuildValue ("I", res);
     return py_res;
 }
 
@@ -2017,11 +1300,11 @@ pyg_arg_info_get_type (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:arg_info_get_type", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_arg_info_get_type (info);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -2036,7 +1319,7 @@ pyg_arg_info_is_caller_allocates (PyObject *self, PyObject *args, PyObject *kwar
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:arg_info_is_caller_allocates", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_arg_info_is_caller_allocates (info);
@@ -2055,7 +1338,7 @@ pyg_arg_info_is_optional (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:arg_info_is_optional", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_arg_info_is_optional (info);
@@ -2074,7 +1357,7 @@ pyg_arg_info_is_return_value (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:arg_info_is_return_value", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_arg_info_is_return_value (info);
@@ -2093,7 +1376,7 @@ pyg_arg_info_is_skip (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:arg_info_is_skip", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_arg_info_is_skip (info);
@@ -2111,7 +1394,7 @@ pyg_arg_info_load_type (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&O&:arg_info_load_type", kwlist,
-                                      gibaseinfo_from_py, &info, gibaseinfo_from_py, &type))
+                                      baseinfo_from_py, &info, baseinfo_from_py, &type))
         return NULL;
 
     g_arg_info_load_type (info, type);
@@ -2129,7 +1412,7 @@ pyg_arg_info_may_be_null (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:arg_info_may_be_null", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_arg_info_may_be_null (info);
@@ -2148,7 +1431,7 @@ pyg_callable_info_can_throw_gerror (PyObject *self, PyObject *args, PyObject *kw
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:callable_info_can_throw_gerror", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_callable_info_can_throw_gerror (info);
@@ -2168,11 +1451,11 @@ pyg_callable_info_get_arg (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&i:callable_info_get_arg", kwlist,
-                                      gibaseinfo_from_py, &info, &n))
+                                      baseinfo_from_py, &info, &n))
         return NULL;
 
     res = g_callable_info_get_arg (info, n);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -2181,17 +1464,17 @@ static PyObject *
 pyg_callable_info_get_caller_owns (PyObject *self, PyObject *args, PyObject *kwargs)
 {
     static char *kwlist[] = { "info", NULL };
-    void* res;
+    unsigned int res;
     PyObject *py_res = NULL;
     GIBaseInfo* info;
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:callable_info_get_caller_owns", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_callable_info_get_caller_owns (info);
-    py_res = Py_BuildValue ("O&", res);
+    py_res = Py_BuildValue ("I", res);
     return py_res;
 }
 
@@ -2206,7 +1489,7 @@ pyg_callable_info_get_n_args (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:callable_info_get_n_args", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_callable_info_get_n_args (info);
@@ -2226,7 +1509,7 @@ pyg_callable_info_get_return_attribute (PyObject *self, PyObject *args, PyObject
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&s:callable_info_get_return_attribute", kwlist,
-                                      gibaseinfo_from_py, &info, &name))
+                                      baseinfo_from_py, &info, &name))
         return NULL;
 
     res = g_callable_info_get_return_attribute (info, name);
@@ -2245,21 +1528,12 @@ pyg_callable_info_get_return_type (PyObject *self, PyObject *args, PyObject *kwa
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:callable_info_get_return_type", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_callable_info_get_return_type (info);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
-}
-
-
-static PyObject *
-pyg_callable_info_invoke (PyObject *self, PyObject *args, PyObject *kwargs)
-{
-
-    PyErr_SetString (PyExc_NotImplementedError, "Don't know how to marshal 0");
-    return NULL;
 }
 
 
@@ -2273,7 +1547,7 @@ pyg_callable_info_is_method (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:callable_info_is_method", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_callable_info_is_method (info);
@@ -2295,7 +1569,7 @@ pyg_callable_info_iterate_return_attributes (PyObject *self, PyObject *args, PyO
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&O&ss:callable_info_iterate_return_attributes", kwlist,
-                                      gibaseinfo_from_py, &info, pygi_codegen_interface_converter, &iterator, &name, &value))
+                                      baseinfo_from_py, &info, attributeiter_from_py, &iterator, &name, &value))
         return NULL;
 
     res = g_callable_info_iterate_return_attributes (info, iterator, name, value);
@@ -2314,7 +1588,7 @@ pyg_callable_info_load_arg (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&iO&:callable_info_load_arg", kwlist,
-                                      gibaseinfo_from_py, &info, &n, gibaseinfo_from_py, &arg))
+                                      baseinfo_from_py, &info, &n, baseinfo_from_py, &arg))
         return NULL;
 
     g_callable_info_load_arg (info, n, arg);
@@ -2331,7 +1605,7 @@ pyg_callable_info_load_return_type (PyObject *self, PyObject *args, PyObject *kw
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&O&:callable_info_load_return_type", kwlist,
-                                      gibaseinfo_from_py, &info, gibaseinfo_from_py, &type))
+                                      baseinfo_from_py, &info, baseinfo_from_py, &type))
         return NULL;
 
     g_callable_info_load_return_type (info, type);
@@ -2349,7 +1623,7 @@ pyg_callable_info_may_return_null (PyObject *self, PyObject *args, PyObject *kwa
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:callable_info_may_return_null", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_callable_info_may_return_null (info);
@@ -2368,7 +1642,7 @@ pyg_callable_info_skip_return (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:callable_info_skip_return", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_callable_info_skip_return (info);
@@ -2387,11 +1661,11 @@ pyg_constant_info_get_type (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:constant_info_get_type", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_constant_info_get_type (info);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -2406,7 +1680,7 @@ pyg_enum_info_get_error_domain (PyObject *self, PyObject *args, PyObject *kwargs
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:enum_info_get_error_domain", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_enum_info_get_error_domain (info);
@@ -2426,11 +1700,11 @@ pyg_enum_info_get_method (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&i:enum_info_get_method", kwlist,
-                                      gibaseinfo_from_py, &info, &n))
+                                      baseinfo_from_py, &info, &n))
         return NULL;
 
     res = g_enum_info_get_method (info, n);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -2445,7 +1719,7 @@ pyg_enum_info_get_n_methods (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:enum_info_get_n_methods", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_enum_info_get_n_methods (info);
@@ -2464,7 +1738,7 @@ pyg_enum_info_get_n_values (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:enum_info_get_n_values", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_enum_info_get_n_values (info);
@@ -2477,17 +1751,17 @@ static PyObject *
 pyg_enum_info_get_storage_type (PyObject *self, PyObject *args, PyObject *kwargs)
 {
     static char *kwlist[] = { "info", NULL };
-    void* res;
+    unsigned int res;
     PyObject *py_res = NULL;
     GIBaseInfo* info;
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:enum_info_get_storage_type", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_enum_info_get_storage_type (info);
-    py_res = Py_BuildValue ("O&", res);
+    py_res = Py_BuildValue ("I", res);
     return py_res;
 }
 
@@ -2503,11 +1777,11 @@ pyg_enum_info_get_value (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&i:enum_info_get_value", kwlist,
-                                      gibaseinfo_from_py, &info, &n))
+                                      baseinfo_from_py, &info, &n))
         return NULL;
 
     res = g_enum_info_get_value (info, n);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -2516,17 +1790,17 @@ static PyObject *
 pyg_field_info_get_flags (PyObject *self, PyObject *args, PyObject *kwargs)
 {
     static char *kwlist[] = { "info", NULL };
-    void* res;
+    unsigned int res;
     PyObject *py_res = NULL;
     GIBaseInfo* info;
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:field_info_get_flags", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_field_info_get_flags (info);
-    py_res = Py_BuildValue ("O&", res);
+    py_res = Py_BuildValue ("I", res);
     return py_res;
 }
 
@@ -2541,7 +1815,7 @@ pyg_field_info_get_offset (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:field_info_get_offset", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_field_info_get_offset (info);
@@ -2560,7 +1834,7 @@ pyg_field_info_get_size (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:field_info_get_size", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_field_info_get_size (info);
@@ -2579,11 +1853,11 @@ pyg_field_info_get_type (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:field_info_get_type", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_field_info_get_type (info);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -2592,17 +1866,17 @@ static PyObject *
 pyg_function_info_get_flags (PyObject *self, PyObject *args, PyObject *kwargs)
 {
     static char *kwlist[] = { "info", NULL };
-    void* res;
+    unsigned int res;
     PyObject *py_res = NULL;
     GIBaseInfo* info;
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:function_info_get_flags", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_function_info_get_flags (info);
-    py_res = Py_BuildValue ("O&", res);
+    py_res = Py_BuildValue ("I", res);
     return py_res;
 }
 
@@ -2617,11 +1891,11 @@ pyg_function_info_get_property (PyObject *self, PyObject *args, PyObject *kwargs
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:function_info_get_property", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_function_info_get_property (info);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -2636,7 +1910,7 @@ pyg_function_info_get_symbol (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:function_info_get_symbol", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_function_info_get_symbol (info);
@@ -2655,11 +1929,11 @@ pyg_function_info_get_vfunc (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:function_info_get_vfunc", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_function_info_get_vfunc (info);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -2670,18 +1944,18 @@ pyg_info_new (PyObject *self, PyObject *args, PyObject *kwargs)
     static char *kwlist[] = { "type", "container", "typelib", "offset", NULL };
     GIBaseInfo* res;
     PyObject *py_res = NULL;
-    void* type;
+    unsigned int type;
     GIBaseInfo* container;
     void* typelib;
     unsigned int offset;
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
-                                      "O&O&O&I:info_new", kwlist,
-                                      pygi_codegen_interface_converter, &type, gibaseinfo_from_py, &container, pygi_codegen_interface_converter, &typelib, &offset))
+                                      "IO&O&I:info_new", kwlist,
+                                      &type, baseinfo_from_py, &container, typelib_from_py, &typelib, &offset))
         return NULL;
 
     res = g_info_new (type, container, typelib, offset);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -2692,11 +1966,11 @@ pyg_info_type_to_string (PyObject *self, PyObject *args, PyObject *kwargs)
     static char *kwlist[] = { "type", NULL };
     const char* res;
     PyObject *py_res = NULL;
-    void* type;
+    unsigned int type;
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
-                                      "O&:info_type_to_string", kwlist,
-                                      pygi_codegen_interface_converter, &type))
+                                      "I:info_type_to_string", kwlist,
+                                      &type))
         return NULL;
 
     res = g_info_type_to_string (type);
@@ -2716,11 +1990,11 @@ pyg_interface_info_find_method (PyObject *self, PyObject *args, PyObject *kwargs
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&s:interface_info_find_method", kwlist,
-                                      gibaseinfo_from_py, &info, &name))
+                                      baseinfo_from_py, &info, &name))
         return NULL;
 
     res = g_interface_info_find_method (info, name);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -2736,11 +2010,11 @@ pyg_interface_info_find_signal (PyObject *self, PyObject *args, PyObject *kwargs
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&s:interface_info_find_signal", kwlist,
-                                      gibaseinfo_from_py, &info, &name))
+                                      baseinfo_from_py, &info, &name))
         return NULL;
 
     res = g_interface_info_find_signal (info, name);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -2756,11 +2030,11 @@ pyg_interface_info_find_vfunc (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&s:interface_info_find_vfunc", kwlist,
-                                      gibaseinfo_from_py, &info, &name))
+                                      baseinfo_from_py, &info, &name))
         return NULL;
 
     res = g_interface_info_find_vfunc (info, name);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -2776,11 +2050,11 @@ pyg_interface_info_get_constant (PyObject *self, PyObject *args, PyObject *kwarg
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&i:interface_info_get_constant", kwlist,
-                                      gibaseinfo_from_py, &info, &n))
+                                      baseinfo_from_py, &info, &n))
         return NULL;
 
     res = g_interface_info_get_constant (info, n);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -2795,11 +2069,11 @@ pyg_interface_info_get_iface_struct (PyObject *self, PyObject *args, PyObject *k
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:interface_info_get_iface_struct", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_interface_info_get_iface_struct (info);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -2815,11 +2089,11 @@ pyg_interface_info_get_method (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&i:interface_info_get_method", kwlist,
-                                      gibaseinfo_from_py, &info, &n))
+                                      baseinfo_from_py, &info, &n))
         return NULL;
 
     res = g_interface_info_get_method (info, n);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -2834,7 +2108,7 @@ pyg_interface_info_get_n_constants (PyObject *self, PyObject *args, PyObject *kw
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:interface_info_get_n_constants", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_interface_info_get_n_constants (info);
@@ -2853,7 +2127,7 @@ pyg_interface_info_get_n_methods (PyObject *self, PyObject *args, PyObject *kwar
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:interface_info_get_n_methods", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_interface_info_get_n_methods (info);
@@ -2872,7 +2146,7 @@ pyg_interface_info_get_n_prerequisites (PyObject *self, PyObject *args, PyObject
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:interface_info_get_n_prerequisites", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_interface_info_get_n_prerequisites (info);
@@ -2891,7 +2165,7 @@ pyg_interface_info_get_n_properties (PyObject *self, PyObject *args, PyObject *k
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:interface_info_get_n_properties", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_interface_info_get_n_properties (info);
@@ -2910,7 +2184,7 @@ pyg_interface_info_get_n_signals (PyObject *self, PyObject *args, PyObject *kwar
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:interface_info_get_n_signals", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_interface_info_get_n_signals (info);
@@ -2929,7 +2203,7 @@ pyg_interface_info_get_n_vfuncs (PyObject *self, PyObject *args, PyObject *kwarg
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:interface_info_get_n_vfuncs", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_interface_info_get_n_vfuncs (info);
@@ -2949,11 +2223,11 @@ pyg_interface_info_get_prerequisite (PyObject *self, PyObject *args, PyObject *k
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&i:interface_info_get_prerequisite", kwlist,
-                                      gibaseinfo_from_py, &info, &n))
+                                      baseinfo_from_py, &info, &n))
         return NULL;
 
     res = g_interface_info_get_prerequisite (info, n);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -2969,11 +2243,11 @@ pyg_interface_info_get_property (PyObject *self, PyObject *args, PyObject *kwarg
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&i:interface_info_get_property", kwlist,
-                                      gibaseinfo_from_py, &info, &n))
+                                      baseinfo_from_py, &info, &n))
         return NULL;
 
     res = g_interface_info_get_property (info, n);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -2989,11 +2263,11 @@ pyg_interface_info_get_signal (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&i:interface_info_get_signal", kwlist,
-                                      gibaseinfo_from_py, &info, &n))
+                                      baseinfo_from_py, &info, &n))
         return NULL;
 
     res = g_interface_info_get_signal (info, n);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -3009,11 +2283,11 @@ pyg_interface_info_get_vfunc (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&i:interface_info_get_vfunc", kwlist,
-                                      gibaseinfo_from_py, &info, &n))
+                                      baseinfo_from_py, &info, &n))
         return NULL;
 
     res = g_interface_info_get_vfunc (info, n);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -3040,11 +2314,11 @@ pyg_object_info_find_method (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&s:object_info_find_method", kwlist,
-                                      gibaseinfo_from_py, &info, &name))
+                                      baseinfo_from_py, &info, &name))
         return NULL;
 
     res = g_object_info_find_method (info, name);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -3061,11 +2335,11 @@ pyg_object_info_find_method_using_interfaces (PyObject *self, PyObject *args, Py
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&sO&:object_info_find_method_using_interfaces", kwlist,
-                                      gibaseinfo_from_py, &info, &name, gibaseinfo_from_py, &implementor))
+                                      baseinfo_from_py, &info, &name, baseinfo_from_py, &implementor))
         return NULL;
 
     res = g_object_info_find_method_using_interfaces (info, name, implementor);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -3081,11 +2355,11 @@ pyg_object_info_find_vfunc (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&s:object_info_find_vfunc", kwlist,
-                                      gibaseinfo_from_py, &info, &name))
+                                      baseinfo_from_py, &info, &name))
         return NULL;
 
     res = g_object_info_find_vfunc (info, name);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -3102,11 +2376,11 @@ pyg_object_info_find_vfunc_using_interfaces (PyObject *self, PyObject *args, PyO
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&sO&:object_info_find_vfunc_using_interfaces", kwlist,
-                                      gibaseinfo_from_py, &info, &name, gibaseinfo_from_py, &implementor))
+                                      baseinfo_from_py, &info, &name, baseinfo_from_py, &implementor))
         return NULL;
 
     res = g_object_info_find_vfunc_using_interfaces (info, name, implementor);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -3121,7 +2395,7 @@ pyg_object_info_get_abstract (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:object_info_get_abstract", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_object_info_get_abstract (info);
@@ -3140,11 +2414,11 @@ pyg_object_info_get_class_struct (PyObject *self, PyObject *args, PyObject *kwar
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:object_info_get_class_struct", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_object_info_get_class_struct (info);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -3160,11 +2434,11 @@ pyg_object_info_get_constant (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&i:object_info_get_constant", kwlist,
-                                      gibaseinfo_from_py, &info, &n))
+                                      baseinfo_from_py, &info, &n))
         return NULL;
 
     res = g_object_info_get_constant (info, n);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -3180,11 +2454,11 @@ pyg_object_info_get_field (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&i:object_info_get_field", kwlist,
-                                      gibaseinfo_from_py, &info, &n))
+                                      baseinfo_from_py, &info, &n))
         return NULL;
 
     res = g_object_info_get_field (info, n);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -3199,7 +2473,7 @@ pyg_object_info_get_fundamental (PyObject *self, PyObject *args, PyObject *kwarg
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:object_info_get_fundamental", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_object_info_get_fundamental (info);
@@ -3218,7 +2492,7 @@ pyg_object_info_get_get_value_function (PyObject *self, PyObject *args, PyObject
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:object_info_get_get_value_function", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_object_info_get_get_value_function (info);
@@ -3238,11 +2512,11 @@ pyg_object_info_get_interface (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&i:object_info_get_interface", kwlist,
-                                      gibaseinfo_from_py, &info, &n))
+                                      baseinfo_from_py, &info, &n))
         return NULL;
 
     res = g_object_info_get_interface (info, n);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -3258,11 +2532,11 @@ pyg_object_info_get_method (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&i:object_info_get_method", kwlist,
-                                      gibaseinfo_from_py, &info, &n))
+                                      baseinfo_from_py, &info, &n))
         return NULL;
 
     res = g_object_info_get_method (info, n);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -3277,7 +2551,7 @@ pyg_object_info_get_n_constants (PyObject *self, PyObject *args, PyObject *kwarg
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:object_info_get_n_constants", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_object_info_get_n_constants (info);
@@ -3296,7 +2570,7 @@ pyg_object_info_get_n_fields (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:object_info_get_n_fields", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_object_info_get_n_fields (info);
@@ -3315,7 +2589,7 @@ pyg_object_info_get_n_interfaces (PyObject *self, PyObject *args, PyObject *kwar
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:object_info_get_n_interfaces", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_object_info_get_n_interfaces (info);
@@ -3334,7 +2608,7 @@ pyg_object_info_get_n_methods (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:object_info_get_n_methods", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_object_info_get_n_methods (info);
@@ -3353,7 +2627,7 @@ pyg_object_info_get_n_properties (PyObject *self, PyObject *args, PyObject *kwar
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:object_info_get_n_properties", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_object_info_get_n_properties (info);
@@ -3372,7 +2646,7 @@ pyg_object_info_get_n_signals (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:object_info_get_n_signals", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_object_info_get_n_signals (info);
@@ -3391,7 +2665,7 @@ pyg_object_info_get_n_vfuncs (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:object_info_get_n_vfuncs", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_object_info_get_n_vfuncs (info);
@@ -3410,11 +2684,11 @@ pyg_object_info_get_parent (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:object_info_get_parent", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_object_info_get_parent (info);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -3430,11 +2704,11 @@ pyg_object_info_get_property (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&i:object_info_get_property", kwlist,
-                                      gibaseinfo_from_py, &info, &n))
+                                      baseinfo_from_py, &info, &n))
         return NULL;
 
     res = g_object_info_get_property (info, n);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -3449,7 +2723,7 @@ pyg_object_info_get_ref_function (PyObject *self, PyObject *args, PyObject *kwar
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:object_info_get_ref_function", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_object_info_get_ref_function (info);
@@ -3468,7 +2742,7 @@ pyg_object_info_get_set_value_function (PyObject *self, PyObject *args, PyObject
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:object_info_get_set_value_function", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_object_info_get_set_value_function (info);
@@ -3488,11 +2762,11 @@ pyg_object_info_get_signal (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&i:object_info_get_signal", kwlist,
-                                      gibaseinfo_from_py, &info, &n))
+                                      baseinfo_from_py, &info, &n))
         return NULL;
 
     res = g_object_info_get_signal (info, n);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -3507,7 +2781,7 @@ pyg_object_info_get_type_init (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:object_info_get_type_init", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_object_info_get_type_init (info);
@@ -3526,7 +2800,7 @@ pyg_object_info_get_type_name (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:object_info_get_type_name", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_object_info_get_type_name (info);
@@ -3545,7 +2819,7 @@ pyg_object_info_get_unref_function (PyObject *self, PyObject *args, PyObject *kw
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:object_info_get_unref_function", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_object_info_get_unref_function (info);
@@ -3565,11 +2839,11 @@ pyg_object_info_get_vfunc (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&i:object_info_get_vfunc", kwlist,
-                                      gibaseinfo_from_py, &info, &n))
+                                      baseinfo_from_py, &info, &n))
         return NULL;
 
     res = g_object_info_get_vfunc (info, n);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -3578,17 +2852,17 @@ static PyObject *
 pyg_property_info_get_flags (PyObject *self, PyObject *args, PyObject *kwargs)
 {
     static char *kwlist[] = { "info", NULL };
-    void* res;
+    unsigned int res;
     PyObject *py_res = NULL;
     GIBaseInfo* info;
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:property_info_get_flags", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_property_info_get_flags (info);
-    py_res = Py_BuildValue ("O&", res);
+    py_res = Py_BuildValue ("I", res);
     return py_res;
 }
 
@@ -3597,17 +2871,17 @@ static PyObject *
 pyg_property_info_get_ownership_transfer (PyObject *self, PyObject *args, PyObject *kwargs)
 {
     static char *kwlist[] = { "info", NULL };
-    void* res;
+    unsigned int res;
     PyObject *py_res = NULL;
     GIBaseInfo* info;
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:property_info_get_ownership_transfer", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_property_info_get_ownership_transfer (info);
-    py_res = Py_BuildValue ("O&", res);
+    py_res = Py_BuildValue ("I", res);
     return py_res;
 }
 
@@ -3622,11 +2896,11 @@ pyg_property_info_get_type (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:property_info_get_type", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_property_info_get_type (info);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -3650,7 +2924,7 @@ pyg_registered_type_info_get_type_init (PyObject *self, PyObject *args, PyObject
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:registered_type_info_get_type_init", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_registered_type_info_get_type_init (info);
@@ -3669,7 +2943,7 @@ pyg_registered_type_info_get_type_name (PyObject *self, PyObject *args, PyObject
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:registered_type_info_get_type_name", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_registered_type_info_get_type_name (info);
@@ -3688,11 +2962,11 @@ pyg_signal_info_get_class_closure (PyObject *self, PyObject *args, PyObject *kwa
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:signal_info_get_class_closure", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_signal_info_get_class_closure (info);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -3701,17 +2975,17 @@ static PyObject *
 pyg_signal_info_get_flags (PyObject *self, PyObject *args, PyObject *kwargs)
 {
     static char *kwlist[] = { "info", NULL };
-    void* res;
+    unsigned int res;
     PyObject *py_res = NULL;
     GIBaseInfo* info;
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:signal_info_get_flags", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_signal_info_get_flags (info);
-    py_res = Py_BuildValue ("O&", res);
+    py_res = Py_BuildValue ("I", res);
     return py_res;
 }
 
@@ -3726,7 +3000,7 @@ pyg_signal_info_true_stops_emit (PyObject *self, PyObject *args, PyObject *kwarg
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:signal_info_true_stops_emit", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_signal_info_true_stops_emit (info);
@@ -3746,11 +3020,11 @@ pyg_struct_info_find_method (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&s:struct_info_find_method", kwlist,
-                                      gibaseinfo_from_py, &info, &name))
+                                      baseinfo_from_py, &info, &name))
         return NULL;
 
     res = g_struct_info_find_method (info, name);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -3765,7 +3039,7 @@ pyg_struct_info_get_alignment (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:struct_info_get_alignment", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_struct_info_get_alignment (info);
@@ -3785,11 +3059,11 @@ pyg_struct_info_get_field (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&i:struct_info_get_field", kwlist,
-                                      gibaseinfo_from_py, &info, &n))
+                                      baseinfo_from_py, &info, &n))
         return NULL;
 
     res = g_struct_info_get_field (info, n);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -3805,11 +3079,11 @@ pyg_struct_info_get_method (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&i:struct_info_get_method", kwlist,
-                                      gibaseinfo_from_py, &info, &n))
+                                      baseinfo_from_py, &info, &n))
         return NULL;
 
     res = g_struct_info_get_method (info, n);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -3824,7 +3098,7 @@ pyg_struct_info_get_n_fields (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:struct_info_get_n_fields", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_struct_info_get_n_fields (info);
@@ -3843,7 +3117,7 @@ pyg_struct_info_get_n_methods (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:struct_info_get_n_methods", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_struct_info_get_n_methods (info);
@@ -3862,7 +3136,7 @@ pyg_struct_info_get_size (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:struct_info_get_size", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_struct_info_get_size (info);
@@ -3881,7 +3155,7 @@ pyg_struct_info_is_foreign (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:struct_info_is_foreign", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_struct_info_is_foreign (info);
@@ -3900,7 +3174,7 @@ pyg_struct_info_is_gtype_struct (PyObject *self, PyObject *args, PyObject *kwarg
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:struct_info_is_gtype_struct", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_struct_info_is_gtype_struct (info);
@@ -3919,7 +3193,7 @@ pyg_type_info_get_array_fixed_size (PyObject *self, PyObject *args, PyObject *kw
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:type_info_get_array_fixed_size", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_type_info_get_array_fixed_size (info);
@@ -3938,7 +3212,7 @@ pyg_type_info_get_array_length (PyObject *self, PyObject *args, PyObject *kwargs
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:type_info_get_array_length", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_type_info_get_array_length (info);
@@ -3951,17 +3225,17 @@ static PyObject *
 pyg_type_info_get_array_type (PyObject *self, PyObject *args, PyObject *kwargs)
 {
     static char *kwlist[] = { "info", NULL };
-    void* res;
+    unsigned int res;
     PyObject *py_res = NULL;
     GIBaseInfo* info;
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:type_info_get_array_type", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_type_info_get_array_type (info);
-    py_res = Py_BuildValue ("O&", res);
+    py_res = Py_BuildValue ("I", res);
     return py_res;
 }
 
@@ -3976,11 +3250,11 @@ pyg_type_info_get_interface (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:type_info_get_interface", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_type_info_get_interface (info);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -3996,11 +3270,11 @@ pyg_type_info_get_param_type (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&i:type_info_get_param_type", kwlist,
-                                      gibaseinfo_from_py, &info, &n))
+                                      baseinfo_from_py, &info, &n))
         return NULL;
 
     res = g_type_info_get_param_type (info, n);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -4009,17 +3283,17 @@ static PyObject *
 pyg_type_info_get_tag (PyObject *self, PyObject *args, PyObject *kwargs)
 {
     static char *kwlist[] = { "info", NULL };
-    void* res;
+    unsigned int res;
     PyObject *py_res = NULL;
     GIBaseInfo* info;
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:type_info_get_tag", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_type_info_get_tag (info);
-    py_res = Py_BuildValue ("O&", res);
+    py_res = Py_BuildValue ("I", res);
     return py_res;
 }
 
@@ -4034,7 +3308,7 @@ pyg_type_info_is_pointer (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:type_info_is_pointer", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_type_info_is_pointer (info);
@@ -4053,7 +3327,7 @@ pyg_type_info_is_zero_terminated (PyObject *self, PyObject *args, PyObject *kwar
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:type_info_is_zero_terminated", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_type_info_is_zero_terminated (info);
@@ -4068,11 +3342,11 @@ pyg_type_tag_to_string (PyObject *self, PyObject *args, PyObject *kwargs)
     static char *kwlist[] = { "type", NULL };
     const char* res;
     PyObject *py_res = NULL;
-    void* type;
+    unsigned int type;
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
-                                      "O&:type_tag_to_string", kwlist,
-                                      pygi_codegen_interface_converter, &type))
+                                      "I:type_tag_to_string", kwlist,
+                                      &type))
         return NULL;
 
     res = g_type_tag_to_string (type);
@@ -4092,11 +3366,11 @@ pyg_union_info_find_method (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&s:union_info_find_method", kwlist,
-                                      gibaseinfo_from_py, &info, &name))
+                                      baseinfo_from_py, &info, &name))
         return NULL;
 
     res = g_union_info_find_method (info, name);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -4111,7 +3385,7 @@ pyg_union_info_get_alignment (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:union_info_get_alignment", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_union_info_get_alignment (info);
@@ -4131,11 +3405,11 @@ pyg_union_info_get_discriminator (PyObject *self, PyObject *args, PyObject *kwar
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&i:union_info_get_discriminator", kwlist,
-                                      gibaseinfo_from_py, &info, &n))
+                                      baseinfo_from_py, &info, &n))
         return NULL;
 
     res = g_union_info_get_discriminator (info, n);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -4150,7 +3424,7 @@ pyg_union_info_get_discriminator_offset (PyObject *self, PyObject *args, PyObjec
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:union_info_get_discriminator_offset", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_union_info_get_discriminator_offset (info);
@@ -4169,11 +3443,11 @@ pyg_union_info_get_discriminator_type (PyObject *self, PyObject *args, PyObject 
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:union_info_get_discriminator_type", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_union_info_get_discriminator_type (info);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -4189,11 +3463,11 @@ pyg_union_info_get_field (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&i:union_info_get_field", kwlist,
-                                      gibaseinfo_from_py, &info, &n))
+                                      baseinfo_from_py, &info, &n))
         return NULL;
 
     res = g_union_info_get_field (info, n);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -4209,11 +3483,11 @@ pyg_union_info_get_method (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&i:union_info_get_method", kwlist,
-                                      gibaseinfo_from_py, &info, &n))
+                                      baseinfo_from_py, &info, &n))
         return NULL;
 
     res = g_union_info_get_method (info, n);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -4228,7 +3502,7 @@ pyg_union_info_get_n_fields (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:union_info_get_n_fields", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_union_info_get_n_fields (info);
@@ -4247,7 +3521,7 @@ pyg_union_info_get_n_methods (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:union_info_get_n_methods", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_union_info_get_n_methods (info);
@@ -4266,7 +3540,7 @@ pyg_union_info_get_size (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:union_info_get_size", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_union_info_get_size (info);
@@ -4285,7 +3559,7 @@ pyg_union_info_is_discriminated (PyObject *self, PyObject *args, PyObject *kwarg
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:union_info_is_discriminated", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_union_info_is_discriminated (info);
@@ -4304,7 +3578,7 @@ pyg_value_info_get_value (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:value_info_get_value", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_value_info_get_value (info);
@@ -4317,17 +3591,17 @@ static PyObject *
 pyg_vfunc_info_get_flags (PyObject *self, PyObject *args, PyObject *kwargs)
 {
     static char *kwlist[] = { "info", NULL };
-    void* res;
+    unsigned int res;
     PyObject *py_res = NULL;
     GIBaseInfo* info;
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:vfunc_info_get_flags", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_vfunc_info_get_flags (info);
-    py_res = Py_BuildValue ("O&", res);
+    py_res = Py_BuildValue ("I", res);
     return py_res;
 }
 
@@ -4342,11 +3616,11 @@ pyg_vfunc_info_get_invoker (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:vfunc_info_get_invoker", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_vfunc_info_get_invoker (info);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -4361,7 +3635,7 @@ pyg_vfunc_info_get_offset (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:vfunc_info_get_offset", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_vfunc_info_get_offset (info);
@@ -4380,11 +3654,11 @@ pyg_vfunc_info_get_signal (PyObject *self, PyObject *args, PyObject *kwargs)
 
     if (!PyArg_ParseTupleAndKeywords (args, kwargs,
                                       "O&:vfunc_info_get_signal", kwlist,
-                                      gibaseinfo_from_py, &info))
+                                      baseinfo_from_py, &info))
         return NULL;
 
     res = g_vfunc_info_get_signal (info);
-    py_res = Py_BuildValue ("O&", gibaseinfo_to_py, &res);
+    py_res = Py_BuildValue ("O&", baseinfo_to_py, &res);
     return py_res;
 }
 
@@ -4408,7 +3682,6 @@ static PyMethodDef pygirepository_functions[] = {
     { "callable_info_get_n_args", (PyCFunction) pyg_callable_info_get_n_args, METH_VARARGS | METH_KEYWORDS },
     { "callable_info_get_return_attribute", (PyCFunction) pyg_callable_info_get_return_attribute, METH_VARARGS | METH_KEYWORDS },
     { "callable_info_get_return_type", (PyCFunction) pyg_callable_info_get_return_type, METH_VARARGS | METH_KEYWORDS },
-    { "callable_info_invoke", (PyCFunction) pyg_callable_info_invoke, METH_VARARGS | METH_KEYWORDS },
     { "callable_info_is_method", (PyCFunction) pyg_callable_info_is_method, METH_VARARGS | METH_KEYWORDS },
     { "callable_info_iterate_return_attributes", (PyCFunction) pyg_callable_info_iterate_return_attributes, METH_VARARGS | METH_KEYWORDS },
     { "callable_info_load_arg", (PyCFunction) pyg_callable_info_load_arg, METH_VARARGS | METH_KEYWORDS },
@@ -4544,17 +3817,11 @@ static int
 pygirepository_register_types (PyObject *module)
 {
 
-    Py_TYPE(&PyGIRepositoryArgument_Type) = &PyType_Type;
-    #ifdef PY_GI_REPOSITORY_ARGUMENT__TYPE_CUSTOM_SETUP
-        PY_GI_REPOSITORY_ARGUMENT__TYPE_CUSTOM_SETUP(PyGIRepositoryArgument_Type)
-    #endif
-    if (PyType_Ready (&PyGIRepositoryArgument_Type))
-        return -1;
-    if (PyModule_AddObject (module, "Argument", (PyObject *)&PyGIRepositoryArgument_Type))
-        return -1;
-
-
     Py_TYPE(&PyGIRepositoryArrayType_Type) = &PyType_Type;
+    PyGIRepositoryArrayType_Type.tp_repr = (reprfunc)pygi_codegen_enum_repr;
+    PyGIRepositoryArrayType_Type.tp_flags = (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE);
+    PyGIRepositoryArrayType_Type.tp_methods = PyGIRepositoryArrayType_methods;
+    PyGIRepositoryArrayType_Type.tp_base = &PyLong_Type;
     #ifdef PY_GI_REPOSITORY_ARRAY_TYPE__TYPE_CUSTOM_SETUP
         PY_GI_REPOSITORY_ARRAY_TYPE__TYPE_CUSTOM_SETUP(PyGIRepositoryArrayType_Type)
     #endif
@@ -4577,6 +3844,10 @@ pygirepository_register_types (PyObject *module)
 
 
     Py_TYPE(&PyGIRepositoryAttributeIter_Type) = &PyType_Type;
+    PyGIRepositoryAttributeIter_Type.tp_repr = (reprfunc)NULL;
+    PyGIRepositoryAttributeIter_Type.tp_flags = (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE);
+    PyGIRepositoryAttributeIter_Type.tp_methods = PyGIRepositoryAttributeIter_methods;
+    PyGIRepositoryAttributeIter_Type.tp_base = &PyType_Type;
     #ifdef PY_GI_REPOSITORY_ATTRIBUTE_ITER__TYPE_CUSTOM_SETUP
         PY_GI_REPOSITORY_ATTRIBUTE_ITER__TYPE_CUSTOM_SETUP(PyGIRepositoryAttributeIter_Type)
     #endif
@@ -4587,6 +3858,10 @@ pygirepository_register_types (PyObject *module)
 
 
     Py_TYPE(&PyGIRepositoryBaseInfo_Type) = &PyType_Type;
+    PyGIRepositoryBaseInfo_Type.tp_repr = (reprfunc)NULL;
+    PyGIRepositoryBaseInfo_Type.tp_flags = (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE);
+    PyGIRepositoryBaseInfo_Type.tp_methods = PyGIRepositoryBaseInfo_methods;
+    PyGIRepositoryBaseInfo_Type.tp_base = &PyType_Type;
     #ifdef PY_GI_REPOSITORY_BASE_INFO__TYPE_CUSTOM_SETUP
         PY_GI_REPOSITORY_BASE_INFO__TYPE_CUSTOM_SETUP(PyGIRepositoryBaseInfo_Type)
     #endif
@@ -4597,6 +3872,10 @@ pygirepository_register_types (PyObject *module)
 
 
     Py_TYPE(&PyGIRepositoryDirection_Type) = &PyType_Type;
+    PyGIRepositoryDirection_Type.tp_repr = (reprfunc)pygi_codegen_enum_repr;
+    PyGIRepositoryDirection_Type.tp_flags = (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE);
+    PyGIRepositoryDirection_Type.tp_methods = PyGIRepositoryDirection_methods;
+    PyGIRepositoryDirection_Type.tp_base = &PyLong_Type;
     #ifdef PY_GI_REPOSITORY_DIRECTION__TYPE_CUSTOM_SETUP
         PY_GI_REPOSITORY_DIRECTION__TYPE_CUSTOM_SETUP(PyGIRepositoryDirection_Type)
     #endif
@@ -4618,6 +3897,10 @@ pygirepository_register_types (PyObject *module)
 
 
     Py_TYPE(&PyGIRepositoryFieldInfoFlags_Type) = &PyType_Type;
+    PyGIRepositoryFieldInfoFlags_Type.tp_repr = (reprfunc)pygi_codegen_enum_repr;
+    PyGIRepositoryFieldInfoFlags_Type.tp_flags = (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE);
+    PyGIRepositoryFieldInfoFlags_Type.tp_methods = PyGIRepositoryFieldInfoFlags_methods;
+    PyGIRepositoryFieldInfoFlags_Type.tp_base = &PyLong_Type;
     #ifdef PY_GI_REPOSITORY_FIELD_INFO_FLAGS__TYPE_CUSTOM_SETUP
         PY_GI_REPOSITORY_FIELD_INFO_FLAGS__TYPE_CUSTOM_SETUP(PyGIRepositoryFieldInfoFlags_Type)
     #endif
@@ -4638,6 +3921,10 @@ pygirepository_register_types (PyObject *module)
 
 
     Py_TYPE(&PyGIRepositoryFunctionInfoFlags_Type) = &PyType_Type;
+    PyGIRepositoryFunctionInfoFlags_Type.tp_repr = (reprfunc)pygi_codegen_enum_repr;
+    PyGIRepositoryFunctionInfoFlags_Type.tp_flags = (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE);
+    PyGIRepositoryFunctionInfoFlags_Type.tp_methods = PyGIRepositoryFunctionInfoFlags_methods;
+    PyGIRepositoryFunctionInfoFlags_Type.tp_base = &PyLong_Type;
     #ifdef PY_GI_REPOSITORY_FUNCTION_INFO_FLAGS__TYPE_CUSTOM_SETUP
         PY_GI_REPOSITORY_FUNCTION_INFO_FLAGS__TYPE_CUSTOM_SETUP(PyGIRepositoryFunctionInfoFlags_Type)
     #endif
@@ -4662,6 +3949,10 @@ pygirepository_register_types (PyObject *module)
 
 
     Py_TYPE(&PyGIRepositoryInfoType_Type) = &PyType_Type;
+    PyGIRepositoryInfoType_Type.tp_repr = (reprfunc)pygi_codegen_enum_repr;
+    PyGIRepositoryInfoType_Type.tp_flags = (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE);
+    PyGIRepositoryInfoType_Type.tp_methods = PyGIRepositoryInfoType_methods;
+    PyGIRepositoryInfoType_Type.tp_base = &PyLong_Type;
     #ifdef PY_GI_REPOSITORY_INFO_TYPE__TYPE_CUSTOM_SETUP
         PY_GI_REPOSITORY_INFO_TYPE__TYPE_CUSTOM_SETUP(PyGIRepositoryInfoType_Type)
     #endif
@@ -4700,6 +3991,10 @@ pygirepository_register_types (PyObject *module)
 
 
     Py_TYPE(&PyGIRepositoryRepository_Type) = &PyType_Type;
+    PyGIRepositoryRepository_Type.tp_repr = (reprfunc)NULL;
+    PyGIRepositoryRepository_Type.tp_flags = (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE);
+    PyGIRepositoryRepository_Type.tp_methods = PyGIRepositoryRepository_methods;
+    PyGIRepositoryRepository_Type.tp_base = &PyType_Type;
     #ifdef PY_GI_REPOSITORY_REPOSITORY__TYPE_CUSTOM_SETUP
         PY_GI_REPOSITORY_REPOSITORY__TYPE_CUSTOM_SETUP(PyGIRepositoryRepository_Type)
     #endif
@@ -4710,6 +4005,10 @@ pygirepository_register_types (PyObject *module)
 
 
     Py_TYPE(&PyGIRepositoryRepositoryClass_Type) = &PyType_Type;
+    PyGIRepositoryRepositoryClass_Type.tp_repr = (reprfunc)NULL;
+    PyGIRepositoryRepositoryClass_Type.tp_flags = (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE);
+    PyGIRepositoryRepositoryClass_Type.tp_methods = PyGIRepositoryRepositoryClass_methods;
+    PyGIRepositoryRepositoryClass_Type.tp_base = &PyType_Type;
     #ifdef PY_GI_REPOSITORY_REPOSITORY_CLASS__TYPE_CUSTOM_SETUP
         PY_GI_REPOSITORY_REPOSITORY_CLASS__TYPE_CUSTOM_SETUP(PyGIRepositoryRepositoryClass_Type)
     #endif
@@ -4720,6 +4019,10 @@ pygirepository_register_types (PyObject *module)
 
 
     Py_TYPE(&PyGIRepositoryRepositoryError_Type) = &PyType_Type;
+    PyGIRepositoryRepositoryError_Type.tp_repr = (reprfunc)pygi_codegen_enum_repr;
+    PyGIRepositoryRepositoryError_Type.tp_flags = (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE);
+    PyGIRepositoryRepositoryError_Type.tp_methods = PyGIRepositoryRepositoryError_methods;
+    PyGIRepositoryRepositoryError_Type.tp_base = &PyLong_Type;
     #ifdef PY_GI_REPOSITORY_REPOSITORY_ERROR__TYPE_CUSTOM_SETUP
         PY_GI_REPOSITORY_REPOSITORY_ERROR__TYPE_CUSTOM_SETUP(PyGIRepositoryRepositoryError_Type)
     #endif
@@ -4742,6 +4045,10 @@ pygirepository_register_types (PyObject *module)
 
 
     Py_TYPE(&PyGIRepositoryRepositoryLoadFlags_Type) = &PyType_Type;
+    PyGIRepositoryRepositoryLoadFlags_Type.tp_repr = (reprfunc)pygi_codegen_enum_repr;
+    PyGIRepositoryRepositoryLoadFlags_Type.tp_flags = (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE);
+    PyGIRepositoryRepositoryLoadFlags_Type.tp_methods = PyGIRepositoryRepositoryLoadFlags_methods;
+    PyGIRepositoryRepositoryLoadFlags_Type.tp_base = &PyLong_Type;
     #ifdef PY_GI_REPOSITORY_REPOSITORY_LOAD_FLAGS__TYPE_CUSTOM_SETUP
         PY_GI_REPOSITORY_REPOSITORY_LOAD_FLAGS__TYPE_CUSTOM_SETUP(PyGIRepositoryRepositoryLoadFlags_Type)
     #endif
@@ -4761,6 +4068,10 @@ pygirepository_register_types (PyObject *module)
 
 
     Py_TYPE(&PyGIRepositoryRepositoryPrivate_Type) = &PyType_Type;
+    PyGIRepositoryRepositoryPrivate_Type.tp_repr = (reprfunc)NULL;
+    PyGIRepositoryRepositoryPrivate_Type.tp_flags = (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE);
+    PyGIRepositoryRepositoryPrivate_Type.tp_methods = PyGIRepositoryRepositoryPrivate_methods;
+    PyGIRepositoryRepositoryPrivate_Type.tp_base = &PyType_Type;
     #ifdef PY_GI_REPOSITORY_REPOSITORY_PRIVATE__TYPE_CUSTOM_SETUP
         PY_GI_REPOSITORY_REPOSITORY_PRIVATE__TYPE_CUSTOM_SETUP(PyGIRepositoryRepositoryPrivate_Type)
     #endif
@@ -4771,6 +4082,10 @@ pygirepository_register_types (PyObject *module)
 
 
     Py_TYPE(&PyGIRepositoryScopeType_Type) = &PyType_Type;
+    PyGIRepositoryScopeType_Type.tp_repr = (reprfunc)pygi_codegen_enum_repr;
+    PyGIRepositoryScopeType_Type.tp_flags = (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE);
+    PyGIRepositoryScopeType_Type.tp_methods = PyGIRepositoryScopeType_methods;
+    PyGIRepositoryScopeType_Type.tp_base = &PyLong_Type;
     #ifdef PY_GI_REPOSITORY_SCOPE_TYPE__TYPE_CUSTOM_SETUP
         PY_GI_REPOSITORY_SCOPE_TYPE__TYPE_CUSTOM_SETUP(PyGIRepositoryScopeType_Type)
     #endif
@@ -4793,6 +4108,10 @@ pygirepository_register_types (PyObject *module)
 
 
     Py_TYPE(&PyGIRepositoryTransfer_Type) = &PyType_Type;
+    PyGIRepositoryTransfer_Type.tp_repr = (reprfunc)pygi_codegen_enum_repr;
+    PyGIRepositoryTransfer_Type.tp_flags = (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE);
+    PyGIRepositoryTransfer_Type.tp_methods = PyGIRepositoryTransfer_methods;
+    PyGIRepositoryTransfer_Type.tp_base = &PyLong_Type;
     #ifdef PY_GI_REPOSITORY_TRANSFER__TYPE_CUSTOM_SETUP
         PY_GI_REPOSITORY_TRANSFER__TYPE_CUSTOM_SETUP(PyGIRepositoryTransfer_Type)
     #endif
@@ -4814,6 +4133,10 @@ pygirepository_register_types (PyObject *module)
 
 
     Py_TYPE(&PyGIRepositoryTypeTag_Type) = &PyType_Type;
+    PyGIRepositoryTypeTag_Type.tp_repr = (reprfunc)pygi_codegen_enum_repr;
+    PyGIRepositoryTypeTag_Type.tp_flags = (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE);
+    PyGIRepositoryTypeTag_Type.tp_methods = PyGIRepositoryTypeTag_methods;
+    PyGIRepositoryTypeTag_Type.tp_base = &PyLong_Type;
     #ifdef PY_GI_REPOSITORY_TYPE_TAG__TYPE_CUSTOM_SETUP
         PY_GI_REPOSITORY_TYPE_TAG__TYPE_CUSTOM_SETUP(PyGIRepositoryTypeTag_Type)
     #endif
@@ -4854,6 +4177,10 @@ pygirepository_register_types (PyObject *module)
 
 
     Py_TYPE(&PyGIRepositoryTypelib_Type) = &PyType_Type;
+    PyGIRepositoryTypelib_Type.tp_repr = (reprfunc)NULL;
+    PyGIRepositoryTypelib_Type.tp_flags = (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE);
+    PyGIRepositoryTypelib_Type.tp_methods = PyGIRepositoryTypelib_methods;
+    PyGIRepositoryTypelib_Type.tp_base = &PyType_Type;
     #ifdef PY_GI_REPOSITORY_TYPELIB__TYPE_CUSTOM_SETUP
         PY_GI_REPOSITORY_TYPELIB__TYPE_CUSTOM_SETUP(PyGIRepositoryTypelib_Type)
     #endif
@@ -4864,6 +4191,10 @@ pygirepository_register_types (PyObject *module)
 
 
     Py_TYPE(&PyGIRepositoryUnresolvedInfo_Type) = &PyType_Type;
+    PyGIRepositoryUnresolvedInfo_Type.tp_repr = (reprfunc)NULL;
+    PyGIRepositoryUnresolvedInfo_Type.tp_flags = (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE);
+    PyGIRepositoryUnresolvedInfo_Type.tp_methods = PyGIRepositoryUnresolvedInfo_methods;
+    PyGIRepositoryUnresolvedInfo_Type.tp_base = &PyType_Type;
     #ifdef PY_GI_REPOSITORY_UNRESOLVED_INFO__TYPE_CUSTOM_SETUP
         PY_GI_REPOSITORY_UNRESOLVED_INFO__TYPE_CUSTOM_SETUP(PyGIRepositoryUnresolvedInfo_Type)
     #endif
@@ -4874,6 +4205,10 @@ pygirepository_register_types (PyObject *module)
 
 
     Py_TYPE(&PyGIRepositoryVFuncInfoFlags_Type) = &PyType_Type;
+    PyGIRepositoryVFuncInfoFlags_Type.tp_repr = (reprfunc)pygi_codegen_enum_repr;
+    PyGIRepositoryVFuncInfoFlags_Type.tp_flags = (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE);
+    PyGIRepositoryVFuncInfoFlags_Type.tp_methods = PyGIRepositoryVFuncInfoFlags_methods;
+    PyGIRepositoryVFuncInfoFlags_Type.tp_base = &PyLong_Type;
     #ifdef PY_GI_REPOSITORY_V_FUNC_INFO_FLAGS__TYPE_CUSTOM_SETUP
         PY_GI_REPOSITORY_V_FUNC_INFO_FLAGS__TYPE_CUSTOM_SETUP(PyGIRepositoryVFuncInfoFlags_Type)
     #endif
@@ -4895,7 +4230,25 @@ pygirepository_register_types (PyObject *module)
     }
 
 
+    Py_TYPE(&PyGIRepository_Argument_Type) = &PyType_Type;
+    PyGIRepository_Argument_Type.tp_repr = (reprfunc)NULL;
+    PyGIRepository_Argument_Type.tp_flags = (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE);
+    PyGIRepository_Argument_Type.tp_methods = PyGIRepository_Argument_methods;
+    PyGIRepository_Argument_Type.tp_base = &PyType_Type;
+    #ifdef PY_GI_REPOSITORY__ARGUMENT__TYPE_CUSTOM_SETUP
+        PY_GI_REPOSITORY__ARGUMENT__TYPE_CUSTOM_SETUP(PyGIRepository_Argument_Type)
+    #endif
+    if (PyType_Ready (&PyGIRepository_Argument_Type))
+        return -1;
+    if (PyModule_AddObject (module, "_Argument", (PyObject *)&PyGIRepository_Argument_Type))
+        return -1;
+
+
     Py_TYPE(&PyGIRepository_BaseInfoStub_Type) = &PyType_Type;
+    PyGIRepository_BaseInfoStub_Type.tp_repr = (reprfunc)NULL;
+    PyGIRepository_BaseInfoStub_Type.tp_flags = (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE);
+    PyGIRepository_BaseInfoStub_Type.tp_methods = PyGIRepository_BaseInfoStub_methods;
+    PyGIRepository_BaseInfoStub_Type.tp_base = &PyType_Type;
     #ifdef PY_GI_REPOSITORY__BASE_INFO_STUB__TYPE_CUSTOM_SETUP
         PY_GI_REPOSITORY__BASE_INFO_STUB__TYPE_CUSTOM_SETUP(PyGIRepository_BaseInfoStub_Type)
     #endif
@@ -4906,6 +4259,10 @@ pygirepository_register_types (PyObject *module)
 
 
     Py_TYPE(&PyGIRepositorynvokeError_Type) = &PyType_Type;
+    PyGIRepositorynvokeError_Type.tp_repr = (reprfunc)pygi_codegen_enum_repr;
+    PyGIRepositorynvokeError_Type.tp_flags = (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE);
+    PyGIRepositorynvokeError_Type.tp_methods = PyGIRepositorynvokeError_methods;
+    PyGIRepositorynvokeError_Type.tp_base = &PyLong_Type;
     #ifdef PY_GI_REPOSITORYNVOKE_ERROR__TYPE_CUSTOM_SETUP
         PY_GI_REPOSITORYNVOKE_ERROR__TYPE_CUSTOM_SETUP(PyGIRepositorynvokeError_Type)
     #endif

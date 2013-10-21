@@ -128,6 +128,8 @@ $python{
     from gi.codegen.codegen import magic_print, method_table_template
 
     for builder in self.class_builders:
+        magic_print("/* ========== ${builder.namespace}.${builder.name} ========== */")
+        builder.print_converters()
         builder.print_methods()
 
     for builder in self.method_builders:

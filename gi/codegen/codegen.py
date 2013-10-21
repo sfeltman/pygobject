@@ -58,7 +58,11 @@ def typeinfo_to_pyparse(type_info):
     tag = type_info.get_tag()
     if tag == TypeTag.INTERFACE:
         iface = type_info.get_interface()
-        name = iface.get_type_name()
+        iface_info_type = iface.get_type()
+        if iface_info_type in (InfoType.FLAGS, InfoType.ENUM):
+            return _typetag_to_pyparse[iface.get_storage_type()]
+
+        name = iface.get_name()
         if name in current_context.registered_structs:
             builder = current_context.registered_structs[name]
             return ('O&', builder.from_py_converter)
@@ -98,7 +102,11 @@ def typeinfo_to_buildvalue(type_info):
     tag = type_info.get_tag()
     if tag == TypeTag.INTERFACE:
         iface = type_info.get_interface()
-        name = iface.get_type_name()
+        iface_info_type = iface.get_type()
+        if iface_info_type in (InfoType.FLAGS, InfoType.ENUM):
+            return _typetag_to_buildvalue[iface.get_storage_type()]
+
+        name = iface.get_name()
         if name in current_context.registered_structs:
             builder = current_context.registered_structs[name]
             return ('O&', builder.to_py_converter)
@@ -141,9 +149,14 @@ def typeinfo_to_ctype(type_info):
     tag = type_info.get_tag()
     if tag == TypeTag.INTERFACE:
         iface = type_info.get_interface()
-        name = iface.get_type_name()
-        if name is not None:
-            return name + '*'
+        iface_info_type = iface.get_type()
+        if iface_info_type in (InfoType.FLAGS, InfoType.ENUM):
+            return _typetag_to_ctype[iface.get_storage_type()]
+
+        name = iface.get_name()
+        if name in current_context.registered_structs:
+            builder = current_context.registered_structs[name]
+            return builder.ctype
     return _typetag_to_ctype[tag]
 
 
@@ -178,7 +191,8 @@ def capture_stdout():
 
 
 _magic_print_substitute_re = re.compile(r'^(?P<indent>[ \t]*)\$python{\s*\n(?P<block>.*?)\s*\}end[ \t]*\n|'
-                                        '(?:\${(?P<expr>.*?)})', re.MULTILINE | re.DOTALL)
+                                        r'(?:\${(?P<expr>.*?)})',
+                                        re.MULTILINE | re.DOTALL)
 
 
 def magic_print(*args, sep=' ', end='\n', file=None, flush=False):
@@ -404,55 +418,11 @@ class MethodBuilder(FunctionBuilder):
             self.py_flags += ' | METH_STATIC'
 
 
-# we can only pretend to use C99 designated initializers
 py_type_object = """
 PyTypeObject ${self.py_type_object_name} = {
     PyVarObject_HEAD_INIT(NULL, 0)
-
     /* .tp_name = */ ${self.tp_name},
     /* .tp_size = */ ${self.tp_size},
-    /* .tp_itemsize = */ 0,
-    /* .tp_dealloc = */ NULL,
-    /* .tp_print = */ NULL,
-    /* .tp_getattr = */ NULL,
-    /* .tp_setattr = */ NULL,
-    /* .tp_compare = */ NULL,
-    /* .tp_repr = */ (reprfunc)${self.tp_repr},
-    /* .tp_as_number = */ NULL,
-    /* .tp_as_sequence = */ NULL,
-    /* .tp_as_mapping = */ NULL,
-    /* .tp_hash = */ NULL,
-    /* .tp_call = */ NULL,
-    /* .tp_str = */ NULL,
-    /* .tp_getattro = */ NULL,
-    /* .tp_setattro = */ NULL,
-    /* .tp_as_buffer = */ NULL,
-    /* .tp_flags = */ (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE),
-    /* .tp_doc = */ NULL,
-    /* .tp_traverse = */ NULL,
-    /* .tp_clear = */ NULL,
-    /* .tp_richcompare = */ NULL,
-    /* .tp_weaklistoffset = */ 0,
-    /* .tp_iter = */ NULL,
-    /* .tp_iternext = */ NULL,
-    /* .tp_methods = */ ${self.tp_methods},
-    /* .tp_members = */ NULL,
-    /* .tp_getset = */ NULL,
-    /* .tp_base = */ ${self.tp_base},
-    /* .tp_dict = */ NULL,
-    /* .tp_descr_get = */ NULL,
-    /* .tp_descr_set = */ NULL,
-    /* .tp_dictoffset = */ 0,
-    /* .tp_init = */ NULL,
-    /* .tp_alloc = */ NULL,
-    /* .tp_new = */ NULL,
-    /* .tp_free = */ NULL,
-    /* .tp_is_gc = */ NULL,
-    /* .tp_bases = */ NULL,
-    /* .tp_mro = */ NULL,
-    /* .tp_cache = */ NULL,
-    /* .tp_subclasses = */ NULL,
-    /* .tp_weaklist = */ NULL,
 };
 """
 
@@ -476,6 +446,10 @@ class ClassBuilder(Builder):
 
     py_type_register = """
         Py_TYPE(&${self.py_type_object_name}) = &PyType_Type;
+        ${self.py_type_object_name}.tp_repr = (reprfunc)${self.tp_repr};
+        ${self.py_type_object_name}.tp_flags = (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE);
+        ${self.py_type_object_name}.tp_methods = ${self.tp_methods};
+        ${self.py_type_object_name}.tp_base = ${self.tp_base};
         #ifdef ${self.py_type_custom_setup_macro_name}
             ${self.py_type_custom_setup_macro_name}(${self.py_type_object_name})
         #endif
@@ -490,8 +464,8 @@ class ClassBuilder(Builder):
             PyObject_HEAD
             $python{
                 if self.wrapped_type is not None:
-                    magic_print('${self.wrapped_type} *obj;')
-                    magic_print('#define ${self.get_wrapped_func}(obj) (obj->obj)')
+                    magic_print('${self.ctype} obj;')
+                    magic_print('#define ${self.get_wrapped_func}(obj) (((${self.py_object_struct_name}*)obj)->obj)')
                 if self.gtype != GObject.TYPE_NONE:
                     magic_print('GType gtype;')
             }end
@@ -500,19 +474,19 @@ class ClassBuilder(Builder):
 
     py_converters = """
         static int
-        ${self.to_py_converter}_from_py (PyObject *obj, int *value)
+        ${self.from_py_converter} (PyObject *obj, ${self.ctype} *value)
         {
-            *value = PyObject_IsTrue (obj);
+            *value = ${self.get_wrapped_func} (obj);
             return 1;
         }
 
         static PyObject *
-        ${self.from_py_converter} (int *value)
+        ${self.to_py_converter} (${self.ctype} value)
         {
-            if (*value)
-                Py_RETURN_TRUE;
-            else
-                Py_RETURN_FALSE;
+            ${self.py_object_struct_name} *obj;
+            obj = PyObject_New(${self.py_object_struct_name}, &${self.py_type_object_name});
+            obj->obj = value;
+            return (PyObject *) obj;
         }
         """
 
@@ -524,9 +498,13 @@ class ClassBuilder(Builder):
         self.full_name = '%s.%s' % (self.namespace, self.name)
         self.gtype = info.get_g_type()
 
+        info_type = info.get_type()
+
         self.wrapped_type = info.get_type_name()
         if self.wrapped_type is None:
             self.wrapped_type = "void"
+
+        self.ctype = self.wrapped_type + '*'
 
         self.py_object_struct_name = 'Py%s%s' % (self.namespace, self.name)
         self.py_type_object_name = '%s_Type' % self.py_object_struct_name
@@ -546,8 +524,8 @@ class ClassBuilder(Builder):
 
         self.get_wrapped_func = self.py_object_struct_name + '_get'
         self.from_pointer_func = ''
-        self.from_py_converter = self.wrapped_type.lower() + '_from_py'
-        self.to_py_converter = self.wrapped_type.lower() + '_to_py'
+        self.from_py_converter = self.name.lower() + '_from_py'
+        self.to_py_converter = self.name.lower() + '_to_py'
 
         if info.get_type() == InfoType.OBJECT:
             self.ref_func = info.get_ref_function()
@@ -561,6 +539,9 @@ class ClassBuilder(Builder):
 
     def print_type_registration(self):
         magic_print(self.py_type_register)
+
+    def print_converters(self):
+        magic_print(self.py_converters)
 
     def print_methods(self):
         for builder in self.method_builders:
@@ -589,12 +570,15 @@ class EnumBuilder(ClassBuilder):
         }
         """
 
+    py_converters = ""
+
     def __init__(self, info):
         super().__init__(info)
         self.tp_base = '&PyLong_Type'
         self.tp_repr = 'pygi_codegen_enum_repr'
         # Enums don't actually hold anything
         self.wrapped_type = None
+        self.ctype = 'long'
 
     def print_type_registration(self):
         super().print_type_registration()
@@ -613,7 +597,6 @@ FIELD
 ARG
 UNRESOLVED) 
 """
-
 
 class ModuleBuilder(Builder):
     def __init__(self, namespace, output='', prefix='py', command_line='', template=''):
@@ -648,7 +631,7 @@ class ModuleBuilder(Builder):
             elif info_type in ClassBuilder.info_types:
                 builder = ClassBuilder(info)
                 self.class_builders.append(builder)
-                self.registered_structs[builder.wrapped_type] = builder
+                self.registered_structs[builder.name] = builder
 
             elif info_type in FunctionBuilder.info_types:
                 self.method_builders.append(FunctionBuilder(info))
