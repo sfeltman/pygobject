@@ -443,7 +443,6 @@ class ClassBuilder(Builder):
                   InfoType.UNION,
                   InfoType.TYPE)
 
-
     py_type_register = """
         Py_TYPE(&${self.py_type_object_name}) = &PyType_Type;
         ${self.py_type_object_name}.tp_repr = (reprfunc)${self.tp_repr};
@@ -521,7 +520,6 @@ class ClassBuilder(Builder):
         self.method_builders = [MethodBuilder(method_info, self.py_object_struct_name)
                                 for method_info in self.info.get_methods()]
 
-
         self.get_wrapped_func = self.py_object_struct_name + '_get'
         self.from_pointer_func = ''
         self.from_py_converter = self.name.lower() + '_from_py'
@@ -595,8 +593,9 @@ VALUE
 PROPERTY
 FIELD
 ARG
-UNRESOLVED) 
+UNRESOLVED)
 """
+
 
 class ModuleBuilder(Builder):
     def __init__(self, namespace, output='', prefix='py', command_line='', template=''):
