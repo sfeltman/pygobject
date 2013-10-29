@@ -727,6 +727,28 @@ pyg_value_array_from_pyobject(GValue *value,
     return 0;
 }
 
+static gboolean
+_py_number_as_double (PyObject *py_arg, double *double_)
+{
+    PyObject *py_float;
+
+    if (!PyNumber_Check (py_arg)) {
+        PyErr_Format (PyExc_TypeError, "Must be number, not %s",
+                      py_arg->ob_type->tp_name);
+        return FALSE;
+    }
+
+    py_float = PyNumber_Float (py_arg);
+    if (!py_float)
+        return FALSE;
+
+    *double_ = PyFloat_AsDouble (py_float);
+    Py_DECREF (py_float);
+
+
+    return TRUE;
+}
+
 static int
 pyg_array_from_pyobject(GValue *value,
                         PyObject *obj)
@@ -801,8 +823,9 @@ pyg_value_from_pyobject_with_error(GValue *value, PyObject *obj)
 {
     PyObject *tmp;
     GType value_type = G_VALUE_TYPE(value);
+    GType fundamental_type = G_TYPE_FUNDAMENTAL(value_type);
 
-    switch (G_TYPE_FUNDAMENTAL(value_type)) {
+    switch (fundamental_type) {
     case G_TYPE_INTERFACE:
         /* we only handle interface types that have a GObject prereq */
         if (g_type_is_a(value_type, G_TYPE_OBJECT)) {
@@ -954,11 +977,21 @@ pyg_value_from_pyobject_with_error(GValue *value, PyObject *obj)
     }
     break;
     case G_TYPE_FLOAT:
-        g_value_set_float(value, PyFloat_AsDouble(obj));
-        break;
     case G_TYPE_DOUBLE:
-        g_value_set_double(value, PyFloat_AsDouble(obj));
-        break;
+    {
+        double double_;
+        if (_py_number_as_double (obj, &double_)) {
+            if (fundamental_type == G_TYPE_FLOAT) {
+                if (double_ > G_MAXFLOAT || double_ < -G_MAXFLOAT)
+                    PyErr_SetString(PyExc_OverflowError, "too big");
+                else
+                    g_value_set_float(value, double_);
+            } else {
+                g_value_set_double(value, double_);
+            }
+        }
+    }
+    break;
     case G_TYPE_STRING:
         if (obj == Py_None) {
             g_value_set_string(value, NULL);
@@ -1101,9 +1134,9 @@ pyg_value_from_pyobject_with_error(GValue *value, PyObject *obj)
     }
     }
 
-    /* If an error occurred, unset the GValue but don't clear the Python error. */
     if (PyErr_Occurred()) {
-        g_value_unset(value);
+        g_value_reset(value);
+        //g_value_unset(value);
         return -1;
     }
 
