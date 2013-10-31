@@ -54,16 +54,16 @@ from ._gi import \
     enum_add, \
     enum_register_new_gtype_and_add, \
     flags_add, \
-    flags_register_new_gtype_and_add
+    flags_register_new_gtype_and_add, \
+    _gobject
 from .types import \
-    GObjectMeta, \
+    GIObjectMeta, \
     StructMeta
 
-import gi._gi
-GInterface = gi._gi._gobject.GInterface
-GObject = gi._gi._gobject.GObject
+GInterface = _gobject.GInterface
+GObject = _gobject.GObject
 
-from ._gobject.constants import \
+from ._constants import \
     TYPE_NONE, \
     TYPE_BOXED, \
     TYPE_POINTER, \
@@ -178,13 +178,13 @@ class IntrospectionModule(object):
                 interfaces = tuple(interface for interface in get_interfaces_for_object(info)
                                    if not issubclass(parent, interface))
                 bases = (parent,) + interfaces
-                metaclass = GObjectMeta
+                metaclass = GIObjectMeta
             elif isinstance(info, CallbackInfo):
                 bases = (CCallback,)
-                metaclass = GObjectMeta
+                metaclass = GIObjectMeta
             elif isinstance(info, InterfaceInfo):
                 bases = (GInterface,)
-                metaclass = GObjectMeta
+                metaclass = GIObjectMeta
             elif isinstance(info, (StructInfo, UnionInfo)):
                 if g_type.is_a(TYPE_BOXED):
                     bases = (Boxed,)
