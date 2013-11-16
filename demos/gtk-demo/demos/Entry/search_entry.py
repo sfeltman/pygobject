@@ -24,7 +24,7 @@ description = """GtkEntry allows to display icons and progress information.
 This demo shows how to use these features in a search entry.
 """
 
-from gi.repository import Gtk, GObject
+from gi.repository import Gtk, GLib
 
 (PIXBUF_COL,
  TEXT_COL) = range(2)
@@ -33,6 +33,7 @@ from gi.repository import Gtk, GObject
 class SearchboxApp:
     def __init__(self, demoapp):
         self.demoapp = demoapp
+        self.search_progress_id = 0
 
         self.window = Gtk.Dialog(title='Search Entry')
         self.window.add_buttons(Gtk.STOCK_CLOSE, Gtk.ResponseType.NONE)
@@ -85,7 +86,7 @@ class SearchboxApp:
 
         entry.connect('notify::text', self.text_changed_cb, find_button)
 
-        entry.connect('activate', self.activate_cb)
+        entry.connect('activate', self.activate_cb, find_button)
 
         # Create the menu
         menu = self.create_search_menu(entry)
@@ -119,30 +120,30 @@ class SearchboxApp:
 
     def finish_search(self, button, entry):
         self.show_find_button()
-        GObject.source_remove(self.search_progress_id)
+        GLib.source_remove(self.search_progress_id)
         self.search_progress_done(entry)
         self.search_progress_id = 0
 
         return False
 
     def start_search_feedback(self, entry):
-        self.search_progress_id = GObject.timeout_add(100,
-                                                      self.search_progress,
-                                                      entry)
+        self.search_progress_id = GLib.timeout_add(100,
+                                                   self.search_progress,
+                                                   entry)
 
         return False
 
     def start_search(self, button, entry):
         self.show_cancel_button()
-        self.search_progress_id = GObject.timeout_add_seconds(1,
-                                                              self.start_search_feedback,
-                                                              entry)
-        self.finish_search_id = GObject.timeout_add_seconds(15,
-                                                            self.finish_search,
-                                                            button)
+        self.search_progress_id = GLib.timeout_add_seconds(1,
+                                                           self.start_search_feedback,
+                                                           entry)
+        self.finish_search_id = GLib.timeout_add_seconds(15,
+                                                         self.finish_search,
+                                                         button)
 
     def stop_search(self, button, entry):
-        GObject.source_remove(self.finish_search_id)
+        GLib.source_remove(self.finish_search_id)
         self.finish_search(button, entry)
 
     def clear_entry_swapped(self, widget, entry):
@@ -219,9 +220,9 @@ class SearchboxApp:
 
     def search_entry_destroyed(self, widget):
         if self.finish_search_id != 0:
-            GObject.source_remove(self.finish_search_id)
+            GLib.source_remove(self.finish_search_id)
         if self.search_progress_id != 0:
-            GObject.source_remove(self.search_progress_id)
+            GLib.source_remove(self.search_progress_id)
 
         self.window = None
 
