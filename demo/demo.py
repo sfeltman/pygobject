@@ -40,7 +40,7 @@ sys.path.insert(0, DEMOROOTDIR)
 
 
 class Demo(GObject.GObject):
-    __gtype_name__ = 'GtkDemo'
+    __gtype_name__ = 'PyGIDemo'
 
     def __init__(self, title, module, filename):
         super(Demo, self).__init__()
@@ -65,7 +65,7 @@ class Demo(GObject.GObject):
 
 
 class DemoTreeStore(Gtk.TreeStore):
-    __gtype_name__ = 'GtkDemoTreeStore'
+    __gtype_name__ = 'PyGIDemoTreeStore'
 
     def __init__(self, *args):
         #TODO: super does not seem to work here?
@@ -110,15 +110,15 @@ class DemoTreeStore(Gtk.TreeStore):
         return self._parent_nodes[name]
 
 
-class GtkDemoApp(Gtk.Application):
-    __gtype_name__ = 'GtkDemoWindow'
+class PyGIDemoApp(Gtk.Application):
+    __gtype_name__ = 'PyGIDemoWindow'
 
     def __init__(self):
-        Gtk.Application.__init__(self, application_id='org.gnome.pygobject.gtkdemo')
+        Gtk.Application.__init__(self, application_id='org.gnome.pygobject.demo')
 
     def on_activate(self, app):
         self.window = Gtk.ApplicationWindow.new(self)
-        self.window.set_title('PyGObject GTK+ Code Demos')
+        self.window.set_title('PyGObject Code Demos')
         self.window.set_default_size(600, 400)
         self.setup_default_icon()
 
@@ -332,12 +332,12 @@ class GtkDemoApp(Gtk.Application):
 
     def run(self, argv):
         self.connect('activate', self.on_activate)
-        return super(GtkDemoApp, self).run(argv)
+        return super(PyGIDemoApp, self).run(argv)
 
 
 def main(argv):
     """Entry point for demo manager"""
-    app = GtkDemoApp()
+    app = PyGIDemoApp()
     return app.run(argv)
 
 
