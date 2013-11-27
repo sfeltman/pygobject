@@ -393,31 +393,41 @@ def signal_lookup(name, type_):
 __all__.append('signal_lookup')
 
 
-def signal_query(id_or_name, type_=None):
-    SignalQuery = namedtuple('SignalQuery',
-                             ['signal_id',
-                              'signal_name',
-                              'itype',
-                              'signal_flags',
-                              'return_type',
-                              # n_params',
-                              'param_types'])
+class _SignalQuery(namedtuple('SignalQuery',
+                              ['signal_id',
+                               'signal_name',
+                               'itype',
+                               'signal_flags',
+                               'return_type',
+                               # n_params',
+                               'param_types'])):
+    def __getitem__(self, index):
+        warnings.warn('Index access to SignalQuery has been deprecated. '
+                      'Please use attribute access directly.',
+                      PyGIDeprecationWarning, stacklevel=2)
+        return super(_SignalQuery, self).__getitem__(index)
 
-    # signal_query needs to use a static method until the following bugs are fixed:
-    # https://bugzilla.gnome.org/show_bug.cgi?id=687550
-    # https://bugzilla.gnome.org/show_bug.cgi?id=687545
-    # https://bugzilla.gnome.org/show_bug.cgi?id=687541
+
+def signal_query(id_or_name, type_=None):
     if type_ is not None:
+        warnings.warn('Calling GObject.signal_query with a name and type has been deprecated. '
+                      'Please use "signal_lookup" passing the resulting id to "signal_query".',
+                      PyGIDeprecationWarning, stacklevel=2)
         id_or_name = signal_lookup(id_or_name, type_)
 
-    res = _gobject.signal_query(id_or_name)
+    res = GObjectModule.signal_query(id_or_name)
     if res is None:
         return None
 
     # Return a named tuple which allows indexing like the static bindings
     # along with field like access of the gi struct.
     # Note however that the n_params was not returned from the static bindings.
-    return SignalQuery(*res)
+    return _SignalQuery(signal_id=res.signal_id,
+                        signal_name=res.signal_name,
+                        itype=res.itype,
+                        signal_flags=res.signal_flags,
+                        return_type=res.return_type,
+                        param_types=res.param_types)
 
 __all__.append('signal_query')
 
