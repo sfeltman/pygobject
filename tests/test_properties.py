@@ -854,6 +854,27 @@ class TestProperty(unittest.TestCase):
 
         self.assertRaises(TypeError, tester._type_from_python, types.CodeType)
 
+    def test_pre_created_param_spec(self):
+        class TestPreCreatedParamSpec(GObject.Object):
+            __gproperties__ = {'spam': GObject.param_spec_boolean('spam',
+                                                                  'spam_nick',
+                                                                  'spam blurb',
+                                                                  default_value=True,
+                                                                  flags=GObject.PARAM_READWRITE)}
+
+        Test = TestPreCreatedParamSpec
+        self.assertTrue(isinstance(Test.props.spam, GObject.GParamSpec))
+        self.assertEqual(Test.props.spam.blurb, 'spam blurb')
+        self.assertEqual(Test.props.spam.default_value, True)
+        self.assertEqual(Test.props.spam.flags, GObject.PARAM_READWRITE)
+        self.assertEqual(Test.props.spam.name, 'spam')
+        self.assertEqual(Test.props.spam.nick, 'spam_nick')
+        self.assertEqual(Test.props.spam.owner_type, Test.__gtype__)
+        self.assertEqual(Test.props.spam.value_type, GObject.TYPE_BOOLEAN)
+
+        obj = Test()
+        self.assertEqual(obj.props.spam, True)
+
     def test_not_enough_args(self):
         def make_class():
             class Test(GObject.Object):

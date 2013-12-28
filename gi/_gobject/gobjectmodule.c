@@ -741,8 +741,14 @@ add_properties (GObjectClass *klass, PyObject *properties)
     while (PyDict_Next(properties, &pos, &key, &value)) {
 	GParamSpec *pspec;
 
-	/* values are of format (type,nick,blurb, type_specific_args, flags) */
-	pspec = pyg_param_spec_from_name_and_args (key, value);
+	/* Allow already created GParamSpecs */
+	if (PyGParamSpec_Check (value)) {
+	    pspec = PyGParamSpec_Get (value);
+	    // g_param_spec_ref (pspec);
+	} else {
+	    /* values are of format (type, nick, blurb, *type_specific_args, flags) */
+	    pspec = pyg_param_spec_from_name_and_args (key, value);
+	}
 
 	if (pspec) {
 	    g_object_class_install_property(klass, 1, pspec);
