@@ -382,9 +382,6 @@ def install_properties(cls):
             gproperties[prop.name] = prop.get_pspec_args()
             props.append(prop)
 
-    if not props:
-        return
-
     cls.__gproperties__ = gproperties
 
     if 'do_get_property' in cls.__dict__ or 'do_set_property' in cls.__dict__:
@@ -401,6 +398,8 @@ def install_properties(cls):
         prop = getattr(cls, name, None)
         if prop:
             return prop.fget(self)
+        else:
+            return getattr(self, '_property_helper_' + name, pspec.default_value)
     cls.do_get_property = obj_get_property
 
     def obj_set_property(self, pspec, value):
@@ -408,4 +407,6 @@ def install_properties(cls):
         prop = getattr(cls, name, None)
         if prop:
             prop.fset(self, value)
+        else:
+            setattr(self, '_property_helper_' + name, value)
     cls.do_set_property = obj_set_property
