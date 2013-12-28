@@ -658,7 +658,7 @@ create_property (const gchar  *prop_name,
 }
 
 static GParamSpec *
-pyg_param_spec_from_object (PyObject *tuple)
+pyg_param_spec_from_name_and_args (PyObject *name, PyObject *args)
 {
     gint val_length;
     const gchar *prop_name;
@@ -667,19 +667,26 @@ pyg_param_spec_from_object (PyObject *tuple)
     PyObject *slice, *item, *py_prop_type;
     GParamSpec *pspec;
 
-    val_length = PyTuple_Size(tuple);
+    if (!PYGLIB_PyUnicode_Check(name)) {
+	PyErr_SetString(PyExc_TypeError,
+			"paramspec name must be a string");
+	return NULL;
+    }
+    prop_name = PYGLIB_PyUnicode_AsString (name);
+
+    val_length = PyTuple_Size(args);
     if (val_length < 4) {
 	PyErr_SetString(PyExc_TypeError,
-			"paramspec tuples must be at least 4 elements long");
+			"paramspec arguments must be at least 4 elements long");
 	return NULL;
     }
 
-    slice = PySequence_GetSlice(tuple, 0, 4);
+    slice = PyTuple_GetSlice(args, 0, 3);
     if (!slice) {
 	return NULL;
     }
 
-    if (!PyArg_ParseTuple(slice, "sOzz", &prop_name, &py_prop_type, &nick, &blurb)) {
+    if (!PyArg_ParseTuple(slice, "Ozz", &py_prop_type, &nick, &blurb)) {
 	Py_DECREF(slice);
 	return NULL;
     }
@@ -691,7 +698,7 @@ pyg_param_spec_from_object (PyObject *tuple)
 	return NULL;
     }
 
-    item = PyTuple_GetItem(tuple, val_length-1);
+    item = PyTuple_GetItem(args, val_length-1);
     if (!PYGLIB_PyLong_Check(item)) {
 	PyErr_SetString(PyExc_TypeError,
 			"last element in tuple must be an int");
@@ -699,12 +706,29 @@ pyg_param_spec_from_object (PyObject *tuple)
     }
 
     /* slice is the extra items in the tuple */
-    slice = PySequence_GetSlice(tuple, 4, val_length-1);
+    slice = PyTuple_GetSlice(args, 3, val_length-1);
     pspec = create_property(prop_name, prop_type,
 			    nick, blurb, slice,
 			    PYGLIB_PyLong_AsLong(item));
+    Py_DECREF(slice);
 
     return pspec;
+}
+
+static GParamSpec *
+pyg_param_spec_from_object (PyObject *tuple)
+{
+    PyObject *args;
+    PyObject *name;
+    GParamSpec *res;
+
+    name = PyTuple_GetItem (tuple, 0);       /* borrowed */
+    args = PyTuple_GetSlice (tuple, 1, -1);  /* new value */
+
+    res = pyg_param_spec_from_name_and_args (name, args);
+    Py_DECREF (args);
+
+    return res;
 }
 
 static gboolean
@@ -715,68 +739,10 @@ add_properties (GObjectClass *klass, PyObject *properties)
     PyObject *key, *value;
 
     while (PyDict_Next(properties, &pos, &key, &value)) {
-	const gchar *prop_name;
-	GType prop_type;
-	const gchar *nick, *blurb;
-	GParamFlags flags;
-	gint val_length;
-	PyObject *slice, *item, *py_prop_type;
 	GParamSpec *pspec;
 
 	/* values are of format (type,nick,blurb, type_specific_args, flags) */
-
-	if (!PYGLIB_PyUnicode_Check(key)) {
-	    PyErr_SetString(PyExc_TypeError,
-			    "__gproperties__ keys must be strings");
-	    ret = FALSE;
-	    break;
-	}
-	prop_name = PYGLIB_PyUnicode_AsString (key);
-
-	if (!PyTuple_Check(value)) {
-	    PyErr_SetString(PyExc_TypeError,
-			    "__gproperties__ values must be tuples");
-	    ret = FALSE;
-	    break;
-	}
-	val_length = PyTuple_Size(value);
-	if (val_length < 4) {
-	    PyErr_SetString(PyExc_TypeError,
-			    "__gproperties__ values must be at least 4 elements long");
-	    ret = FALSE;
-	    break;
-	}
-
-	slice = PySequence_GetSlice(value, 0, 3);
-	if (!slice) {
-	    ret = FALSE;
-	    break;
-	}
-	if (!PyArg_ParseTuple(slice, "Ozz", &py_prop_type, &nick, &blurb)) {
-	    Py_DECREF(slice);
-	    ret = FALSE;
-	    break;
-	}
-	Py_DECREF(slice);
-	prop_type = pyg_type_from_object(py_prop_type);
-	if (!prop_type) {
-	    ret = FALSE;
-	    break;
-	}
-	item = PyTuple_GetItem(value, val_length-1);
-	if (!PYGLIB_PyLong_Check(item)) {
-	    PyErr_SetString(PyExc_TypeError,
-		"last element in __gproperties__ value tuple must be an int");
-	    ret = FALSE;
-	    break;
-	}
-	flags = PYGLIB_PyLong_AsLong(item);
-
-	/* slice is the extra items in the tuple */
-	slice = PySequence_GetSlice(value, 3, val_length-1);
-	pspec = create_property(prop_name, prop_type, nick, blurb,
-				slice, flags);
-	Py_DECREF(slice);
+	pspec = pyg_param_spec_from_name_and_args (key, value);
 
 	if (pspec) {
 	    g_object_class_install_property(klass, 1, pspec);
@@ -785,13 +751,15 @@ add_properties (GObjectClass *klass, PyObject *properties)
 	    ret = FALSE;
             PyErr_Fetch(&type, &value, &traceback);
             if (PYGLIB_PyUnicode_Check(value)) {
-                char msg[256];
-                g_snprintf(msg, 256,
-			   "%s (while registering property '%s' for GType '%s')",
-               PYGLIB_PyUnicode_AsString(value),
-			   prop_name, G_OBJECT_CLASS_NAME(klass));
-                Py_DECREF(value);
-                value = PYGLIB_PyUnicode_FromString(msg);
+                PyObject *fmt;
+                PyObject *oldvalue = value;
+
+                fmt = PYGLIB_PyUnicode_FromFormat(
+                            " (while registering property '" PYG_FMT_OBJ_STR "' for GType '%s')",
+                            key, G_OBJECT_CLASS_NAME(klass));
+                value = PySequence_Concat (value, fmt);
+                Py_DECREF (oldvalue);
+                Py_DECREF (fmt);
             }
             PyErr_Restore(type, value, traceback);
 	    break;

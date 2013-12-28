@@ -76,6 +76,8 @@ static int _pyglib_init_##modname(PyObject *module)
 
 #define RO READONLY
 
+#define PYG_FMT_OBJ_STR "unknown@%p"
+
 #define PYGLIB_PyBaseString_Check(ob) (PyString_Check(ob) || PyUnicode_Check(ob))
 
 #define PYGLIB_PyUnicode_Check PyString_Check
@@ -180,6 +182,8 @@ PyTypeObject symbol = {                                 \
     if (PyType_Ready(&type))                            \
 	    return;                                         \
     PyDict_SetItemString(d, name, (PyObject *)&type);
+
+#define PYG_FMT_OBJ_STR "%S"
 
 #define PYGLIB_PyBaseString_Check PyUnicode_Check
 

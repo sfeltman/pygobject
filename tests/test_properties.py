@@ -854,6 +854,51 @@ class TestProperty(unittest.TestCase):
 
         self.assertRaises(TypeError, tester._type_from_python, types.CodeType)
 
+    def test_not_enough_args(self):
+        def make_class():
+            class Test(GObject.Object):
+                __gproperties__ = {'spam': (int, 'spam', 'spam')}
+
+        self.assertRaisesRegexp(TypeError,
+                                '.*at least 4 elements.*while registering property.*',
+                                make_class)
+
+    def test_invalid_prop_name(self):
+        def make_class():
+            class Test(GObject.Object):
+                __gproperties__ = {0xbad41c: (int, 'spam', 'spam', 0)}
+
+        self.assertRaisesRegexp(TypeError,
+                                '.*must be a string.*while registering property.*',
+                                make_class)
+
+    def test_invalid_prop_type(self):
+        def make_class():
+            class Test(GObject.Object):
+                __gproperties__ = {'spam': ('invalid', 'spam', 'spam', 0)}
+
+        self.assertRaisesRegexp(TypeError,
+                                '.*typecode.*while registering property.*',
+                                make_class)
+
+    def test_invalid_prop_nick(self):
+        def make_class():
+            class Test(GObject.Object):
+                __gproperties__ = {'spam': (int, 0xbad41c, 'spam', 0)}
+
+        self.assertRaisesRegexp(TypeError,
+                                '.*must be.*not int.*while registering property.*',
+                                make_class)
+
+    def test_invalid_prop_flags(self):
+        def make_class():
+            class Test(GObject.Object):
+                __gproperties__ = {'spam': (int, 'spam', 'spam', 'invalid')}
+
+        self.assertRaisesRegexp(TypeError,
+                                '.*last element.*int.*while registering property.*',
+                                make_class)
+
 
 class TestInstallProperties(unittest.TestCase):
     # These tests only test how signalhelper.install_signals works
