@@ -121,7 +121,7 @@ def _get_pytype_hint(gi_type):
     return gi_type.get_tag_as_string()
 
 
-def _generate_callable_info_doc(info):
+def _generate_callable_info_sig(info):
     in_args, out_args = split_function_info_args(info)
     in_args_strs = []
     if isinstance(info, VFuncInfo):
@@ -174,24 +174,53 @@ def _generate_callable_info_doc(info):
         out_args_strs.append(argstr)
 
     if out_args_strs:
-        return '%s(%s) -> %s' % (info.__name__, in_args_str, ', '.join(out_args_strs))
+        return '(%s) -> %s' % (in_args_str, ', '.join(out_args_strs))
     else:
-        return '%s(%s)' % (info.__name__, in_args_str)
+        return '(%s)' % in_args_str
+
+
+def _generate_callable_info_doc(info):
+    return info.__name__ + _generate_callable_info_sig(info)
+
+
+def _get_constructor_overloads(constructors):
+    blacklist = set()
+    overloads = {}
+
+    for method_info in constructors:
+        key = frozenset(arg.get_name() for arg in method_info.get_arguments())
+        if key in overloads:
+            blacklist.add(key)
+            del overloads[key]
+        elif key not in blacklist:
+            overloads[key] = method_info
+
+    return overloads.values()
 
 
 def _generate_class_info_doc(info):
     doc = '\n:Constructors:\n'  # start with \n to avoid auto indent of other lines
+    info_name = info.__name__
 
     if isinstance(info, StructInfo):
         # Don't show default constructor for disguised (0 length) structs
         if info.get_size() > 0:
-            doc += '    ' + info.get_name() + '()\n'
+            doc += '    ' + info_name + '()\n'
     else:
-        doc += '    ' + info.get_name() + '(**properties)\n'
+        doc += '    ' + info_name + '(**properties)\n'
 
-    for method_info in info.get_methods():
-        if method_info.is_constructor():
-            doc += '    ' + _generate_callable_info_doc(method_info) + '\n'
+    constructors = [method for method in info.get_methods() if method.is_constructor()]
+    overloads = _get_constructor_overloads(constructors)
+
+    # Add overloaded constructors
+    for constructor in sorted(overloads, key=lambda x: len(x.__name__)):
+        doc += '    %s%s\n' % (info_name, _generate_callable_info_sig(constructor))
+
+    # Add named constructors blacklisted from overloads due to argument ambiguity
+    for constructor in constructors:
+        if constructor not in overloads:
+            doc += '    %s.%s%s\n' % (info_name, constructor.__name__,
+                                      _generate_callable_info_sig(constructor))
 
     return doc
 

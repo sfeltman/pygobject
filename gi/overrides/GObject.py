@@ -521,6 +521,15 @@ def _signalmethod(func):
 
 
 class Object(GObjectModule.Object):
+    def __new__(cls, *args, **kwargs):
+        # Note to the future:
+        # When all the overridden constructors and initializers are
+        # eventually removed (version 4.0?) we should restrict this to only
+        # accepting keyword arguments.
+
+        # Call dispatching constructor defined by the meta-class in gi.types.py
+        return cls._dispatching_constructor(GObjectModule.Object.__new__, *args, **kwargs)
+
     def _unsupported_method(self, *args, **kargs):
         raise RuntimeError('This method is currently unsupported.')
 

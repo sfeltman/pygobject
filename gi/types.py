@@ -47,10 +47,63 @@ if (3, 0) <= sys.version_info < (3, 3):
         return hasattr(obj, '__call__')
 
 
+def _get_constructor(targets, default, *args, **kwargs):
+    # Don't do any dispatching if positional arguments are given.
+    # We want to play nicely with overridden __init__ functions
+    # which allow positional args (but are deprecated) so immediately
+    # return the default constructor when they are given.
+    if args:
+        return default
+
+    key = frozenset(kwargs.keys())
+    return targets.get(key, default)
+
+
 class MetaClassHelper(object):
+    def _make_dispatching_constructor(cls, default_constructor):
+        """Build a new Python constructor __new__ for the given class using
+        supplying a default for use when a dispatch target is not found.
+        """
+        # Get targets outside of dispatching_constructor so it is bound in
+        # based on the meta-class context, not dynamically and accessed via
+        # cls within the dispatcher. Otherwise overridden classes would always
+        # be able to pick up base class dispatchers, which we don't want for
+        # constructors.
+        targets = cls._constructor_dispatch_targets
+
+        def dispatching_constructor(cls, *args, **kwargs):
+            new = _get_constructor(targets, default_constructor, *args, **kwargs)
+            return new(cls, **kwargs)
+
+        return dispatching_constructor
+
+    def _dispatching_constructor(cls, default_constructor, *args, **kwargs):
+        # Static version of above used by GObject.Object.
+        targets = cls.__dict__.get('_constructor_dispatch_targets', {})
+        new = _get_constructor(targets, default_constructor, *args, **kwargs)
+        return new(cls, **kwargs)
+
     def _setup_methods(cls):
+        cls._constructor_dispatch_targets = {}
+        blacklist = set()
+
         for method_info in cls.__info__.get_methods():
             setattr(cls, method_info.__name__, method_info)
+
+            # Keep a cache of target constructors for the dispatching to
+            # look through for quick lookup. Any ambiguity in terms of
+            # multiple constructors with the same argument names are not
+            # included by using a black list, for example:
+            # Gtk.Button.new_with_label(label) and Gtk.Button.new_with_mnemonic(label)
+            if method_info.is_constructor():
+                # use a frozenset because tuple lookup is not possible via an
+                # unordered kwargs.keys() in the dispatching_constructor
+                key = frozenset(arg.get_name() for arg in method_info.get_arguments())
+                if key in cls._constructor_dispatch_targets:
+                    blacklist.add(key)
+                    del cls._constructor_dispatch_targets[key]
+                else:
+                    cls._constructor_dispatch_targets[key] = method_info
 
     def _setup_fields(cls):
         for field_info in cls.__info__.get_fields():
@@ -275,12 +328,14 @@ class StructMeta(type, MetaClassHelper):
         cls._setup_fields()
         cls._setup_methods()
 
-        for method_info in cls.__info__.get_methods():
-            if method_info.is_constructor() and \
-                    method_info.__name__ == 'new' and \
-                    not method_info.get_arguments():
-                cls.__new__ = staticmethod(method_info)
-                break
+        # Only apply a new dispatching constructor if the class doesn't already
+        # specify one. e.g. don't clobber overrides like the following:
+        #
+        # class Cursor(Gdk.Cursor):
+        #     def __new__(...): ...
+        #
+        if '__new__' not in dict_:
+            cls.__new__ = cls._make_dispatching_constructor(default_constructor=cls.__new__)
 
     @property
     def __doc__(cls):
