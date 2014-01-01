@@ -2,6 +2,7 @@
 # vim: tabstop=4 shiftwidth=4 expandtab
 
 import unittest
+import warnings
 
 from gi.repository import GLib
 
@@ -15,7 +16,9 @@ try:
     import pygtkcompat
 
     pygtkcompat.enable()
-    pygtkcompat.enable_gtk(version='3.0')
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', category=RuntimeWarning)
+        pygtkcompat.enable_gtk(version='3.0')
 
     import atk
     import pango
