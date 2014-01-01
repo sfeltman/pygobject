@@ -4,7 +4,7 @@ AUTOMAKE_OPTIONS = 1.7
 # Part of the gi subdirectory is handled with non-recursive make to avoid
 # py-compile getting confused between gi/types.py and Python's standard
 # types module.
-SUBDIRS = examples gi tests pygtkcompat
+SUBDIRS = demos examples gi tests pygtkcompat
 
 PLATFORM_VERSION = 3.0
 

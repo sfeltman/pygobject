@@ -195,6 +195,9 @@ AC_SUBST(FFI_CFLAGS)
 AC_SUBST(FFI_LIBS)
 AC_SUBST(LIBFFI_PC)
 
+GLIB_COMPILE_RESOURCES=`$PKG_CONFIG --variable glib_compile_resources gio-2.0`
+AC_SUBST(GLIB_COMPILE_RESOURCES)
+
 dnl gio
 PKG_CHECK_MODULES(GIO, gio-2.0 >= gio_required_version)
 
@@ -270,6 +273,14 @@ AC_CONFIG_FILES(
   gi/overrides/Makefile
   gi/_glib/Makefile
   gi/_gobject/Makefile
+  demos/Makefile
+  demos/gtk-demo/Makefile
+  demos/gtk-demo/demos/Makefile
+  demos/gtk-demo/demos/Css/Makefile
+  demos/gtk-demo/demos/data/Makefile
+  demos/gtk-demo/demos/Entry/Makefile
+  demos/gtk-demo/demos/IconView/Makefile
+  demos/gtk-demo/demos/TreeView/Makefile
   examples/Makefile
   tests/Makefile
   pygtkcompat/Makefile
