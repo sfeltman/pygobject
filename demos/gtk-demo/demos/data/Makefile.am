@@ -8,13 +8,12 @@ RESOURCES =             \
     cssview.css
 
 demo.gresource: demo.gresource.xml $(RESOURCES)
-	$(AM_V_GEN) $(GLIB_COMPILE_RESOURCES) --target=$@ --sourcedir=$(srcdir) demo.gresource.xml
+	$(AM_V_GEN) $(GLIB_COMPILE_RESOURCES) --target=$@ --sourcedir=$(srcdir) $(srcdir)/demo.gresource.xml
 
-EXTRA_DIST =                \
+dist_pkgdata_DATA =                \
     alphatest.png           \
     apple-red.png           \
     background.jpg          \
-    demo.gresource.xml      \
     demo.ui                 \
     floppybuddy.gif         \
     gnome-applets.png       \
@@ -27,7 +26,6 @@ EXTRA_DIST =                \
     gnome-gsame.png         \
     gnu-keys.png            \
     gtk-logo-rgb.gif        \
+    demo.gresource.xml      \
+    demo.gresource          \
     $(RESOURCES)
-
-all-local: demo.gresource
-
