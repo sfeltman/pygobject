@@ -51,8 +51,9 @@ typedef struct {
 
 typedef struct {
     PyObject_HEAD
-    gpointer pointer;
-    GType gtype;
+    gpointer       pointer;
+    GType          gtype;
+    GDestroyNotify destroy;
 } PyGPointer;
 
 #define pyg_pointer_type(v)       (((PyGPointer *)(v))->gtype)

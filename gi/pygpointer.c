@@ -38,6 +38,10 @@ PYGLIB_DEFINE_TYPE("gobject.GPointer", PyGPointer_Type, PyGPointer);
 static void
 pyg_pointer_dealloc(PyGPointer *self)
 {
+    if (self->destroy && self->pointer) {
+        self->destroy(self->pointer);
+        self->pointer = NULL;
+    }
     Py_TYPE(self)->tp_free((PyObject *)self);
 }
 
@@ -137,6 +141,7 @@ pyg_register_pointer(PyObject *dict, const gchar *class_name,
  * pyg_pointer_new:
  * @pointer_type: the GType of the pointer value.
  * @pointer: the pointer value.
+ * @destroy: (allow-none): callback passed the pointer data to destroy.
  *
  * Creates a wrapper for a pointer value.  Since G_TYPE_POINTER types
  * don't register any information about how to copy/free them, there
@@ -147,7 +152,7 @@ pyg_register_pointer(PyObject *dict, const gchar *class_name,
  * Returns: the boxed wrapper.
  */
 PyObject *
-pyg_pointer_new(GType pointer_type, gpointer pointer)
+pyg_pointer_new(GType pointer_type, gpointer pointer, GDestroyNotify destroy)
 {
     PyGILState_STATE state;
     PyGPointer *self;
@@ -178,6 +183,7 @@ pyg_pointer_new(GType pointer_type, gpointer pointer)
 
     self->pointer = pointer;
     self->gtype = pointer_type;
+    self->destroy = destroy;
 
     return (PyObject *)self;
 }
