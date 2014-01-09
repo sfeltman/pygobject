@@ -990,8 +990,8 @@ pyg_value_from_pyobject_with_error(GValue *value, PyObject *obj)
         if (obj == Py_None)
             g_value_set_pointer(value, NULL);
         else if (PyObject_TypeCheck(obj, &PyGPointer_Type) &&
-                G_VALUE_HOLDS(value, ((PyGPointer *)obj)->gtype))
-            g_value_set_pointer(value, pyg_pointer_get(obj, gpointer));
+                G_VALUE_HOLDS(value, pyg_pointer_type(obj)))
+            g_value_set_pointer(value, pyg_pointer_get_ptr(obj));
         else if (PYGLIB_CPointer_Check(obj))
             g_value_set_pointer(value, PYGLIB_CPointer_GetPointer(obj, NULL));
         else if (G_VALUE_HOLDS_GTYPE (value))
@@ -1009,8 +1009,8 @@ pyg_value_from_pyobject_with_error(GValue *value, PyObject *obj)
         else if (G_VALUE_HOLDS(value, PY_TYPE_OBJECT))
             g_value_set_boxed(value, obj);
         else if (PyObject_TypeCheck(obj, &PyGBoxed_Type) &&
-                G_VALUE_HOLDS(value, ((PyGBoxed *)obj)->gtype))
-            g_value_set_boxed(value, pyg_boxed_get(obj, gpointer));
+                G_VALUE_HOLDS(value, pyg_boxed_type(obj)))
+            g_value_set_boxed(value, pyg_boxed_get_ptr(obj));
         else if (G_VALUE_HOLDS(value, G_TYPE_VALUE)) {
             GType type;
             GValue *n_value;
@@ -1528,7 +1528,8 @@ pyg_signal_class_closure_marshal(GClosure *closure,
 	    && item->ob_refcnt != 1) {
 	    PyGBoxed* boxed_item = (PyGBoxed*)item;
 	    if (!boxed_item->free_on_dealloc) {
-		boxed_item->boxed = g_boxed_copy(boxed_item->gtype, boxed_item->boxed);
+		pyg_boxed_set_ptr(boxed_item, g_boxed_copy(pyg_boxed_type(boxed_item),
+							   pyg_boxed_get_ptr(boxed_item)));
 		boxed_item->free_on_dealloc = TRUE;
 	    }
 	}

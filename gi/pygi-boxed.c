@@ -34,10 +34,10 @@ _boxed_dealloc (PyGIBoxed *self)
 
     if ( ( (PyGBoxed *) self)->free_on_dealloc) {
         if (self->slice_allocated) {
-            g_slice_free1 (self->size, ( (PyGBoxed *) self)->boxed);
+            g_slice_free1 (self->size, pyg_boxed_get_ptr(self));
         } else {
             g_type = pyg_type_from_object ( (PyObject *) self);
-            g_boxed_free (g_type, ( (PyGBoxed *) self)->boxed);
+            g_boxed_free (g_type, pyg_boxed_get_ptr(self));
         }
     }
 
@@ -153,8 +153,8 @@ _pygi_boxed_new (PyTypeObject *type,
         return NULL;
     }
 
-    ( (PyGBoxed *) self)->gtype = pyg_type_from_object ( (PyObject *) type);
-    ( (PyGBoxed *) self)->boxed = boxed;
+    pyg_boxed_set_type(self, pyg_type_from_object ( (PyObject *) type));
+    pyg_boxed_set_ptr(self, boxed);
     ( (PyGBoxed *) self)->free_on_dealloc = free_on_dealloc;
     if (allocated_slice > 0) {
         self->size = allocated_slice;
