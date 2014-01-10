@@ -123,7 +123,7 @@ pygi_get_property_value (PyGObject *instance, GParamSpec *pspec)
         goto out;
 
     g_value_init (&value, G_PARAM_SPEC_VALUE_TYPE (pspec));
-    g_object_get_property (instance->obj, pspec->name, &value);
+    g_object_get_property (pygobject_get (instance), pspec->name, &value);
 
     type_info = g_property_info_get_type (property_info);
     transfer = g_property_info_get_ownership_transfer (property_info);
@@ -432,7 +432,7 @@ pygi_set_property_value (PyGObject *instance,
             goto out;
     }
 
-    g_object_set_property (instance->obj, pspec->name, &value);
+    g_object_set_property (pygobject_get (instance), pspec->name, &value);
     g_value_unset (&value);
 
     ret_value = 0;

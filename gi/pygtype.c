@@ -941,7 +941,7 @@ gclosure_from_pyfunc(PyGObject *object, PyObject *func)
 {
     GSList *l;
     PyGObjectData *inst_data;
-    inst_data = pyg_object_peek_inst_data(object->obj);
+    inst_data = pyg_object_peek_inst_data(pygobject_get(object));
     if (inst_data) {
         for (l = inst_data->closures; l; l = l->next) {
             PyGClosure *pyclosure = l->data;

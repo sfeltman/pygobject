@@ -96,7 +96,7 @@ _wrap_test_interface_iface_method(PyGObject *self, PyObject *args, PyObject *kwa
     if (!PyArg_ParseTupleAndKeywords(args, kwargs,":", kwlist))
         return NULL;
     
-    test_interface_iface_method(TEST_INTERFACE(self->obj));
+    test_interface_iface_method(TEST_INTERFACE(pygobject_get(self)));
     
     Py_INCREF(Py_None);
     return Py_None;
@@ -126,7 +126,7 @@ _wrap_TestInterface__do_iface_method(PyObject *cls, PyObject *args, PyObject *kw
   iface = g_type_interface_peek(g_type_class_peek(pyg_type_from_object(cls)),
 				TEST_TYPE_INTERFACE);
   if (iface->iface_method)
-    iface->iface_method(TEST_INTERFACE(self->obj));
+    iface->iface_method(TEST_INTERFACE(pygobject_get(self)));
   else {
     PyErr_SetString(PyExc_NotImplementedError,
 		    "interface method TestInterface.iface_method not implemented");
@@ -230,7 +230,7 @@ PYGLIB_DEFINE_TYPE("testhelper.OwnedByLibrary", PyTestOwnedByLibrary_Type, PyGOb
 static PyObject *
 _wrap_test_owned_by_library_release (PyGObject *self)
 {
-    test_owned_by_library_release (TEST_OWNED_BY_LIBRARY (self->obj));
+    test_owned_by_library_release (TEST_OWNED_BY_LIBRARY (pygobject_get(self)));
     return Py_None;
 }
 
@@ -245,7 +245,7 @@ PYGLIB_DEFINE_TYPE("testhelper.FloatingAndSunk", PyTestFloatingAndSunk_Type, PyG
 static PyObject *
 _wrap_test_floating_and_sunk_release (PyGObject *self)
 {
-    test_floating_and_sunk_release (TEST_FLOATING_AND_SUNK (self->obj));
+    test_floating_and_sunk_release (TEST_FLOATING_AND_SUNK (pygobject_get(self)));
     return Py_None;
 }
 
@@ -480,7 +480,7 @@ _wrap_connectcallbacks(PyObject * self, PyObject *args)
     if (!PyArg_ParseTuple(args, "O", &obj))
       return NULL;
 
-    connectcallbacks (G_OBJECT (obj->obj));
+    connectcallbacks (G_OBJECT (pygobject_get(obj)));
 
     Py_INCREF(Py_None);
     return Py_None;

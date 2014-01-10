@@ -47,6 +47,7 @@ typedef struct {
 } PyGObject;
 
 #define pygobject_get(v) (((PyGObject *)(v))->obj)
+#define pygobject_set(v,p) (((PyGObject *)(v))->obj = (GObject *)p)
 #define pygobject_check(v,base) (PyObject_TypeCheck(v,base))
 
 typedef struct {
