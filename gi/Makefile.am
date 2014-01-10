@@ -65,6 +65,8 @@ _gi_la_SOURCES = \
 	pyglib-private.h \
 	pyglib-python-compat.h \
 	gimodule.c \
+	pygi-wrapper.c \
+	pygi-wrapper.h \
 	pygi-repository.c \
 	pygi-repository.h \
 	pygi-info.c \

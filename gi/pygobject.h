@@ -108,7 +108,9 @@ typedef PyTypeObject * (*PyGTypeRegistrationFunction) (const gchar *name,
 struct _PyGObject_Functions {
     /* 
      * All field names in here are considered private,
-     * use the macros below instead, which provides stability
+     * use the macros below instead, which provides stability.
+     * This structure must maintain ABI compatibility.
+     * Only append new items to the end of the structure.
      */
     void (* register_class)(PyObject *dict, const gchar *class_name,
 			    GType gtype, PyTypeObject *type, PyObject *bases);
@@ -218,6 +220,8 @@ struct _PyGObject_Functions {
     PyObject *(* newgobj_full)(GObject *obj, gboolean steal, gpointer g_class);
     PyTypeObject *object_type;
     int (* value_from_pyobject_with_error)(GValue *value, PyObject *obj);
+
+    PyTypeObject *wrapper_type;
 };
 
 
@@ -299,6 +303,7 @@ struct _PyGObject_Functions *_PyGObject_API;
 #define pyg_disable_warning_redirections (_PyGObject_API->disable_warning_redirections)
 #define pyg_gerror_exception_check (_PyGObject_API->gerror_exception_check)
 #define pyg_option_group_new       (_PyGObject_API->option_group_new)
+#define PyGIWrapper_Type            (*_PyGObject_API->wrapper_type)
 
 
 /**
