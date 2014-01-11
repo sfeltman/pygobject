@@ -157,9 +157,10 @@ _pygi_boxed_new (PyTypeObject *type,
         return NULL;
     }
 
-    ( (PyGBoxed *) self)->gtype = pyg_type_from_object ( (PyObject *) type);
-    ( (PyGBoxed *) self)->free_on_dealloc = free_on_dealloc;
     pyg_boxed_set_ptr (self, boxed);
+    pyg_boxed_set_type (self, pyg_type_from_object ((PyObject *)type));
+    ( (PyGBoxed *) self)->free_on_dealloc = free_on_dealloc;
+
     if (allocated_slice > 0) {
         self->size = allocated_slice;
         self->slice_allocated = TRUE;

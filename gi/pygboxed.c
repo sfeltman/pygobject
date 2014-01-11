@@ -72,8 +72,9 @@ pyg_boxed_repr(PyGBoxed *self)
 {
     gchar buf[128];
 
-    g_snprintf(buf, sizeof(buf), "<%s at 0x%lx>", g_type_name(self->gtype),
+    g_snprintf(buf, sizeof(buf), "<%s at 0x%lx>", g_type_name (pyg_boxed_type (self)),
 	       (long)pyg_boxed_get_ptr (self));
+
     return PYGLIB_PyUnicode_FromString(buf);
 }
 
@@ -86,7 +87,7 @@ pyg_boxed_init(PyGBoxed *self, PyObject *args, PyObject *kwargs)
 	return -1;
 
     pyg_boxed_set_ptr (self, NULL);
-    self->gtype = 0;
+    pyg_boxed_set_type (self, 0);
     self->free_on_dealloc = FALSE;
 
     g_snprintf(buf, sizeof(buf), "%s can not be constructed",
@@ -104,7 +105,10 @@ pyg_boxed_free(PyObject *op)
 static PyObject *
 pyg_boxed_copy(PyGBoxed *self)
 {
-    return pyg_boxed_new (self->gtype, pyg_boxed_get_ptr (self), TRUE, TRUE);
+    return pyg_boxed_new (pyg_boxed_type (self),
+                          pyg_boxed_get_ptr (self),
+                          TRUE,
+                          TRUE);
 }
 
 
@@ -206,8 +210,9 @@ pyg_boxed_new(GType boxed_type, gpointer boxed, gboolean copy_boxed,
 
     if (copy_boxed)
 	boxed = g_boxed_copy(boxed_type, boxed);
+
     pyg_boxed_set_ptr (self, boxed);
-    self->gtype = boxed_type;
+    pyg_boxed_set_type (self, boxed_type);
     self->free_on_dealloc = own_ref;
 
     pyglib_gil_state_release(state);
