@@ -57,10 +57,13 @@ typedef struct {
     gboolean free_on_dealloc;
 } PyGBoxed;
 
+#define pyg_boxed_type(v)       (((PyGBoxed *)(v))->gtype)
+#define pyg_boxed_set_type(v,t) (((PyGBoxed *)(v))->gtype = t)
 #define pyg_boxed_get(v,t)      ((t *)((PyGBoxed *)(v))->boxed)
 #define pyg_boxed_get_ptr(v)    (((PyGBoxed *)(v))->boxed)
 #define pyg_boxed_set_ptr(v,p)  (((PyGBoxed *)(v))->boxed = (gpointer)p)
-#define pyg_boxed_check(v,typecode) (PyObject_TypeCheck(v, &PyGBoxed_Type) && ((PyGBoxed *)(v))->gtype == typecode)
+#define pyg_boxed_check(v,typecode) (PyObject_TypeCheck(v, &PyGBoxed_Type) && \
+                                     (pyg_boxed_type (v) == typecode))
 
 typedef struct {
     PyObject_HEAD
@@ -68,10 +71,13 @@ typedef struct {
     GType gtype;
 } PyGPointer;
 
+#define pyg_pointer_type(v)       (((PyGPointer *)(v))->gtype)
+#define pyg_pointer_set_type(v,t) (((PyGPointer *)(v))->gtype = t)
 #define pyg_pointer_get(v,t)      ((t *)((PyGPointer *)(v))->pointer)
 #define pyg_pointer_get_ptr(v)    (((PyGPointer *)(v))->pointer)
 #define pyg_pointer_set_ptr(v,p)  (((PyGPointer *)(v))->pointer = (gpointer)p)
-#define pyg_pointer_check(v,typecode) (PyObject_TypeCheck(v, &PyGPointer_Type) && ((PyGPointer *)(v))->gtype == typecode)
+#define pyg_pointer_check(v,typecode) (PyObject_TypeCheck(v, &PyGPointer_Type) && \
+                                       (pyg_pointer_type (v) == typecode))
 
 typedef void (*PyGFatalExceptionFunc) (void);
 typedef void (*PyGThreadBlockFunc) (void);

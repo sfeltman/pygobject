@@ -153,7 +153,7 @@ _pygi_struct_new (PyTypeObject *type,
     g_type = pyg_type_from_object ( (PyObject *) type);
 
     pyg_pointer_set_ptr (self, pointer);
-    ( (PyGPointer *) self)->gtype = g_type;
+    pyg_pointer_set_type (self, g_type);
     self->free_on_dealloc = free_on_dealloc;
 
     return (PyObject *) self;

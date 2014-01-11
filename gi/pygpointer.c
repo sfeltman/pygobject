@@ -78,7 +78,7 @@ pyg_pointer_init(PyGPointer *self, PyObject *args, PyObject *kwargs)
 	return -1;
 
     pyg_pointer_set_ptr (self, NULL);
-    self->gtype = 0;
+    pyg_pointer_set_type (self, 0);
 
     g_snprintf(buf, sizeof(buf), "%s can not be constructed",
 	       Py_TYPE(self)->tp_name);
@@ -176,7 +176,7 @@ pyg_pointer_new(GType pointer_type, gpointer pointer)
 	return NULL;
 
     pyg_pointer_set_ptr (self, pointer);
-    self->gtype = pointer_type;
+    pyg_pointer_set_type (self, pointer_type);
 
     return (PyObject *)self;
 }
