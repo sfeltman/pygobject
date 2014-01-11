@@ -59,8 +59,7 @@ typedef struct {
 #define pygobject_check(v,base)   (PyObject_TypeCheck(v,base))
 
 typedef struct {
-    PyObject_HEAD
-    gpointer boxed;
+    PyGIWrapper parent;
     GType gtype;
     gboolean free_on_dealloc;
 } PyGBoxed;
@@ -74,8 +73,7 @@ typedef struct {
                                      (pyg_boxed_type (v) == typecode))
 
 typedef struct {
-    PyObject_HEAD
-    gpointer pointer;
+    PyGIWrapper parent;
     GType gtype;
 } PyGPointer;
 
