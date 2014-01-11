@@ -9,6 +9,15 @@
 
 G_BEGIN_DECLS
 
+typedef struct {
+    PyObject_HEAD
+    gpointer wrapped;
+} PyGIWrapper;
+
+#define pygi_wrapper_get(v,t)  ((t *)((PyGIWrapper *)(v))->wrapped)
+#define pygi_wrapper_set(v,p)  (((PyGIWrapper *)(v))->wrapped = (gpointer)p)
+#define pygi_wrapper_check(v)  (PyObject_TypeCheck(v, &PyGIWrapper_Type))
+
 /* PyGClosure is a _private_ structure */
 typedef void (* PyClosureExceptionHandler) (GValue *ret, guint n_param_values, const GValue *params);
 typedef struct _PyGClosure PyGClosure;
@@ -31,8 +40,7 @@ typedef enum {
   /* closures is just an alias for what is found in the
    * PyGObjectData */
 typedef struct {
-    PyObject_HEAD
-    GObject *obj;
+    PyGIWrapper parent;
     PyObject *inst_dict; /* the instance dictionary -- must be last */
     PyObject *weakreflist; /* list of weak references */
     
@@ -46,9 +54,9 @@ typedef struct {
 
 } PyGObject;
 
-#define pygobject_get(v) (((PyGObject *)(v))->obj)
-#define pygobject_set(v,p) (((PyGObject *)(v))->obj = (GObject *)p)
-#define pygobject_check(v,base) (PyObject_TypeCheck(v,base))
+#define pygobject_get(v)          (pygi_wrapper_get(v,GObject))
+#define pygobject_set(v,p)        (pygi_wrapper_set(v,p))
+#define pygobject_check(v,base)   (PyObject_TypeCheck(v,base))
 
 typedef struct {
     PyObject_HEAD
