@@ -51,6 +51,7 @@ from ._gi import \
     Struct, \
     Boxed, \
     CCallback, \
+    Wrapper, \
     enum_add, \
     enum_register_new_gtype_and_add, \
     flags_add, \
@@ -89,8 +90,8 @@ def get_parent_for_object(object_info):
         if gtype and gtype.pytype:
             return gtype.pytype
 
-        # Otherwise use builtins.object as the base
-        return object
+        # Otherwise use Wrapper as our base
+        return Wrapper
 
     namespace = parent_object_info.get_namespace()
     name = parent_object_info.get_name()
@@ -224,6 +225,12 @@ class IntrospectionModule(object):
             # Register the new Python wrapper.
             if g_type != TYPE_NONE:
                 g_type.pytype = wrapper
+
+            # If we have a class directly inheriting from "Wrapper" it basically
+            # means we have a fundamental type. Attach the memory management
+            # functions from the classes __info__ (ref/unref) when available.
+            if isinstance(info, ObjectInfo) and bases[0] == Wrapper:
+                wrapper._setup_memory_management_from_gi_info()
 
         elif isinstance(info, FunctionInfo):
             wrapper = info

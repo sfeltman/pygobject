@@ -28,8 +28,8 @@
 
 G_BEGIN_DECLS
 
-typedef void * (*PyGIWrapper_CopyFunc)(void *data);
-typedef void   (*PyGIWrapper_FreeFunc)(void *data);
+typedef gpointer (*PyGIWrapper_CopyFunc)(gpointer wrapped);
+typedef void     (*PyGIWrapper_FreeFunc)(gpointer wrapped);
 
 /**
  * PyGIWrapperFuncs:
@@ -63,6 +63,19 @@ pygi_wrapper_funcs_get (PyObject *obj);
 void
 pygi_wrapper_register_types (PyObject *d);
 
+gpointer
+pygi_wrapper_copy_wrapped (PyObject *wrapper);
+
+#define \
+pygi_wrapper_peek_wrapped(wrapper) pygi_wrapper_get(wrapper, void)
+
+void
+pygi_wrapper_set_wrapped (PyObject *wrapper, gpointer wrapped, gboolean copy);
+
+gboolean
+pygi_wrapper_marshal_from_py_object (PyObject    *wrapper, /*in*/
+                                     GIArgument  *arg,     /*out*/
+                                     GITransfer   transfer);
 G_END_DECLS
 
 #endif /* __PYGI_WRAPPER_H__ */

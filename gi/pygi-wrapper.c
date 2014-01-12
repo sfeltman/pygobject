@@ -138,6 +138,78 @@ pygi_wrapper_funcs_get (PyObject *obj)
     return (PyGIWrapperFuncs *)PyCapsule_GetPointer (capsule, NULL);
 }
 
+
+gpointer
+pygi_wrapper_copy_wrapped (PyObject *wrapper)
+{
+    gpointer wrapped = pygi_wrapper_get (wrapper, void);
+    if (G_LIKELY (wrapped != NULL)) {
+        PyGIWrapperFuncs *funcs = pygi_wrapper_funcs_get (wrapper);
+        if (G_LIKELY (funcs != NULL && funcs->copy != NULL)) {
+            wrapped = funcs->copy (wrapped);
+        }
+    }
+
+    return wrapped;
+}
+
+void
+pygi_wrapper_take_wrapped (PyObject *wrapper, gpointer wrapped)
+{
+
+}
+
+gboolean
+pygi_wrapper_marshal_from_py_object (PyObject    *wrapper, /*in*/
+                                     GIArgument  *arg,     /*out*/
+                                     GITransfer   transfer)
+{
+    gpointer wrapped = NULL;
+
+    if (G_UNLIKELY (wrapper == Py_None)) {
+        arg->v_pointer = NULL;
+        return TRUE;
+    }
+
+    if (G_UNLIKELY (!pygi_wrapper_check (wrapper))) {
+        PyObject *repr = PyObject_Repr (wrapper);
+        PyErr_Format (PyExc_TypeError, "expected gi.Wrapper but got %s",
+                      PYGLIB_PyUnicode_AsString (repr));
+        Py_DECREF (repr);
+        return FALSE;
+    }
+
+    if (G_LIKELY (transfer == GI_TRANSFER_NOTHING)) {
+        wrapped = g_wrapper_peek_wrapped (wrapper);
+    } else {
+        wrapped = g_wrapper_copy_wrapped (wrapper);
+    }
+
+    arg->v_pointer = wrapped;
+    return TRUE;
+}
+
+PyObject *
+pygi_wrapper_marshal_to_py_object (GIArgument *arg, GITransfer transfer)
+{
+    PyObject *wrapper;
+
+    if (arg->v_pointer == NULL) {
+        Py_RETURN_NONE;
+    } else if (G_IS_PARAM_SPEC(arg->v_pointer)) {
+        pyobj = pyg_param_spec_new (arg->v_pointer);
+        if (transfer == GI_TRANSFER_EVERYTHING)
+            g_param_spec_unref (arg->v_pointer);
+
+    } else {
+         pyobj = pygobject_new_full (arg->v_pointer,
+                                     /*steal=*/ transfer == GI_TRANSFER_EVERYTHING,
+                                     /*type=*/  NULL);
+    }
+
+    return pyobj;
+}
+
 static PyObject*
 _pygi_wrapper_richcompare (PyObject *self, PyObject *other, int op)
 {
