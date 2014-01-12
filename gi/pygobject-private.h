@@ -36,6 +36,7 @@ extern struct _PyGObject_Functions pygobject_api_functions;
 
 extern GType PY_TYPE_OBJECT;
 
+extern GQuark pygi_wrapper_class_key;
 extern GQuark pygboxed_type_key;
 extern GQuark pygboxed_marshal_key;
 extern GQuark pygenum_class_key;
@@ -87,6 +88,7 @@ void pygobject_object_register_types(PyObject *d);
 extern PyTypeObject *PyGObject_MetaType;
 
 /* from pygobject.h */
+extern PyTypeObject PyGIWrapper_Type;
 extern PyTypeObject PyGObject_Type;
 extern PyTypeObject PyGProps_Type;
 extern PyTypeObject PyGPropsDescr_Type;

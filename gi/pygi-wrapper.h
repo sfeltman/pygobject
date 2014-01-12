@@ -60,30 +60,8 @@ pygi_wrapper_funcs_attach_static (PyObject         *obj,
 PyGIWrapperFuncs *
 pygi_wrapper_funcs_get (PyObject *obj);
 
-PyObject *
-pygi_wrapper_new_py_type_from_info (GIObjectInfo *info);
-
-PyGIWrapperFuncs *
-pygi_wrapper_funcs_get (PyObject *obj);
-
-PyObject *
-pygi_wrapper_class_from_gtype (GType gtype);
-
-PyObject *
-pygi_wrapper_class_from_object_info (GIObjectInfo *info);
-
-PyObject *
-pygi_wrapper_class_new_full (const char *class_name,
-                             const char *module_name,
-                             GType gtype,
-                             PyGIWrapper_CopyFunc copy_func,
-                             PyGIWrapper_FreeFunc free_func);
-
-PyObject *
-pygi_wrapper_class_new_from_object_info (GIObjectInfo *info);
-
 void
-pygi_wrapper_register_types(PyObject *d);
+pygi_wrapper_register_types (PyObject *d);
 
 G_END_DECLS
 

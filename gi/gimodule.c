@@ -665,6 +665,7 @@ PYGLIB_MODULE_START(_gi, "_gi")
 
     pygi_foreign_init ();
     pygi_error_register_types (module);
+    pygi_wrapper_register_types (module);
     _pygi_repository_register_types (module);
     _pygi_info_register_types (module);
     _pygi_struct_register_types (module);

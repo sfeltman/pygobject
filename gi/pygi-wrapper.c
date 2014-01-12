@@ -28,6 +28,7 @@
 #include "pygobject-private.h"
 #include "pygi-wrapper.h"
 #include "pygi-type.h"
+#include "pygi-info.h"
 
 GQuark pygi_wrapper_class_key;
 
@@ -137,156 +138,6 @@ pygi_wrapper_funcs_get (PyObject *obj)
     return (PyGIWrapperFuncs *)PyCapsule_GetPointer (capsule, NULL);
 }
 
-/**
- * pygi_wrapper_class_from_gtype:
- * @gtype: GType which may hold a Python wrapper class.
- *
- * Returns: A Python class associated with @gtype or NULL.
- */
-PyObject *
-pygi_wrapper_class_from_gtype (GType gtype)
-{
-    PyObject *pytype = NULL;
-
-    pytype = g_type_get_qdata (gtype, pygi_wrapper_class_key);
-
-    if (!pytype)
-        pytype = pygi_type_import_by_g_type_real (gtype);
-
-    return pytype;
-}
-
-/**
- * pygi_wrapper_class_from_object_info:
- * @info: GIObjectInfo which may have an associated Python wrapper class.
- *
- * Returns: A Python class associated with @info or NULL.
- */
-PyObject *
-pygi_wrapper_class_from_object_info (GIObjectInfo *info)
-{
-    PyObject *pytype = NULL;
-    GType gtype = g_registered_type_info_get_g_type ((GIRegisteredTypeInfo *)info);
-
-    if (gtype != G_TYPE_NONE) {
-        pytype = pygi_wrapper_class_from_gtype (gtype);
-    }
-
-    if (pytype == NULL) {
-        pytype = _pygi_type_import_by_name (g_base_info_get_namespace (info),
-                                            g_base_info_get_name (info));
-    }
-
-    return pytype;
-}
-
-/**
- * pygi_wrapper_class_new_full:
- * @class_name: Python class name of wrapper class to be created.
- * @module_name: Python module name of wrapper class to be created.
- * @gtype: GType to associate the wrapper class with (allows G_TYPE_NONE).
- * @copy_func: (allow-none): A function for copying/reffing a pointer held by
- *   the new wrapper.
- * @free_func: (allow-none): A function for freeing/unreffing a pointer held by
- *   the new wrapper.
- *
- * Returns: A new Python class which allows wrapping a pointer with memory management.
- */
-PyObject *
-pygi_wrapper_class_new_full (const char *class_name,
-                             const char *module_name,
-                             GType gtype,
-                             PyGIWrapper_CopyFunc copy_func,
-                             PyGIWrapper_FreeFunc free_func)
-{
-    int res;
-    PyObject *class_dict;
-    PyObject *wrapper_class;
-    PyObject *py_module_name;
-
-    if (gtype != G_TYPE_NONE) {
-        wrapper_class = pygi_wrapper_class_from_gtype (gtype);
-        if (wrapper_class != NULL) {
-            return wrapper_class;
-        }
-    }
-
-    class_dict = PyDict_New();
-    if (class_dict == NULL) {
-        return NULL;
-    }
-
-    /* Create a new class derived from PyGIWrapper. This is the same as:
-     * >>> wrapper_class = type(typename, (gi.Wrapper,), {})
-     */
-    wrapper_class = PyObject_CallFunction ((PyObject *)&PyType_Type, "s(O)O",
-                                           class_name,
-                                           (PyObject *)&PyGIWrapper_Type,
-                                           class_dict);
-    Py_DECREF (class_dict);
-    if (wrapper_class == NULL) {
-        return NULL;
-    }
-
-    py_module_name = PYGLIB_PyUnicode_FromString (module_name);
-    res = PyObject_SetAttrString (wrapper_class, "__module__", py_module_name);
-    Py_DECREF (py_module_name);
-    if (res < 0) {
-        Py_DECREF (wrapper_class);
-        return NULL;
-    }
-
-    res = pygi_wrapper_funcs_attach (wrapper_class,
-                                     copy_func,
-                                     free_func);
-    if (res < 0) {
-        Py_DECREF (wrapper_class);
-        return NULL;
-    }
-
-    /* If we have a valid GType, stash our new wrapper as qdata on it. */
-    if (gtype != G_TYPE_NONE) {
-        PyObject *py_gtype;
-        g_type_set_qdata (gtype, pygi_wrapper_class_key, wrapper_class);
-
-        py_gtype = pyg_type_wrapper_new (gtype);
-        res = PyObject_SetAttrString (wrapper_class, "__gtype__", py_gtype);
-        Py_DECREF (py_gtype);
-        if (res < 0) {
-            Py_DECREF (wrapper_class);
-            return NULL;
-        }
-    }
-
-    return wrapper_class;
-}
-
-/**
- * pygi_wrapper_type_new_from_object_info:
- * @info: GIObjectInfo to use as an information source of pygi_wrapper_class_new_full.
- *
- * Generate a new Python class from @info. The new class will be named according
- * to the GI info and will contain a "PyGIWrapperFuncs" setup with ref/unref
- * functions for the class instances wrapped pointer.
- */
-PyObject *
-pygi_wrapper_class_new_from_object_info (GIObjectInfo *info)
-{
-    PyObject *wrapper_class;
-
-    wrapper_class = pygi_wrapper_class_from_object_info (info);
-    if (wrapper_class != NULL) {
-        return wrapper_class;
-    }
-
-    return pygi_wrapper_class_new_full (
-               g_base_info_get_name ((GIBaseInfo *)info),
-               g_base_info_get_namespace ((GIBaseInfo *)info),
-               g_registered_type_info_get_g_type ((GIRegisteredTypeInfo *)info),
-               g_object_info_get_ref_function_pointer (info),
-               g_object_info_get_unref_function_pointer (info));
-}
-
 static PyObject*
 _pygi_wrapper_richcompare (PyObject *self, PyObject *other, int op)
 {
@@ -314,20 +165,6 @@ _pygi_wrapper_repr (PyGIWrapper *self)
                                         pygi_wrapper_get (self, void));
 }
 
-static int
-_pygi_wrapper_init (PyGIWrapper *self, PyObject *args, PyObject *kwargs)
-{
-    if (!PyArg_ParseTuple(args, ":Wrapper.__init__")) {
-        return -1;
-    }
-
-    self->wrapped = NULL;
-
-    PyErr_Format (PyExc_NotImplementedError, "%s can not be constructed",
-                  Py_TYPE(self)->tp_name);
-    return -1;
-}
-
 static void
 _pygi_wrapper_dealloc (PyGIWrapper *self)
 {
@@ -339,18 +176,48 @@ _pygi_wrapper_dealloc (PyGIWrapper *self)
     Py_TYPE(self)->tp_free ((PyObject *)self);
 }
 
+static PyObject *
+_pygi_wrapper_class_setup_memory_management_from_gi_info (PyObject *wrapper_class,
+                                                          PyObject *unused)
+{
+    GIObjectInfo *info;
+
+    info = (GIObjectInfo *)_pygi_object_get_gi_info (wrapper_class, &PyGIObjectInfo_Type);
+    if (info == NULL) {
+        return NULL;
+    }
+
+    if (pygi_wrapper_funcs_attach (wrapper_class,
+                                   g_object_info_get_ref_function_pointer (info),
+                                   g_object_info_get_unref_function_pointer (info))) {
+        return NULL;
+    }
+
+    Py_RETURN_NONE;
+}
+
+static PyMethodDef _pygi_wrapper_methods[] = {
+    { "_setup_memory_management_from_gi_info",
+        (PyCFunction)_pygi_wrapper_class_setup_memory_management_from_gi_info,
+        METH_CLASS | METH_NOARGS },
+    { NULL, NULL, 0 }
+};
+
 void
-pygi_wrapper_register_types(PyObject *d)
+pygi_wrapper_register_types(PyObject *module)
 {
     pygi_wrapper_class_key = g_quark_from_static_string("PyGIWrapper::class");
 
+    Py_TYPE(&PyGIWrapper_Type) = &PyType_Type;
     PyGIWrapper_Type.tp_dealloc = (destructor)_pygi_wrapper_dealloc;
     PyGIWrapper_Type.tp_richcompare = _pygi_wrapper_richcompare;
     PyGIWrapper_Type.tp_repr = (reprfunc)_pygi_wrapper_repr;
     PyGIWrapper_Type.tp_hash = (hashfunc)_pygi_wrapper_hash;
     PyGIWrapper_Type.tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE;
-    PyGIWrapper_Type.tp_init = (initproc)_pygi_wrapper_init;
+    PyGIWrapper_Type.tp_methods = _pygi_wrapper_methods;
 
-    if (!PyType_Ready (&PyGIWrapper_Type))
+    if (PyType_Ready (&PyGIWrapper_Type))
+        return;
+    if (PyModule_AddObject (module, "Wrapper", (PyObject *) &PyGIWrapper_Type))
         return;
 }
