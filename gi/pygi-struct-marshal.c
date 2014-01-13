@@ -357,7 +357,7 @@ _pygi_marshal_to_py_interface_struct (GIArgument *arg,
         if (py_type) {
             py_obj = _pygi_boxed_new ((PyTypeObject *) py_type,
                                       arg->v_pointer,
-                                      transfer == GI_TRANSFER_EVERYTHING || is_allocated,
+                                      transfer == GI_TRANSFER_NOTHING && !is_allocated,
                                       is_allocated ?
                                               g_struct_info_get_size(interface_info) : 0);
         }
