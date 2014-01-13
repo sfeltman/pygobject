@@ -120,7 +120,7 @@ pygi_signal_closure_marshal(GClosure *closure,
             g_arg_info_load_type(&arg_info, &type_info);
             transfer = g_arg_info_get_ownership_transfer(&arg_info);
 
-            arg = _pygi_argument_from_g_value(&param_values[i], &type_info);
+            pygi_value_to_argument (&param_values[i], &arg, &type_info);
             
             if (g_type_info_get_tag (&type_info) == GI_TYPE_TAG_ARRAY) {
                 /* Skip the self argument of param_values */

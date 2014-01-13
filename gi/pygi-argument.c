@@ -843,8 +843,10 @@ _pygi_argument_to_array (GIArgument  *arg,
                             return NULL;
                     } else {
                         /* get it from args_values */
-                        GIArgument length_arg = _pygi_argument_from_g_value (&(args_values[length_arg_pos]),
-                                &length_type_info);
+                        GIArgument length_arg = {0,};
+                        pygi_value_to_argument (&(args_values[length_arg_pos]),
+                                                &length_arg,
+                                                &length_type_info);
                         if (!gi_argument_to_gssize (&length_arg,
                                                     g_type_info_get_tag (&length_type_info),
                                                     &length))

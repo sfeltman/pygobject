@@ -24,8 +24,9 @@
 
 G_BEGIN_DECLS
 
-GIArgument _pygi_argument_from_g_value(const GValue *value,
-                                       GITypeInfo *type_info);
+gboolean  pygi_value_to_argument (const GValue *value,
+                                  GIArgument *arg,
+                                  GITypeInfo *type_info);
 
 int       pyg_value_from_pyobject(GValue *value, PyObject *obj);
 int       pyg_value_from_pyobject_with_error(GValue *value, PyObject *obj);

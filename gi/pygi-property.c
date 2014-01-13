@@ -21,9 +21,10 @@
  * IN THE SOFTWARE.
  */
 
-#include "pygi-private.h"
-
 #include <girepository.h>
+
+#include "pygi-private.h"
+#include "pygi-value.h"
 
 static GIPropertyInfo *
 lookup_property_from_object_info (GIObjectInfo *info, const gchar *attr_name)
@@ -95,15 +96,6 @@ _pygi_lookup_property_from_g_type (GType g_type, const gchar *attr_name)
     return ret;
 }
 
-static inline gpointer
-g_value_get_or_dup_boxed (const GValue *value, GITransfer transfer)
-{
-    if (transfer == GI_TRANSFER_EVERYTHING)
-        return g_value_dup_boxed (value);
-    else
-        return g_value_get_boxed (value);
-}
-
 PyObject *
 pygi_get_property_value_real (PyGObject *instance, GParamSpec *pspec)
 {
@@ -112,8 +104,9 @@ pygi_get_property_value_real (PyGObject *instance, GParamSpec *pspec)
     GIArgument arg = { 0, };
     PyObject *py_value = NULL;
     GITypeInfo *type_info = NULL;
-    GITransfer transfer;
-    GITypeTag type_tag;
+    gboolean free_array = FALSE;
+    //GITransfer transfer;
+    //GITypeTag type_tag;
 
     /* The owner_type of the pspec gives us the exact type that introduced the
      * property, even if it is a parent class of the instance in question. */
@@ -126,6 +119,31 @@ pygi_get_property_value_real (PyGObject *instance, GParamSpec *pspec)
     g_object_get_property (instance->obj, pspec->name, &value);
 
     type_info = g_property_info_get_type (property_info);
+
+    pygi_value_to_argument (&value, &arg, type_info);
+
+    /* Special case array marshaling because pygi_value_to_argument only copies
+     * a pointer. _pygi_argument_to_array makes a real GArray for us which is
+     * what _pygi_argument_to_object expects.
+     */
+    if (g_type_info_get_tag (type_info) == GI_TYPE_TAG_ARRAY) {
+        arg.v_pointer = _pygi_argument_to_array (&arg, NULL, NULL, NULL,
+                                                 type_info, &free_array);
+    }
+
+    /* Always assume transfer nothing for properties. This forces copies of data
+     * that will be managed by Python. g_value_unset is assumed to take care of
+     * anything returned from g_object_get_property.
+     */
+    py_value = _pygi_argument_to_object (&arg, type_info, GI_TRANSFER_NOTHING);
+
+    if (free_array) {
+        g_array_free (arg.v_pointer, FALSE);
+    }
+
+    g_value_unset (&value);
+
+#if 0
     transfer = g_property_info_get_ownership_transfer (property_info);
 
     type_tag = g_type_info_get_tag (type_info);
@@ -258,8 +276,9 @@ pygi_get_property_value_real (PyGObject *instance, GParamSpec *pspec)
             goto out;
     }
 
-    py_value = _pygi_argument_to_object (&arg, type_info, transfer);
+    py_value = _pygi_argument_to_object (&arg, type_info, GI_TRANSFER_NOTHING);
     g_value_unset (&value);
+#endif
 
 out:
     if (property_info != NULL)
