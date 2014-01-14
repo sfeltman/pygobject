@@ -105,7 +105,7 @@ _boxed_new (PyTypeObject *type,
         goto out;
     }
 
-    self = (PyGIBoxed *) _pygi_boxed_new (type, boxed, TRUE, size);
+    self = (PyGIBoxed *) _pygi_boxed_new (type, boxed, FALSE, size);
     if (self == NULL) {
         g_slice_free1 (size, boxed);
         goto out;
@@ -156,7 +156,14 @@ _pygi_boxed_new (PyTypeObject *type,
 
     gtype = pyg_type_from_object ( (PyObject *) type);
     if (copy_boxed) {
-        boxed = g_boxed_copy (gtype, boxed);
+        if (allocated_slice > 0)
+            boxed = g_slice_copy (allocated_slice, boxed);
+        else
+            boxed = g_boxed_copy (gtype, boxed);
+    }
+
+    if (boxed == NULL) {
+        return NULL;
     }
 
     ( (PyGBoxed *) self)->gtype = gtype;

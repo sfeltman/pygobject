@@ -218,7 +218,7 @@ class Variant(GLib.Variant):
         v.format_string = format_string
         return v
 
-    def __del__(self):
+    def foo__del__(self):
         self.unref()
 
     def __str__(self):
@@ -547,7 +547,7 @@ class Source(GLib.Source):
         setattr(source, '__pygi_custom_source', True)
         return source
 
-    def __del__(self):
+    def foo__del__(self):
         if hasattr(self, '__pygi_custom_source'):
             self.unref()
 

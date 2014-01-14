@@ -510,6 +510,7 @@ _wrap_pyg_variant_type_from_string (PyObject *self, PyObject *args)
     char *type_string;
     PyObject *py_type;
     PyObject *py_variant = NULL;
+    gsize size;
 
     if (!PyArg_ParseTuple (args, "s:variant_type_from_string",
                            &type_string)) {
@@ -518,7 +519,9 @@ _wrap_pyg_variant_type_from_string (PyObject *self, PyObject *args)
 
     py_type = _pygi_type_import_by_name ("GLib", "VariantType");
 
-    py_variant = _pygi_boxed_new ( (PyTypeObject *) py_type, type_string, FALSE, 0);
+    size = strlen (type_string) + 1;
+
+    py_variant = _pygi_boxed_new ( (PyTypeObject *) py_type, type_string, TRUE, size);
 
     return py_variant;
 }
