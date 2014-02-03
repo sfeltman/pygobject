@@ -1,0 +1,51 @@
+#
+# run with: autom4te -l M4sugar -I <path-to-ini-file.m4> ini-file.test
+#
+
+m4_include(ini-file.m4)
+
+m4_define([assert_equal],
+[m4_if([$1], [$2],
+       [passed],
+       [m4_fatal([$1 != $2])]
+)])
+
+
+# sanity check
+m4_define([foo], [abc])
+assert_equal(foo, abc)
+
+assert_equal(
+  _ini_split_on_index_exclusive([abc=123], 3),
+  [abc,123])
+
+assert_equal(
+  _ini_split_key_value([abc=123]),
+  [abc,123])
+
+#assert_equal(
+#  _ini_split_key_value([  abc  =  123  ]),
+#  [abc,123])
+
+assert_equal(
+  _ini_split_key_value([abc=123=456]),
+  [abc,123=456])
+
+_ini_define([bar=456])
+assert_equal(bar, 456)
+
+# test equals sign in value
+_ini_define([baz=bar=456])
+assert_equal(baz, 456=456)
+
+# test blank line
+_ini_define([])
+
+# test no value
+_ini_define([keywithnovalue])
+assert_equal(keywithnovalue, keywithnovalue)
+
+# test comment line
+# _ini_define([[# this is a comment]])
+
+

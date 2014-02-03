@@ -23,7 +23,9 @@ EXTRA_DIST = \
 	pygi-convert.sh \
 	m4/as-ac-expand.m4 \
 	m4/jhflags.m4 \
-	m4/python.m4
+	m4/python.m4 \
+	m4/ini-file.m4 \
+	configure.ini
 
 MAINTAINERCLEANFILES = \
 	$(srcdir)/INSTALL \

@@ -12,35 +12,25 @@ AC_PREREQ([2.68])
 # You can also build against a full interpreter path, such as
 #   $ ./configure --with-python=~/my-patched-python/python
 
-m4_define(python_min_ver, 2.7)
-m4_define(python3_min_ver, 3.1)
+# Include "key=value" from configure.ini as m4 defines
+m4_sinclude([m4/ini-file.m4])
+ini_include([configure.ini])
 
-dnl the pygobject version number
-m4_define(pygobject_major_version, 3)
-m4_define(pygobject_minor_version, 11)
-m4_define(pygobject_micro_version, 90)
-m4_define(pygobject_version, pygobject_major_version.pygobject_minor_version.pygobject_micro_version)
-
-dnl versions of packages we require ...
-m4_define(introspection_required_version, 1.38.0)
-m4_define(py2cairo_required_version, 1.2.0)
-m4_define(py3cairo_required_version, 1.10.0)
-m4_define(glib_required_version, 2.38.0)
-m4_define(gio_required_version, 2.38.0)
-
-AC_INIT([pygobject],[pygobject_version],
-	[http://bugzilla.gnome.org/enter_bug.cgi?product=pygobject],
-	[pygobject],[https://live.gnome.org/PyGObject/])
+AC_INIT([package_name],
+  [package_version],
+	[package_bugtracker],
+	[package_name],
+	[package_url])
 AC_SUBST(ACLOCAL_AMFLAGS, "-I m4 -I .")
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_SRCDIR([gi/gimodule.c])
 
-AC_DEFINE(PYGOBJECT_MAJOR_VERSION, pygobject_major_version, [pygobject major version])
-AC_SUBST(PYGOBJECT_MAJOR_VERSION, pygobject_major_version)
-AC_DEFINE(PYGOBJECT_MINOR_VERSION, pygobject_minor_version, [pygobject minor version])
-AC_SUBST(PYGOBJECT_MINOR_VERSION, pygobject_minor_version)
-AC_DEFINE(PYGOBJECT_MICRO_VERSION, pygobject_micro_version, [pygobject micro version])
-AC_SUBST(PYGOBJECT_MICRO_VERSION, pygobject_micro_version)
+AC_DEFINE(PYGOBJECT_MAJOR_VERSION, package_major_version, [pygobject major version])
+AC_SUBST(PYGOBJECT_MAJOR_VERSION, package_major_version)
+AC_DEFINE(PYGOBJECT_MINOR_VERSION, package_minor_version, [pygobject minor version])
+AC_SUBST(PYGOBJECT_MINOR_VERSION, package_minor_version)
+AC_DEFINE(PYGOBJECT_MICRO_VERSION, package_micro_version, [pygobject micro version])
+AC_SUBST(PYGOBJECT_MICRO_VERSION, package_micro_version)
 
 AC_CONFIG_HEADERS(config.h)
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES(yes)])
