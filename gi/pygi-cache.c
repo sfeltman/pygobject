@@ -452,17 +452,24 @@ pygi_arg_cache_new (GITypeInfo *type_info,
 static PyGIDirection
 _pygi_get_direction (PyGICallableCache *callable_cache, GIDirection gi_direction)
 {
-    /* For vfuncs and callbacks our marshalling directions are reversed */
     if (gi_direction == GI_DIRECTION_INOUT) {
         return PYGI_DIRECTION_BIDIRECTIONAL;
     } else if (gi_direction == GI_DIRECTION_IN) {
-        if (callable_cache->function_type == PYGI_FUNCTION_TYPE_CALLBACK)
-            return PYGI_DIRECTION_TO_PYTHON;
         return PYGI_DIRECTION_FROM_PYTHON;
     } else {
-        if (callable_cache->function_type == PYGI_FUNCTION_TYPE_CALLBACK)
-            return PYGI_DIRECTION_FROM_PYTHON;
         return PYGI_DIRECTION_TO_PYTHON;
+    }
+}
+
+static PyGIDirection
+_pygi_get_direction_reversed (PyGICallableCache *callable_cache, GIDirection gi_direction)
+{
+    if (gi_direction == GI_DIRECTION_INOUT) {
+        return PYGI_DIRECTION_BIDIRECTIONAL;
+    } else if (gi_direction == GI_DIRECTION_IN) {
+        return PYGI_DIRECTION_TO_PYTHON;
+    } else {
+        return PYGI_DIRECTION_FROM_PYTHON;
     }
 }
 
@@ -719,10 +726,8 @@ _setup_invoker (GICallableInfo *callable_info,
     return TRUE;
 }
 
-PyGICallableCache *
-pygi_callable_cache_new (GICallableInfo *callable_info,
-                         GCallback function_ptr,
-                         gboolean is_ccallback)
+static PyGICallableCache *
+pygi_callable_cache_new (GICallableInfo *callable_info, gboolean has_self)
 {
     gint n_args;
     PyGICallableCache *cache;
@@ -735,6 +740,11 @@ pygi_callable_cache_new (GICallableInfo *callable_info,
 
     cache->name = g_base_info_get_name ((GIBaseInfo *)callable_info);
     cache->throws = g_callable_info_can_throw_gerror ((GIBaseInfo *)callable_info);
+
+    n_args = g_callable_info_get_n_args (callable_info);
+    if (has_self) {
+        n_args++;
+    }
 
     if (g_base_info_is_deprecated (callable_info)) {
         const gchar *deprecated = g_base_info_get_attribute (callable_info, "deprecated");
@@ -750,37 +760,20 @@ pygi_callable_cache_new (GICallableInfo *callable_info,
         g_free (warning);
     }
 
-    if (type == GI_INFO_TYPE_FUNCTION) {
-        GIFunctionInfoFlags flags;
-
-        flags = g_function_info_get_flags ( (GIFunctionInfo *)callable_info);
-
-        if (flags & GI_FUNCTION_IS_CONSTRUCTOR)
-            cache->function_type = PYGI_FUNCTION_TYPE_CONSTRUCTOR;
-        else if (flags & GI_FUNCTION_IS_METHOD)
-            cache->function_type = PYGI_FUNCTION_TYPE_METHOD;
-    } else if (type == GI_INFO_TYPE_VFUNC) {
-        cache->function_type = PYGI_FUNCTION_TYPE_VFUNC;
-    } else if (type == GI_INFO_TYPE_CALLBACK) {
-        if (is_ccallback)
-            cache->function_type = PYGI_FUNCTION_TYPE_CCALLBACK;
-        else
-            cache->function_type = PYGI_FUNCTION_TYPE_CALLBACK;
-    } else {
-        cache->function_type = PYGI_FUNCTION_TYPE_METHOD;
+    if (n_args >= 0) {
+        cache->args_cache = g_ptr_array_new_full (n_args, (GDestroyNotify) pygi_arg_cache_free);
+        g_ptr_array_set_size (cache->args_cache, n_args);
     }
 
-    n_args = g_callable_info_get_n_args (callable_info);
+    return cache;
+}
+
 
     /* if we are a method or vfunc make sure the instance parameter is counted */
     if (cache->function_type == PYGI_FUNCTION_TYPE_METHOD ||
             cache->function_type == PYGI_FUNCTION_TYPE_VFUNC)
         n_args++;
 
-    if (n_args >= 0) {
-        cache->args_cache = g_ptr_array_new_full (n_args, (GDestroyNotify) pygi_arg_cache_free);
-        g_ptr_array_set_size (cache->args_cache, n_args);
-    }
 
     if (!_args_cache_generate (callable_info, cache))
         goto err;
@@ -794,3 +787,55 @@ err:
     pygi_callable_cache_free (cache);
     return NULL;
 }
+
+PyGICallableCache *
+pygi_callable_cache_new_for_function (GICallableInfo *callable_info)
+{
+    gboolean has_self = FALSE;
+    PyGICallableCache *cache;
+
+    GIFunctionInfoFlags flags;
+
+    flags = g_function_info_get_flags ( (GIFunctionInfo *)callable_info);
+
+    if (flags & GI_FUNCTION_IS_CONSTRUCTOR) {
+        cache->function_type = PYGI_FUNCTION_TYPE_CONSTRUCTOR;
+
+    } else if (flags & GI_FUNCTION_IS_METHOD) {
+        cache->function_type = PYGI_FUNCTION_TYPE_METHOD;
+        has_self = TRUE;
+
+    } else {
+        cache->function_type = PYGI_FUNCTION_TYPE_FUNCTION;
+    }
+
+    cache = pygi_callable_cache_new (callable_info);
+
+}
+
+PyGICallableCache *
+pygi_callable_cache_new_for_callback (GICallableInfo *callable_info,
+                                      GCallback function_ptr)
+{
+    PyGICallableCache *cache = pygi_callable_cache_new (callable_info);
+    /* For vfuncs and callbacks our marshalling directions are reversed */
+    if (is_ccallback)
+        cache->function_type = PYGI_FUNCTION_TYPE_CCALLBACK;
+    else
+        cache->function_type = PYGI_FUNCTION_TYPE_CALLBACK;
+
+}
+
+PyGICallableCache *
+pygi_callable_cache_new_for_vfunc (GICallableInfo *callable_info)
+{
+    PyGICallableCache *cache = pygi_callable_cache_new (callable_info);
+    /* For vfuncs and callbacks our marshalling directions are reversed */
+    cache->function_type = PYGI_FUNCTION_TYPE_VFUNC;
+
+
+    PyGICallableCache *cache = pygi_callable_cache_new (callable_info,
+                                                        TRUE /* has_self */);
+
+}
+

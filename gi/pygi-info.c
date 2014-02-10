@@ -674,6 +674,23 @@ _function_info_descr_get (PyGICallableInfo *self, PyObject *obj, PyObject *type)
     return (PyObject *)_new_bound_callable_info (self, bound_arg);
 }
 
+/* _constructor_info_descr_get
+ *
+ * Descriptor protocol implementation for constructors.
+ */
+static PyObject *
+_constructor_info_descr_get (PyGICallableInfo *self, PyObject *obj, PyObject *type) {
+    GIFunctionInfoFlags flags;
+    PyObject *bound_arg = NULL;
+
+    if (type == NULL)
+        bound_arg = (PyObject *)(Py_TYPE(obj));
+    else
+        bound_arg = type;
+
+    return (PyObject *)_new_bound_callable_info (self, bound_arg);
+}
+
 /* _vfunc_info_descr_get
  *
  * Descriptor protocol implementation for virtual functions.
@@ -1232,6 +1249,14 @@ static PyMethodDef _PyGIFunctionInfo_methods[] = {
     { "get_vfunc", (PyCFunction) _wrap_g_function_info_get_vfunc, METH_NOARGS },
     { NULL, NULL, 0 }
 };
+
+
+/* GIConstructorInfo:
+ *
+ * A specialization of FunctionInfo which maintains a reference to the GType.
+ */
+PYGLIB_DEFINE_TYPE ("gi.ConstructorInfo", PyGIConstructorInfo_Type, PyGICallableInfo);
+
 
 /* RegisteredTypeInfo */
 PYGLIB_DEFINE_TYPE ("gi.RegisteredTypeInfo", PyGIRegisteredTypeInfo_Type, PyGIBaseInfo);
@@ -2176,6 +2201,11 @@ _pygi_info_register_types (PyObject *m)
                          PyGICallableInfo_Type);
     PyGIFunctionInfo_Type.tp_call = (ternaryfunc) _function_info_call;
     PyGIFunctionInfo_Type.tp_descr_get = (descrgetfunc) _function_info_descr_get;
+
+    _PyGI_REGISTER_TYPE (m, PyGIConstructorInfo_Type, ConstructorInfo,
+                         PyGICallableInfo_Type);
+    PyGIFunctionInfo_Type.tp_call = (ternaryfunc) _constructor_info_call;
+    PyGIFunctionInfo_Type.tp_descr_get = (descrgetfunc) _constructor_info_descr_get;
 
     _PyGI_REGISTER_TYPE (m, PyGIVFuncInfo_Type, VFuncInfo,
                          PyGICallableInfo_Type);

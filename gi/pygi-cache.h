@@ -170,6 +170,8 @@ struct _PyGICallableCache
     GHashTable *arg_name_hash;
     gboolean throws;
 
+    gssize n_args;
+
     /* Index of user_data arg that can eat variable args passed to a callable. */
     gssize user_data_varargs_index;
 
@@ -192,6 +194,10 @@ struct _PyGICallableCache
 
     /* An invoker with ffi_cif already setup */
     GIFunctionInvoker invoker;
+
+    /* Virtual Functions */
+    PyGIDirection (*get_direction) (PyGICallableCache *callable_cache,
+                                    GIDirection gi_direction);
 };
 
 gboolean
@@ -243,9 +249,15 @@ void
 pygi_callable_cache_free (PyGICallableCache *cache);
 
 PyGICallableCache *
-pygi_callable_cache_new  (GICallableInfo *callable_info,
-                          GCallback function_ptr,
-                          gboolean is_ccallback);
+pygi_callable_cache_new_for_function  (GICallableInfo *callable_info);
+
+PyGICallableCache *
+pygi_callable_cache_new_for_callback  (GICallableInfo *callable_info,
+                                       GCallback function_ptr);
+
+PyGICallableCache *
+pygi_callable_cache_new_for_vfunc     (GICallableInfo *callable_info);
+
 
 #define _pygi_callable_cache_args_len(cache) ((cache)->args_cache)->len
 
