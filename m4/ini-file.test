@@ -48,4 +48,10 @@ assert_equal(keywithnovalue, keywithnovalue)
 # test comment line
 # _ini_define([[# this is a comment]])
 
+m4_define([multi_line_test], [multi_line_string= \
+this is a \
+multiline string])
+
+_ini_define(multi_line_test)
+assert_equal(multi_line_string, [this is a multiline string])
 

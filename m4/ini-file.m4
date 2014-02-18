@@ -35,7 +35,7 @@ m4_define([_ini_split_key_value],
 # m4_define(KEY, VALUE)
 #
 m4_define([_ini_define],
-[m4_apply(m4_define, _ini_split_key_value([$1]))])
+[m4_apply([m4_define], _ini_split_key_value([$1]))])
 
 
 # _ini_read_lines(FILENAME):
@@ -44,7 +44,7 @@ m4_define([_ini_define],
 # result as a list.
 #
 m4_define([_ini_read_lines],
-[m4_split(m4_include($1[]), m4_newline)])
+[m4_split(m4_include([$1]), m4_newline)])
 
 
 # ini_include(FILENAME)
