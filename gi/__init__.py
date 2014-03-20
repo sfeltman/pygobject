@@ -48,6 +48,12 @@ version_info = _gobject.pygobject_version[:]
 __version__ = "{0}.{1}.{2}".format(*version_info)
 
 
+# Options which can be enabled or disabled after importing 'gi' which may effect
+# repository imports or binding machinery in a backwards incompatible way.
+options = {'remove_deprecated_initializers': False,
+           }
+
+
 def check_version(version):
     if isinstance(version, str):
         version_list = tuple(map(int, version.split(".")))

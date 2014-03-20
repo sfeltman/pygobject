@@ -1,6 +1,7 @@
 import types
 import warnings
 
+import gi
 from gi import PyGIDeprecationWarning
 from gi._gi import CallableInfo
 from gi._constants import \
@@ -12,6 +13,8 @@ from pkgutil import extend_path
 __path__ = extend_path(__path__, __name__)
 
 registry = None
+
+remove_deprecated_initializers = gi.options['remove_deprecated_initializers']
 
 
 def wraps(wrapped):
@@ -120,6 +123,13 @@ def deprecated_init(super_init_func, arg_names, ignore=tuple(),
         warning when non-keyword args or aliases are used.
     :rtype: callable
     """
+
+    # Bypass deprecated initializers by simply returning the super class init.
+    # Note that override modules might add additional logic to completely skip
+    # the override when this is set. We also do it here as an extra measure.
+    if remove_deprecated_initializers:
+        return super_init_func
+
     # We use a list of argument names to maintain order of the arguments
     # being deprecated. This allows calls with positional arguments to
     # continue working but with a deprecation message.
