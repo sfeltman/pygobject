@@ -151,6 +151,21 @@ _gi_cairo_la_LDFLAGS = \
 	-export-symbols-regex "init_gi_cairo|PyInit__gi_cairo"
 
 
+analyze_srcs = $(filter %.c, $(_gi_la_SOURCES))
+analyze_plists = $(analyze_srcs:%.c=%.plist)
+
+MOSTLYCLEANFILES = $(analyze_plists)
+
+$(analyze_plists): %.plist: %.c
+	@echo "  CCSA  " $@
+	@$(COMPILE) --analyze $(_gi_la_CFLAGS) $< -o $@
+
+analyze: $(analyze_plists)
+
+.PHONY: analyze
+
+
+
 # This is to ensure we have a symlink to the .so in the
 # build directory, which the Python interpreter can load
 # directly without having to know how to parse .la files.

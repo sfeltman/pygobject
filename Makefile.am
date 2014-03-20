@@ -203,4 +203,7 @@ check.valgrindlog:
 check.valgrindxml:
 	cd tests && $(MAKE) check.valgrindxml
 
+analyze:
+	cd gi && $(MAKE) analyze
+
 @GNOME_CODE_COVERAGE_RULES@
