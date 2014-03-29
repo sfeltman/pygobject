@@ -25,9 +25,8 @@
 #include "pygi-marshal-cleanup.h"
 
 static inline gboolean
-_invoke_callable (PyGIInvokeState *state,
-                  PyGICallableCache *cache,
-                  GICallableInfo *callable_info)
+_invoke_callable (PyGICallableCache *cache,
+                  PyGIInvokeState   *state)
 {
     GIFFIReturnValue ffi_return_value = {0};
 
@@ -246,12 +245,11 @@ _py_args_combine_and_check_length (PyGICallableCache *cache,
     return combined_py_args;
 }
 
-static inline gboolean
-_invoke_state_init_from_callable_cache (GIBaseInfo *info,
-                                        PyGIInvokeState *state,
-                                        PyGICallableCache *cache,
-                                        PyObject *py_args,
-                                        PyObject *kwargs)
+static gboolean
+pygi_callable_cache_init_state (PyGICallableCache *cache,
+                                PyGIInvokeState *state,
+                                PyObject *py_args,
+                                PyObject *kwargs)
 {
     PyObject *combined_args = NULL;
     state->implementor_gtype = 0;
@@ -728,7 +726,7 @@ pygi_callable_info_invoke (GIBaseInfo *info, PyObject *py_args,
     if (!_invoke_marshal_in_args (&state, cache))
         goto err;
 
-    if (!_invoke_callable (&state, cache, info))
+    if (!_invoke_callable (cache, &state))
         goto err;
 
     ret = _invoke_marshal_out_args (&state, cache);
@@ -752,4 +750,306 @@ _wrap_g_callable_info_invoke (PyGIBaseInfo *self, PyObject *py_args,
     }
 
     return pygi_callable_info_invoke (self->info, py_args, kwargs, self->cache, NULL);
+}
+
+PyObject *
+pygi_callable_cache_invoke (PyGICallableCache *cache,
+                            PyGIInvokeState   *state)
+{
+    PyObject *ret = NULL;
+
+    if (!_invoke_marshal_in_args (&state, cache))
+        goto err;
+
+    if (!_invoke_callable (cache, &state))
+        goto err;
+
+    ret = _invoke_marshal_out_args (&state, cache);
+    pygi_marshal_cleanup_args_from_py_marshal_success (&state, cache);
+
+    if (ret)
+        pygi_marshal_cleanup_args_to_py_marshal_success (&state, cache);
+err:
+    _invoke_state_clear (&state, cache);
+    return ret;
+
+}
+
+static gboolean
+pygi_vfunc_cache_init_state (PyGICallableInfo *self,
+                             PyGICallableCache *cache,
+                             PyGIInvokeState *state,
+                             PyObject *py_args,
+                             PyObject *kwargs)
+{
+    GError *error = NULL;
+
+    if (!pygi_callable_info_init_state (cache, state, py_args, kwargs))
+        return FALSE;
+
+    if (self->implementor_gtype == 0)
+        return FALSE;
+
+    state->implementor_gtype = self->implementor_gtype;
+
+    /* vfunc addresses are pulled into the state at call time and cannot be
+     * cached because the call site can specify a different portion of the
+     * class hierarchy. e.g. Object.do_func vs. SubObject.do_func might
+     * retrieve a different vfunc address but GI gives us the same vfunc info.
+     */
+    state->function_ptr = g_vfunc_info_get_address ((GIVFuncInfo *)cache->info,
+                                                    state->implementor_gtype,
+                                                    &error);
+    if (pyglib_error_check (&error)) {
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+
+/* prepend_tuple_arg:
+ *
+ * Create a new tuple with `arg` prepended if it is not NULL.
+ * In the NULL case, increment args and return it. In either case
+ * the caller is responsible for calling Py_DECREF on the results.
+ */
+static PyObject *
+pygi_prepend_tuple_arg (PyObject *arg, PyObject *args)
+{
+    int i;
+    PyObject *result;
+    Py_ssize_t argcount;
+    PyObject *newargs;
+
+    if (arg == NULL) {
+        Py_INCREF (args);
+        return args;
+    }
+
+    argcount = PyTuple_Size (args);
+    newargs = PyTuple_New (argcount + 1);
+    if (newargs == NULL)
+        return NULL;
+
+    Py_INCREF (arg);
+    PyTuple_SET_ITEM (newargs, 0, arg);
+
+    for (i = 0; i < argcount; i++) {
+        PyObject *v = PyTuple_GET_ITEM (args, i);
+        Py_XINCREF (v);
+        PyTuple_SET_ITEM (newargs, i+1, v);
+    }
+
+    return newargs;
+}
+
+/* pygi_callable_info_call:
+ *
+ * Shared wrapper for invoke which can be bound (instance method or class constructor)
+ * or unbound (function or static method).
+ */
+static PyObject *
+pygi_callable_info_call_with_state (PyGICallableInfo *self, PyObject *args, PyObject *kwargs)
+{
+    PyObject *result = NULL;
+    PyObject *new_args = NULL;
+    PyGIBaseInfo *new_self = NULL;
+
+    /* Insert the bound arg at the beginning of the invoke method args.
+     * This is used to inject a method calls instance argument into the arg
+     * list which was bound in by the descriptors __get__ call. */
+    if (self->py_bound_arg) {
+        new_args = pygi_prepend_tuple_arg (self->py_bound_arg, args);
+        if (new_args == NULL)
+            return NULL;
+
+        /* Invoke with the original GI info struct this wrapper was based upon.
+         * This is necessary to maintain the same cache for all bound versions.
+         */
+        new_self = (PyGIBaseInfo *)self->py_unbound_info;
+
+    } else {
+        /* We should never have an unbound info when calling invoke
+         * at this point because the descriptor implementation on sub-classes
+         * should return "self" not a copy when there is no bound arg.
+         */
+        g_assert (self->py_unbound_info == NULL);
+        new_self = (PyGIBaseInfo *)self;
+        new_args = args;
+        Py_INCREF (args);
+    }
+
+    if (new_self->cache == NULL) {
+        new_self->cache = pygi_callable_cache_new (new_self->info, NULL, FALSE);
+        if (new_self->cache == NULL)
+            return NULL;
+    }
+
+    result = _wrap_g_callable_info_invoke (new_self, new_args, kwargs);
+    Py_DECREF (new_args);
+    return result;
+}
+
+
+/* pygi_function_info_call:
+ *
+ * Specialization of pygi_callable_info_call for GIFunctionInfo which
+ * handles constructor error conditions.
+ */
+PyObject *
+pygi_function_info_call (PyGICallableInfo *self, PyObject *args, PyObject *kwargs)
+{
+    GIFunctionInfoFlags flags;
+
+    /* Ensure constructors are only called as class methods on the class
+     * implementing the constructor and not on sub-classes.
+     */
+    flags = g_function_info_get_flags ( (GIFunctionInfo*) self->base.info);
+    if (flags & GI_FUNCTION_IS_CONSTRUCTOR) {
+        PyObject *py_str_name;
+        const gchar *str_name;
+        GIBaseInfo *container_info = g_base_info_get_container (self->base.info);
+        g_assert (container_info != NULL);
+
+        py_str_name = PyObject_GetAttrString (self->py_bound_arg, "__name__");
+        if (py_str_name == NULL)
+            return NULL;
+
+        if (PyUnicode_Check (py_str_name) ) {
+            PyObject *tmp = PyUnicode_AsUTF8String (py_str_name);
+            Py_DECREF (py_str_name);
+            py_str_name = tmp;
+        }
+
+#if PY_VERSION_HEX < 0x03000000
+        str_name = PyString_AsString (py_str_name);
+#else
+        str_name = PyBytes_AsString (py_str_name);
+#endif
+
+        if (strcmp (str_name, _safe_base_info_get_name (container_info))) {
+            PyErr_Format (PyExc_TypeError,
+                          "%s constructor cannot be used to create instances of "
+                          "a subclass %s",
+                          _safe_base_info_get_name (container_info),
+                          str_name);
+            Py_DECREF (py_str_name);
+            return NULL;
+        }
+        Py_DECREF (py_str_name);
+    }
+
+    return pygi_callable_info_call (self, args, kwargs);
+}
+
+/* pygi_vfunc_info_call:
+ */
+PyObject *
+pygi_vfunc_info_call (PyGICallableInfo *self,
+                      PyObject         *args,
+                      PyObject         *kwargs)
+{
+    return pygi_callable_info_call (self, args, kwargs);
+}
+
+/* pygi_callable_info_new_bound
+ *
+ * Create a new PyGICallableInfo instance which is a bound version of `self`.
+ * The new version will create a reference to the original as the `py_unbound_into`
+ * attribute with additional references to the `bound_arg` and `implementor_gtype`.
+ */
+static PyGICallableInfo *
+pygi_callable_info_new_bound (PyGICallableInfo *self,
+                              PyObject         *bound_arg,
+                              GType             implementor_gtype)
+{
+    PyGICallableInfo *new_self;
+
+    /* Return self if this is already bound. */
+    if (self->py_bound_arg != NULL) {
+        Py_INCREF ((PyObject *)self);
+        return self;
+    }
+
+    /* Create a new CallableInfo referencing the same GIBaseInfo. */
+    new_self = (PyGICallableInfo *)_pygi_info_new (self->base.info);
+    if (new_self == NULL)
+        return NULL;
+
+    if (bound_arg != NULL && bound_arg != Py_None) {
+        Py_INCREF (bound_arg);
+        new_self->py_bound_arg = bound_arg;
+    }
+
+    Py_INCREF ((PyObject *)self);
+    new_self->py_unbound_info = (struct PyGICallableInfo *)self;
+
+    new_self->implementor_gtype = implementor_gtype;
+
+    return new_self;
+}
+
+/* pygi_function_info_descr_get
+ *
+ * Descriptor protocol implementation for functions, methods, and constructors.
+ * This is the implementation of the `__get__` method of an object descriptor.
+ * See: http://docs.python.org/3.3/howto/descriptor.html
+ *
+ * This allows for CallableInfo objects to act as properties on the Python GI
+ * class. Accessing the descriptor results in a "bound" CallableInfo being
+ * created and returned.
+ *
+ * > MyClass.my_function
+ * or
+ * > my_instance.my_method
+ *
+ * Either of these accessors will return a new CallableInfo with the classes
+ * GType bound in as "implementor_type" and instance accessors will additionally
+ * bind the instance as "py_bound_arg".
+ */
+PyObject *
+pygi_function_info_descr_get (PyGICallableInfo *self,
+                              PyObject         *obj,
+                              PyObject         *type) {
+    GIFunctionInfoFlags flags;
+    PyObject *bound_arg = NULL;
+    GType gtype = G_TYPE_INVALID;
+
+    /* Only methods will bind the argument in. */
+    flags = g_function_info_get_flags ( (GIFunctionInfo*) self->base.info);
+    if (flags & GI_FUNCTION_IS_METHOD) {
+        bound_arg = obj;
+    }
+
+    if (type != NULL) {
+        gtype = pyg_type_from_object (type);
+    } else if (obj != NULL) }
+        gtype = pyg_type_from_object (obj);
+    }
+
+    return (PyObject *)pygi_callable_info_new_bound (self, bound_arg, gtype);
+}
+
+/* pygi_vfunc_info_descr_get
+ *
+ * Descriptor protocol implementation for virtual functions.
+ */
+PyObject *
+pygi_vfunc_info_descr_get (PyGICallableInfo *self,
+                           PyObject         *obj,
+                           PyObject         *type) {
+    PyObject *result;
+    PyObject *py_gtype;
+    GType gtype;
+
+    /* The GType must be available for vfunc calls in order to get the function
+     * pointer.
+     */
+    gtype = pyg_type_from_object (type);
+    if (gtype == G_TYPE_INVALID) {
+        return NULL;
+    }
+
+    return (PyObject *)pygi_callable_info_new_bound (self, obj, gtype);
 }

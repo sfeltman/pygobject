@@ -123,6 +123,7 @@ pygi_callable_cache_free (PyGICallableCache *cache)
     if (cache == NULL)
         return;
 
+    g_base_info_unref ((GIBaseInfo *)cache->info);
     g_slist_free (cache->to_py_args);
     g_slist_free (cache->arg_name_list);
     g_hash_table_destroy (cache->arg_name_hash);
@@ -725,15 +726,18 @@ pygi_callable_cache_new (GICallableInfo *callable_info,
 {
     gint n_args;
     PyGICallableCache *cache;
-    GIInfoType type = g_base_info_get_type ( (GIBaseInfo *)callable_info);
+    GIInfoType type;
+    GIBaseInfo *base_info = (GIBaseInfo *)callable_info;
 
     cache = g_slice_new0 (PyGICallableCache);
 
     if (cache == NULL)
         return NULL;
 
-    cache->name = g_base_info_get_name ((GIBaseInfo *)callable_info);
-    cache->throws = g_callable_info_can_throw_gerror ((GIBaseInfo *)callable_info);
+    type = g_base_info_get_type (base_info);
+    cache->name = g_base_info_get_name (base_info);
+    cache->throws = g_callable_info_can_throw_gerror (base_info);
+    cache->info = (GICallableInfo *)g_base_info_ref (base_info);
 
     if (g_base_info_is_deprecated (callable_info)) {
         const gchar *deprecated = g_base_info_get_attribute (callable_info, "deprecated");

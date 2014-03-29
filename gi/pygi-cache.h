@@ -155,42 +155,6 @@ typedef struct _PyGIInterfaceCache
     gchar *type_name;
 } PyGIInterfaceCache;
 
-struct _PyGICallableCache
-{
-    const gchar *name;
-
-    PyGIFunctionType function_type;
-
-    PyGIArgCache *return_cache;
-    GPtrArray *args_cache;
-    GSList *to_py_args;
-    GSList *arg_name_list; /* for keyword arg matching */
-    GHashTable *arg_name_hash;
-    gboolean throws;
-
-    /* Index of user_data arg that can eat variable args passed to a callable. */
-    gssize user_data_varargs_index;
-
-    /* Number of out args passed to g_function_info_invoke.
-     * This is used for the length of PyGIInvokeState.out_values */
-    gssize n_to_py_args;
-
-    /* Number of out args for g_function_info_invoke that will be skipped
-     * when marshaling to Python due to them being implicitly available
-     * (list/array length).
-     */
-    gssize n_to_py_child_args;
-
-    /* Number of Python arguments expected for invoking the gi function. */
-    gssize n_py_args;
-
-    /* Minimum number of args required to call the callable from Python.
-     * This count does not include args with defaults. */
-    gssize n_py_required_args;
-
-    /* An invoker with ffi_cif already setup */
-    GIFunctionInvoker invoker;
-};
 
 gboolean
 pygi_arg_base_setup      (PyGIArgCache *arg_cache,
@@ -236,6 +200,74 @@ pygi_arg_cache_new       (GITypeInfo *type_info,
 
 void
 pygi_arg_cache_free      (PyGIArgCache *cache);
+
+
+
+struct _PyGICallableCache
+{
+    const gchar *name;
+
+    GICallableInfo *info;
+
+    PyGIFunctionType function_type;
+    PyGIArgCache *return_cache;
+    GPtrArray *args_cache;
+    GSList *to_py_args;
+    GSList *arg_name_list; /* for keyword arg matching */
+    GHashTable *arg_name_hash;
+    gboolean throws;
+
+    /* Index of user_data arg that can eat variable args passed to a callable. */
+    gssize user_data_varargs_index;
+
+    /* Number of out args passed to g_function_info_invoke.
+     * This is used for the length of PyGIInvokeState.out_values */
+    gssize n_to_py_args;
+
+    /* Number of out args for g_function_info_invoke that will be skipped
+     * when marshaling to Python due to them being implicitly available
+     * (list/array length).
+     */
+    gssize n_to_py_child_args;
+
+    /* Number of Python arguments expected for invoking the gi function. */
+    gssize n_py_args;
+
+    /* Minimum number of args required to call the callable from Python.
+     * This count does not include args with defaults. */
+    gssize n_py_required_args;
+
+    /* An invoker with ffi_cif already setup */
+    GIFunctionInvoker invoker;
+
+    PyObject * (*invoke_from_python) (PyGICallableCache *cache,
+                                      PyObject          *args,
+                                      PyObject          *kwargs);
+
+    gboolean   (*init_state)         (PyGICallableCache *cache,
+                                      PyGIInvokeState   *state,
+                                      PyObject          *args,
+                                      PyObject          *kwargs);
+
+    gboolean   (*marshal_in_args)    (PyGICallableCache *cache,
+                                      PyGIInvokeState   *state);
+
+    PyObject * (*marshal_out_args)   (PyGICallableCache *cache,
+                                      PyGIInvokeState   *state);
+
+};
+
+
+typedef struct PyGICallableCache PyGIFunctionCache;
+
+typedef struct PyGIFunctionCache PyGIConstructorCache;
+
+typedef struct PyGIFunctionCache PyGICCCallbackCache;
+
+typedef struct PyGIFunctionCache PyGIVFuncCacheCache;
+
+typedef struct PyGIFunctionCache PyGIMethodCache;
+
 
 void
 pygi_callable_cache_free (PyGICallableCache *cache);

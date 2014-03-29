@@ -55,6 +55,11 @@ typedef struct {
     /* Holds bound argument for instance, class, and vfunc methods. */
     PyObject *py_bound_arg;
 
+    /* GType passed through the descriptor __get__ based on the PyType arg.
+     * This is used to track the GType of vfunc calls through the bound function
+     * so that the vfuncs pointer can be extracted for the ffi call. */
+    GType implementor_gtype;
+
 } PyGICallableInfo;
 
 typedef struct {
