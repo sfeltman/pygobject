@@ -27,6 +27,13 @@
 # use gi.repository.GLib.GError
 
 
+from collections import OrderedDict
+
+# Holds a dictionary mapping Python exception types into integers "code"
+# stored on GError based exceptions.
+_exceptions = OrderedDict()
+
+
 class GError(RuntimeError):
     def __init__(self, message='unknown error', domain='pygi-error', code=0):
         super(GError, self).__init__(message)
@@ -52,3 +59,19 @@ class GError(RuntimeError):
     def new_literal(domain, message, code):
         """Placeholder that will be monkey patched in GLib overrides."""
         raise NotImplementedError
+
+
+def py_exc_to_gerror(exc):
+    """Convert a builtin Python exception into a GError exception."""
+    if isinstance(exc, GError):
+        return exc
+    code = _exceptions.setdefault(type(exc), len(_exceptions))
+    return GError(str(exc), domain='Python', code=code)
+
+
+def py_exc_from_gerror(gerror):
+    """Convert a GError translated Python exception back into a Python exception."""
+    if gerror.domain == 'Python':
+        exc_type = list(_exceptions.keys())[gerror.code]
+        return exc_type(gerror.message)
+    return gerror

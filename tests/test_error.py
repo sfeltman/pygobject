@@ -27,6 +27,7 @@ import unittest
 
 from gi.repository import GLib
 from gi.repository import GIMarshallingTests
+from gi._error import py_exc_from_gerror, py_exc_to_gerror
 
 
 class TestType(unittest.TestCase):
@@ -63,6 +64,53 @@ class TestType(unittest.TestCase):
 
     def test_inheritance(self):
         self.assertTrue(issubclass(GLib.Error, RuntimeError))
+
+
+class TestConversions(unittest.TestCase):
+    def _run_exception_conversion_test(self, exc_type):
+        exc_message = 'Test exception message 42'
+        e = exc_type(exc_message)
+        gerror = py_exc_to_gerror(e)
+        self.assertEqual(gerror.message, exc_message)
+        self.assertEqual(gerror.domain, 'Python')
+
+        e = py_exc_from_gerror(gerror)
+        self.assertEqual(str(e), exc_message)
+        self.assertIsInstance(e, exc_type)
+
+    def test_conversion(self):
+        # Test round tripping of builtin exception to GError and back.
+        self._run_exception_conversion_test(SystemExit)
+        self._run_exception_conversion_test(KeyboardInterrupt)
+        self._run_exception_conversion_test(GeneratorExit)
+        self._run_exception_conversion_test(Exception)
+        self._run_exception_conversion_test(StopIteration)
+        self._run_exception_conversion_test(ArithmeticError)
+        self._run_exception_conversion_test(FloatingPointError)
+        self._run_exception_conversion_test(OverflowError)
+        self._run_exception_conversion_test(ZeroDivisionError)
+        self._run_exception_conversion_test(AssertionError)
+        self._run_exception_conversion_test(AttributeError)
+        self._run_exception_conversion_test(BufferError)
+        self._run_exception_conversion_test(EOFError)
+        self._run_exception_conversion_test(ImportError)
+        self._run_exception_conversion_test(LookupError)
+        self._run_exception_conversion_test(IndexError)
+        self._run_exception_conversion_test(MemoryError)
+        self._run_exception_conversion_test(NameError)
+        self._run_exception_conversion_test(UnboundLocalError)
+        self._run_exception_conversion_test(OSError)
+        self._run_exception_conversion_test(ReferenceError)
+        self._run_exception_conversion_test(RuntimeError)
+        self._run_exception_conversion_test(NotImplementedError)
+        self._run_exception_conversion_test(SyntaxError)
+        self._run_exception_conversion_test(IndentationError)
+        self._run_exception_conversion_test(TabError)
+        self._run_exception_conversion_test(SystemError)
+        self._run_exception_conversion_test(TypeError)
+        self._run_exception_conversion_test(ValueError)
+        self._run_exception_conversion_test(UnicodeError)
+        self._run_exception_conversion_test(Warning)
 
 
 class ObjectWithVFuncException(GIMarshallingTests.Object):
