@@ -19,7 +19,7 @@
 
 #include "pygi-private.h"
 #include "pygi-closure.h"
-
+#include "pygi-error.h"
 
 typedef struct _PyGICallbackCache
 {
@@ -561,6 +561,17 @@ _pygi_invoke_closure_clear_py_data(PyGICClosure *invoke_closure)
     PyGILState_Release (state);
 }
 
+static void
+pygi_closure_handle_error (GICallableInfo *callable_info, void **args)
+{
+    /* Callables that throw do not include the GError** as one of the regular
+     * annotated arguments. Instead it is assumed to be a last argument
+     * positioned at g_callable_info_get_n_args(). */
+    int n_args = g_callable_info_get_n_args (callable_info);
+    GError **error = * (GError ***) args[n_args];
+    pygi_gerror_exception_check (error);
+}
+
 void
 _pygi_closure_handle (ffi_cif *cif,
                       void    *result,
@@ -590,7 +601,12 @@ _pygi_closure_handle (ffi_cif *cif,
 
     if (retval == NULL) {
         _pygi_closure_clear_retval (closure->info, result);
-        PyErr_Print();
+        if (closure->throws_gerror) {
+            pygi_closure_handle_error (closure->info, args);
+        } else {
+            PyErr_Print();
+        }
+
         goto end;
     }
 
@@ -677,6 +693,7 @@ _pygi_make_native_closure (GICallableInfo* info,
     /* Give the closure the information it needs to determine when
        to free itself later */
     closure->scope = scope;
+    closure->throws_gerror = g_callable_info_can_throw_gerror (info);
 
     return closure;
 }
