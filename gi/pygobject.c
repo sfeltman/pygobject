@@ -22,6 +22,7 @@
 #  include <config.h>
 #endif
 
+#include <gio/gio.h>
 #include <pyglib.h>
 #include "pygobject-private.h"
 #include "pyginterface.h"
@@ -29,6 +30,8 @@
 
 #include "pygi.h"
 #include "pygi-value.h"
+#include "pygi-error.h"
+
 
 static void pygobject_dealloc(PyGObject *self);
 static int  pygobject_traverse(PyGObject *self, visitproc visit, void *arg);
@@ -1262,6 +1265,8 @@ pygobject_init(PyGObject *self, PyObject *args, PyObject *kwargs)
     guint n_params = 0, i;
     GParameter *params = NULL;
     GObjectClass *class;
+    GError *error = NULL;
+    int res = 0;
 
     /* Only do GObject creation and property setting if the GObject hasn't
      * already been created. The case where self->obj already exists can occur
@@ -1294,11 +1299,24 @@ pygobject_init(PyGObject *self, PyObject *args, PyObject *kwargs)
 	return -1;
     }
 
-    if (!pygobject_prepare_construct_properties (class, kwargs, &n_params, &params))
+    if (!pygobject_prepare_construct_properties (class, kwargs, &n_params, &params)) {
+        res = -1;
         goto cleanup;
+    }
 
-    if (pygobject_constructv(self, n_params, params))
-	PyErr_SetString(PyExc_RuntimeError, "could not create object");
+    if (pygobject_constructv (self, n_params, params)) {
+        PyErr_SetString (PyExc_RuntimeError, "could not create object");
+        res = -1;
+        goto cleanup;
+    }
+
+    /* Always run initiable_init if the object implements GInitable.  */
+    if (G_IS_INITABLE (self->obj) &&
+            !g_initable_init ((GInitable *)self->obj, NULL, &error)) {
+        pygi_error_check (&error);
+        res = -1;
+        goto cleanup;
+    }
 
  cleanup:
     for (i = 0; i < n_params; i++) {
@@ -1307,8 +1325,8 @@ pygobject_init(PyGObject *self, PyObject *args, PyObject *kwargs)
     }
     g_free(params);
     g_type_class_unref(class);
-    
-    return (self->obj) ? 0 : -1;
+
+    return res;
 }
 
 #define CHECK_GOBJECT(self) \

@@ -4,7 +4,9 @@
 import unittest
 
 import gi.overrides
-from gi.repository import GLib, Gio
+from gi.repository import GLib
+from gi.repository import GObject
+from gi.repository import Gio
 
 
 class TestGio(unittest.TestCase):
@@ -201,3 +203,28 @@ class TestGFile(unittest.TestCase):
         main_loop = GLib.MainLoop()
         main_loop.run()
         self.assertFalse(self.file.query_exists(None))
+
+
+class PyInitable(GObject.Object, Gio.Initable):
+    init_count = GObject.Property(type=int, default=0)
+
+    def do_init(self, cancellable):
+        if self.init_count == 42:
+            raise GLib.GError('testing error')
+        self.init_count += 1
+        return True
+
+
+class TestInitable(unittest.TestCase):
+    def test_init_is_called(self):
+        initable = PyInitable()
+        self.assertEqual(initable.init_count, 1)
+
+        # test calling init manually continues to work
+        initable.init()
+        self.assertEqual(initable.init_count, 2)
+
+    @unittest.expectedFailure  # https://bugzilla.gnome.org/show_bug.cgi?id=710671
+    def test_init_failure(self):
+        with self.assertRaisesRegex(GLib.GError, 'testing error'):
+            PyInitable(init_count=42)
