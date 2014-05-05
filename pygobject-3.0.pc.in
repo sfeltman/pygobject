@@ -11,9 +11,9 @@ libdir=@libdir@
 pygobjectincludedir=${includedir}/pygobject-3.0
 
 Name: PyGObject
-Description: Python bindings for GObject
-Requires: gobject-2.0
-Requires.private: @LIBFFI_PC@
+Description: Python bindings for GObject Introspection
+Requires: @PYGI_PACKAGES@
+Requires.private: @PYGI_PRIVATE_PACKAGES@
 Version: @VERSION@
 Cflags: -I${pygobjectincludedir}
 

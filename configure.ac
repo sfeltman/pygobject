@@ -173,26 +173,32 @@ AC_SUBST([PYTHON_BASENAME])
 
 AS_AC_EXPAND(DATADIR, $datadir)
 
-dnl libffi
-PKG_CHECK_MODULES(FFI, libffi >= 3.0)
-LIBFFI_PC=libffi
 
-AC_SUBST(FFI_CFLAGS)
-AC_SUBST(FFI_LIBS)
-AC_SUBST(LIBFFI_PC)
+dnl Required Packages
+PYGI_PACKAGES="glib-2.0 >= glib_required_version \
+ gobject-2.0 >= glib_required_version"
+AC_SUBST(PYGI_PACKAGES)
 
-dnl gio
-PKG_CHECK_MODULES(GIO, gio-2.0 >= gio_required_version)
+PKG_CHECK_MODULES([GLIB],    [glib-2.0 >= glib_required_version])
+PKG_CHECK_MODULES([GOBJECT], [gobject-2.0 >= glib_required_version])
 
+
+dnl Required Private Packages
+PYGI_PRIVATE_PACKAGES="libffi >= 3.0 \
+ gio-2.0 >= gio_required_version \
+ gobject-introspection-1.0 >= introspection_required_version"
+AC_SUBST(PYGI_PRIVATE_PACKAGES)
+
+PKG_CHECK_MODULES([FFI], [libffi >= 3.0])
+PKG_CHECK_MODULES([GIO], [gio-2.0 >= gio_required_version])
+PKG_CHECK_MODULES([GI],  [gobject-introspection-1.0 >= introspection_required_version])
+
+
+dnl Cairo
 AC_ARG_ENABLE(cairo,
     AS_HELP_STRING([--enable-cairo],[Enable Cairo bindings using introspection information]),
     enable_cairo=$enableval,
     enable_cairo=yes)
-
-PKG_CHECK_MODULES(GI,
-    glib-2.0 >= glib_required_version
-    gobject-introspection-1.0 >= introspection_required_version
-)
 
 GI_DATADIR=$($PKG_CONFIG --variable=gidatadir gobject-introspection-1.0)
 AC_SUBST(GI_DATADIR)

@@ -120,13 +120,19 @@ _gi_la_SOURCES = \
 _gi_la_CFLAGS = \
 	$(extension_cppflags) \
 	$(GLIB_CFLAGS) \
-	$(GI_CFLAGS)
+	$(GOBJECT_CFLAGS) \
+	$(GIO_CFLAGS) \
+	$(GI_CFLAGS) \
+	$(FFI_CFLAGS)
 _gi_la_CPPFLAGS = \
 	$(extension_cppflags)
 _gi_la_LIBADD = \
 	$(extension_libadd) \
 	$(GLIB_LIBS) \
-	$(GI_LIBS)
+	$(GOBJECT_LIBS) \
+	$(GIO_LIBS) \
+	$(GI_LIBS) \
+	$(FFI_LIBS)
 _gi_la_LDFLAGS = \
 	$(extension_ldflags) \
 	-export-symbols-regex "init_gi|PyInit__gi"
@@ -138,12 +144,16 @@ endif
 _gi_cairo_la_SOURCES = \
 	pygi-foreign-cairo.c
 _gi_cairo_la_CFLAGS = \
+	$(GLIB_CFLAGS) \
+	$(GOBJECT_CFLAGS) \
 	$(GI_CFLAGS) \
 	$(PYCAIRO_CFLAGS)
 _gi_cairo_la_CPPFLAGS = \
 	$(extension_cppflags)
 _gi_cairo_la_LIBADD = \
 	$(extension_libadd) \
+	$(GLIB_LIBS) \
+	$(GOBJECT_LIBS) \
 	$(GI_LIBS) \
 	$(PYCAIRO_LIBS)
 _gi_cairo_la_LDFLAGS = \
