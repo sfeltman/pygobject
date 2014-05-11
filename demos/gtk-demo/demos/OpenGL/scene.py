@@ -66,7 +66,7 @@ class App(object):
         self.window = Gtk.Window()
         self.window.set_title('OpenGL Scene')
         self.window.set_default_size(400, 300)
-        self.window.connect('destroy', self.on_destroy)
+        self.draw_id = None
 
         self.area = GtkGL.Area.new([ConfigAttr.RGBA,
                                     ConfigAttr.RED_SIZE, 8,
@@ -74,12 +74,11 @@ class App(object):
                                     ConfigAttr.BLUE_SIZE, 8,
                                     ConfigAttr.DEPTH_SIZE, 8,
                                     ])
-        self.window.add(self.area)
 
         self.area.connect('configure-event', self.on_reshape)
-        self.draw_id = GLib.idle_add(self.on_draw)
-        GLib.timeout_add(0, self.on_init)
+        self.window.connect('destroy', self.on_destroy)
 
+        self.window.add(self.area)
         self.window.show_all()
 
     def on_init(self):
@@ -100,13 +99,19 @@ class App(object):
         glEnable(GL_LIGHT0)
         glEnable(GL_DEPTH_TEST)
 
+        self.draw_id = GLib.idle_add(self.on_draw)
+
     def on_destroy(self, *args):
         # We must remove the source from the main loop otherwise it will
         # keep running after the window is closed.
-        GLib.source_remove(self.draw_id)
+        if self.draw_id is not None:
+            GLib.source_remove(self.draw_id)
         Gtk.main_quit()
 
     def on_reshape(self, widget, event):
+        if self.draw_id is None:
+            self.on_init()
+
         self.area.make_current()
         w, h = event.width, event.height
         glViewport(0, 0, w, h)
