@@ -49,33 +49,35 @@ typedef struct {
 } PyGIWrapperFuncs;
 
 int
-pygi_wrapper_funcs_attach (PyObject            *obj,
-                           PyGIWrapper_CopyFunc copy_func,
-                           PyGIWrapper_FreeFunc free_func);
+pygi_wrapper_funcs_attach        (PyObject            *obj,
+                                  PyGIWrapper_CopyFunc copy_func,
+                                  PyGIWrapper_FreeFunc free_func);
 
 int
 pygi_wrapper_funcs_attach_static (PyObject         *obj,
                                   PyGIWrapperFuncs *funcs);
 
 PyGIWrapperFuncs *
-pygi_wrapper_funcs_get (PyObject *obj);
+pygi_wrapper_funcs_get           (PyObject *obj);
 
 void
-pygi_wrapper_register_types (PyObject *d);
+pygi_wrapper_register_types      (PyObject *d);
 
 gpointer
-pygi_wrapper_copy_wrapped (PyObject *wrapper);
+pygi_wrapper_copy_wrapped        (PyObject *wrapper);
 
 #define \
 pygi_wrapper_peek_wrapped(wrapper) pygi_wrapper_get(wrapper, void)
 
 void
-pygi_wrapper_set_wrapped (PyObject *wrapper, gpointer wrapped, gboolean copy);
+pygi_wrapper_set_wrapped         (PyObject *wrapper,
+                                  gpointer  wrapped,
+                                  gboolean  copy);
 
 gboolean
-pygi_wrapper_marshal_from_py_object (PyObject    *wrapper, /*in*/
-                                     GIArgument  *arg,     /*out*/
-                                     GITransfer   transfer);
+pygi_wrapper_marshal_from_py     (PyObject    *wrapper, /*in*/
+                                  GIArgument  *arg,     /*out*/
+                                  GITransfer   transfer);
 G_END_DECLS
 
 #endif /* __PYGI_WRAPPER_H__ */
