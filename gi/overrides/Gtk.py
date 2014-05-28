@@ -19,19 +19,24 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301
 # USA
 
-import collections
+import os
 import sys
+import collections
 import warnings
+import inspect
 
+from gi.repository import GLib
 from gi.repository import GObject
 from ..overrides import override, strip_boolean_result, deprecated_init
 from ..module import get_introspection_module
 from gi import PyGIDeprecationWarning
 
 if sys.version_info >= (3, 0):
+    _unicode = str
     _basestring = str
     _callable = lambda c: hasattr(c, '__call__')
 else:
+    _unicode = unicode
     _basestring = basestring
     _callable = callable
 
@@ -113,6 +118,212 @@ def _builder_connect_callback(builder, gobj, signal_name, handler_name, connect_
             gobj.connect_after(signal_name, handler, *args)
         else:
             gobj.connect(signal_name, handler, *args)
+
+
+def _builder_connect_callback2(builder, gobj, signal_name, handler_name, connect_obj, flags, obj_or_map):
+    """A simplified and more accurate version of _builder_connect_callback which
+    has a better consideration for connect_obj.
+    """
+    handler, args = _extract_handler_and_args(obj_or_map, handler_name)
+
+    if connect_obj is None:
+        gobj.connect(signal_name, handler, *args, flags=flags)
+    else:
+        gobj.connect(signal_name, handler, connect_obj, *args, flags=flags)
+
+
+#
+# GTK+ Composite Template Support
+#
+
+class TemplateChild(object):
+    """Descriptor class for binding named children in the template ui to
+    properties on the template class.
+    """
+    def __init__(self, name, internal=False):
+        super(TemplateChild, self).__init__()
+        self.name = name
+        self.internal = internal
+        self.gtype = None  # GType is bound in by the gclass_init.
+
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+        return instance.get_template_child(self.gtype, self.name)
+
+    def bind_to_template_class(self, cls):
+        self.gtype = cls.__gtype__
+        cls.bind_template_child_full(self.name, self.internal, 0)
+
+
+__all__.append('TemplateChild')
+
+
+class TemplateCallback(object):
+    """Decorator for callbacks that will be bound by name from signals
+    specified in the UI template file.
+    """
+    def __init__(self, func):
+        super(TemplateCallback, self).__init__()
+        self.func = func
+
+    def __call__(self, *args, **kwargs):
+        return self.func(*args, **kwargs)
+
+
+__all__.append('TemplateCallback')
+
+
+def _template_gclass_init(cls, gclass=None):
+    if cls._template_text_:
+        if isinstance(cls._template_text_, _unicode):
+            template_text = cls._template_text_.encode('utf-8')
+        else:
+            template_text = cls._template_text_
+        gbytes = GLib.Bytes.new(template_text)
+        cls.set_template(gbytes)
+
+    elif cls._template_ui_:
+        cls.set_template_from_resource(cls._template_ui_)
+
+    else:
+        # If no ui file or text is given, ignore this.
+        return
+
+    # Build a dictionary holding (name, handler) for items in the class
+    # dictionary marked as Gtk.TemplateCallback.
+    signals = {}
+    for name, value in cls.__dict__.items():
+        if isinstance(value, TemplateCallback):
+            signals[name] = value.func
+        elif isinstance(value, TemplateChild):
+            value.bind_to_template_class(cls)
+
+    cls.set_connect_func(_builder_connect_callback2, signals)
+
+
+def _template_ginstance_init(self):
+    if self._template_text_ or self._template_ui_:
+        self.init_template()
+
+
+class Template(object):
+    """Decorator for marking a custom Widget as a composite template.
+
+    :param str ui:
+        Filename of GTK+ Builder UI file on disk or in a gresource. Disk is
+        searched first in the location of the Python classes file and assumed
+        to be part of a gresource if the file is not found.
+    :param str text:
+        str or bytes containing builder xml text. Used if the `ui` argument is
+        not given.
+    :param str type_name:
+        GObject type name to use. This must match the "class" attribute of the
+        template element in the builder ui. Defaults to the Python class name.
+
+    :returns:
+        A new class which is a copy of the input class being decoratod with the
+        addition of supporting composite template hooks.
+
+    This class is for decorating Widget sub-classes which bind their child
+    hierarchy directly from a Builder UI definition.
+
+    It is important to note that signal callbacks are treated as staticmethods
+    in Python terms. This means the first argument to the callback will be the
+    widget emitting the signal, not the template itself. If the template itself
+    is desired as the callback argument, you can bind it to the "User data"
+    field and set the "Swap" field in glade for the given signal specification.
+    This shows up as the "object" attribute of the "signal" element in builder
+    XML as shown below.
+
+    .. code-block:: python
+
+        text = '''
+        <interface domain="gtk30">
+          <requires lib="gtk+" version="3.6"/>
+          <template class="MyWidget" parent="GtkBox">
+            <child>
+              <object class="GtkButton" id="child_widget">
+                <property name="label">Hello World</property>
+                <signal name="clicked" handler="my_callback"
+                        object="MyWidget" swapped="yes"/>
+              </object>
+            </child>
+          </template>
+        </interface>
+        '''
+
+        @Gtk.Template(text=text)
+        class MyWidget(Gtk.Box):
+            child_widget = Gtk.TemplateChild(Gtk.Button, "child_widget")
+
+            @Gtk.TemplateCallback
+            def my_callback(self, btn):
+                pass
+
+    """
+    def __init__(self, ui=None, text=None, type_name=None):
+        super(Template, self).__init__()
+        self.ui = ui
+        self.text = text
+        self.type_name = type_name
+
+    def get_template_text(self, cls):
+        """Get a tuple of (ui, text) for the given class based on this template.
+
+        If "ui" is set in the template, attempt to load its contents as a file
+        from disk located in the same location as "cls".
+        """
+        if self.ui:
+            path = os.path.dirname(inspect.getfile(cls))
+            path = os.path.join(path, self.ui)
+            if os.path.isfile(path):
+                with open(path, 'rb') as file:
+                    text = file.read()
+                return self.ui, text
+        return self.ui, self.text
+
+    def get_type_name(self, cls):
+        if self.type_name is None:
+            return cls.__name__
+        else:
+            return self.type_name
+
+    def get_class_members(self, cls):
+        # Start with a copy of the input classes dictionary.
+        members = cls.__dict__.copy()
+
+        # Remove members which might cause problems when we create
+        # our new class.
+        for name in ('__dict__', '__weakref__', '__gtype__'):
+            if name in members:
+                del members[name]
+
+        ui, text = self.get_template_text(cls)
+        type_name = self.get_type_name(cls)
+
+        members.update({'__module__': cls.__module__,
+                        '__gtype_name__': type_name,
+                        '_template_ui_': ui,
+                        '_template_text_': text,
+                        '_gclass_init_': classmethod(_template_gclass_init),
+                        '_ginstance_init_': _template_ginstance_init,
+                        })
+
+        return members
+
+    def __call__(self, cls):
+        """Create a new class which is a copy of the given cls with additional
+        GObject class and instance init hooks used for Gtk.Widget templating."""
+
+        # Generate a new sister class of the input class with additional
+        # Gtk.Widget templating support.
+        members = self.get_class_members(cls)
+        meta_type = type(cls)
+        return meta_type(cls.__name__, cls.__bases__, members)
+
+
+__all__.append('Template')
 
 
 class Widget(Gtk.Widget):

@@ -100,6 +100,7 @@ EXTRA_DIST = \
 	test_signal.py \
 	test_source.py \
 	test_subprocess.py \
+	test_template.ui \
 	test_thread.py \
 	test_typeclass.py \
 	test_everything.py \

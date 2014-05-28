@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated with glade 3.16.1 -->
+<interface>
+  <requires lib="gtk+" version="3.10"/>
+  <template class="PySpinSelector" parent="GtkBox">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="orientation">vertical</property>
+    <child>
+      <object class="GtkButton" id="up_button">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="receives_default">True</property>
+        <property name="always_show_image">True</property>
+        <signal name="clicked" handler="on_up_button_clicked" object="PySpinSelector" swapped="yes"/>
+        <child>
+          <object class="GtkArrow" id="arrow2">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="arrow_type">up</property>
+          </object>
+        </child>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">True</property>
+        <property name="position">0</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkDrawingArea" id="display_area">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="events">GDK_EXPOSURE_MASK | GDK_POINTER_MOTION_MASK | GDK_POINTER_MOTION_HINT_MASK | GDK_BUTTON_MOTION_MASK | GDK_BUTTON1_MOTION_MASK | GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK | GDK_STRUCTURE_MASK</property>
+        <signal name="draw" handler="on_display_area_draw" object="PySpinSelector" swapped="yes"/>
+      </object>
+      <packing>
+        <property name="expand">True</property>
+        <property name="fill">True</property>
+        <property name="position">1</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkButton" id="down_button">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="receives_default">True</property>
+        <signal name="clicked" handler="on_down_button_clicked" object="PySpinSelector" swapped="yes"/>
+        <child>
+          <object class="GtkArrow" id="arrow1">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="arrow_type">down</property>
+          </object>
+        </child>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">True</property>
+        <property name="position">2</property>
+      </packing>
+    </child>
+  </template>
+</interface>

@@ -831,6 +831,115 @@ class TestBuilder(unittest.TestCase):
         self.assertEqual(signal_checker.after_sentinel, 2)
 
 
+class TestTemplate(unittest.TestCase):
+    def test_template_members(self):
+        class FakeWidget(object):
+            def my_method(self):
+                pass
+
+            @property
+            def my_property(self):
+                return 42
+
+        template = Gtk.Template(ui='fake.ui', text='fake text')
+        members = template.get_class_members(FakeWidget)
+
+        self.assertEqual(members['__module__'], FakeWidget.__module__)
+        self.assertEqual(members['__gtype_name__'], 'FakeWidget')
+        self.assertEqual(members['_template_ui_'], 'fake.ui')
+        self.assertEqual(members['_template_text_'], 'fake text')
+        self.assertEqual(members['my_property'], FakeWidget.my_property)
+        self.assertTrue('my_method' in members)
+        self.assertTrue('_gclass_init_' in members)
+        self.assertTrue('_ginstance_init_' in members)
+
+    def test_template_file(self):
+        # Simple test limited to ensuring the test_template.ui file is loaded.
+        class FooWidget(object):
+            pass
+
+        template = Gtk.Template(ui='test_template.ui')
+        ui, text = template.get_template_text(FooWidget)
+        self.assertEqual(ui, 'test_template.ui')
+        self.assertTrue(b'<template class="FooWidget" parent="GtkBox">' in text)
+
+    def test_builder_template(self):
+        template_string = """
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated with glade 3.16.1 -->
+<interface domain="gtk30">
+  <requires lib="gtk+" version="3.6"/>
+  <template class="FooWidget" parent="GtkBox">
+    <property name="can_focus">False</property>
+    <property name="spacing">42</property>
+    <property name="homogeneous">True</property>
+    <child>
+      <object class="GtkButton" id="hello_button">
+        <property name="label">Hello World</property>
+        <property name="can_focus">False</property>
+        <property name="receives_default">False</property>
+        <signal name="clicked" handler="on_hello_button_clicked" swapped="no"/>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">True</property>
+        <property name="position">0</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkButton" id="goodbye_button">
+        <property name="label">Goodbye Cruel World</property>
+        <property name="can_focus">False</property>
+        <property name="receives_default">False</property>
+        <signal name="clicked" handler="on_goodbye_button_clicked" object="FooWidget" swapped="yes"/>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">True</property>
+        <property name="position">1</property>
+      </packing>
+    </child>
+  </template>
+</interface>
+"""
+        hello_clicked = []
+        goodbye_clicked = []
+
+        @Gtk.Template(text=template_string)
+        class FooWidget(Gtk.Box):
+            hello_button = Gtk.Template.ChildBinding('hello_button')
+            goodbye_button = Gtk.Template.ChildBinding('goodbye_button')
+
+            @Gtk.Template.Callback
+            def on_hello_button_clicked(btn):
+                hello_clicked.append(btn)
+
+            @Gtk.Template.Callback
+            def on_goodbye_button_clicked(self, btn):
+                goodbye_clicked.extend([self, btn])
+
+        foo = FooWidget()
+        self.assertEqual(foo.hello_button.get_label(), 'Hello World')
+        self.assertEqual(foo.goodbye_button.get_label(), 'Goodbye Cruel World')
+
+        # By default, signal handlers specified in ui files are passed the widget
+        # they connect to.
+        # The hello_buttons signal callback receives the button.
+        self.assertSequenceEqual(hello_clicked, [])
+        foo.hello_button.clicked()
+        self.assertSequenceEqual(hello_clicked, [foo.hello_button])
+        foo.hello_button.clicked()
+        self.assertSequenceEqual(hello_clicked, [foo.hello_button] * 2)
+
+        # goodbye_buttons signal callback receives the template widget which is
+        # specified as user data in the builder xml.
+        self.assertSequenceEqual(goodbye_clicked, [])
+        foo.goodbye_button.clicked()
+        self.assertSequenceEqual(goodbye_clicked, [foo, foo.goodbye_button])
+        foo.goodbye_button.clicked()
+        self.assertSequenceEqual(goodbye_clicked, [foo, foo.goodbye_button] * 2)
+
+
 @unittest.skipUnless(Gtk, 'Gtk not available')
 class TestTreeModel(unittest.TestCase):
     def test_tree_model_sort(self):
