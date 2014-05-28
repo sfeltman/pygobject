@@ -854,6 +854,30 @@ pyg_object_class_init(GObjectClass *class, PyObject *py_class)
     } else {
 	PyErr_Clear();
     }
+
+    /* Use the class dictionary for _gclass_init_ hook lookup to make
+     * sure it is called only once per-class and not for sub-classes. */
+    if (PyDict_GetItemString (class_dict, "_gclass_init_")) {
+        /* FIXME:
+         * The signature of _gclass_init_ is:
+         *     @classmethod
+         *     def _gclass_init_(pyclass, gclass):
+         *         pass
+         *
+         * But since GObjectClass is not statically wrapped or working very well
+         * with introspection bindings, we pass None as the gclass argument to
+         * allow future API expansion.
+         */
+        PyObject *res = PyObject_CallMethod (py_class, "_gclass_init_",
+                                             "O", Py_None);
+        if (res == NULL) {
+            return;
+        } else {
+            Py_DECREF (res);
+        }
+    } else {
+        PyErr_Clear();
+    }
 }
 
 static void
@@ -1000,12 +1024,30 @@ pygobject_constructv(PyGObject  *self,
     return 0;
 }
 
+
+/* pygobject__g_instance_init:
+ *
+ * pygobject__g_instance_init will be called for each class in a Python created
+ * class hierarchy inheriting from GObject. This complicates things because
+ * it can essentially be called multiple times for a single instance creation
+ * where there is more than one Python class in the hierarchy.
+ * However, a distinction can be made between calls by looking at the "instance"
+ * arguments g_class *member* which is mutated by the system before each call to
+ * denote the initialization taking place. Whereas the g_class *argument* is
+ * always consistently the leaf most class being initialized.
+ */
 static void
 pygobject__g_instance_init(GTypeInstance   *instance,
                            gpointer         g_class)
 {
+    PyGILState_STATE state;
     GObject *object = (GObject *) instance;
     PyObject *wrapper, *args, *kwargs;
+    PyObject *current_py_class;
+    GType current_g_type;
+    gpointer current_g_class;
+
+    state = pyglib_gil_state_ensure();
 
     wrapper = g_object_get_qdata(object, pygobject_wrapper_key);
     if (wrapper == NULL) {
@@ -1020,8 +1062,6 @@ pygobject__g_instance_init(GTypeInstance   *instance,
           /* this looks like a python object created through
            * g_object_new -> we have no python wrapper, so create it
            * now */
-        PyGILState_STATE state;
-        state = pyglib_gil_state_ensure();
         wrapper = pygobject_new_full(object,
                                      /*steal=*/ FALSE,
                                      g_class);
@@ -1037,8 +1077,32 @@ pygobject__g_instance_init(GTypeInstance   *instance,
 
         Py_DECREF(args);
         Py_DECREF(kwargs);
-        pyglib_gil_state_release(state);
     }
+
+    /* Determine the "current" initialization taking place by looking at the
+     * mutating g_class held in the instance. GObject instance initialization
+     * is semantically different from Python in that initializers in GObject
+     * are automatically called in succession from the base class to the leaf
+     * class. Whereas in Python initializers are virtual and only called once
+     * for the outermost version. Super-class versions must be explicitly called
+     * by sub-classes.
+     * We restrict the calling of the _ginstance_init_ hook to only running once
+     * and only when we reach the leaf most class instance being initialized.
+     * This allows a closer parity with Pythons more explicit requirement of
+     * calling super instead of the system automatically chaining things up.
+     */
+    current_g_type = G_TYPE_FROM_INSTANCE (instance);
+    current_g_class = g_type_class_peek (current_g_type);
+    current_py_class = g_type_get_qdata (current_g_type, pygobject_class_key);
+    if (current_g_class == g_class &&
+            PyObject_HasAttrString (current_py_class, "_ginstance_init_")) {
+        PyObject *res = PyObject_CallMethod (current_py_class,
+                                             "_ginstance_init_",
+                                             "O", wrapper);
+        Py_XDECREF (res);
+    }
+
+    pyglib_gil_state_release(state);
 }
 
 
@@ -1166,8 +1230,7 @@ pyg_type_register(PyTypeObject *class, const char *type_name)
 
     /* store pointer to the class with the GType */
     Py_INCREF(class);
-    g_type_set_qdata(instance_type, g_quark_from_string("PyGObject::class"),
-		     class);
+    g_type_set_qdata(instance_type, pygobject_class_key, class);
 
     /* Mark this GType as a custom python type */
     g_type_set_qdata(instance_type, pygobject_custom_key,

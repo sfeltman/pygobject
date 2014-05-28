@@ -73,6 +73,79 @@ class TestGObjectAPI(unittest.TestCase):
         self.assertEqual(GObject.G_MAXUINT64, 2 ** 64 - 1)
 
 
+# These must be globals because they are modified during the parsing of
+# ClassWithInitHooks below.
+_init_hook_counters = {'class_init_count': 0,
+                       'instance_init_count': 0,
+                       'instance_subinit_count': 0,
+                       }
+
+
+class ClassWithInitHooks(GObject.Object):
+    @classmethod
+    def _gclass_init_(cls, gclass=None):
+        _init_hook_counters['class_init_count'] += 1
+
+    def _ginstance_init_(self):
+        _init_hook_counters['instance_init_count'] += 1
+
+
+class TestGObjectHooks(unittest.TestCase):
+    def test_class_init_hook(self):
+        self.assertTrue(_init_hook_counters['class_init_count'] > 0)
+
+    def test_instance_init_hook(self):
+        start_count = _init_hook_counters['instance_init_count']
+        ClassWithInitHooks()
+        self.assertEqual(_init_hook_counters['instance_init_count'],
+                         start_count + 1)
+
+    def test_inherited_init_hooks(self):
+        start_class_count = _init_hook_counters['class_init_count']
+        start_inst_count = _init_hook_counters['instance_init_count']
+
+        # Inheriting should increment the count.
+        class SubclassWithInheritedHooks(ClassWithInitHooks):
+            pass
+
+        # Sub-classing should not invoke the base classes hook.
+        self.assertEqual(_init_hook_counters['class_init_count'],
+                         start_class_count)
+
+        SubclassWithInheritedHooks()
+        self.assertEqual(_init_hook_counters['instance_init_count'],
+                         start_inst_count + 1)
+
+    def test_overridden_init_hooks(self):
+        start_class_count = _init_hook_counters['class_init_count']
+        start_inst_count = _init_hook_counters['instance_init_count']
+        start_subinst_count = _init_hook_counters['instance_subinit_count']
+
+        # Inheriting increment the class count.
+        class SubclassWithOverridenHooks(ClassWithInitHooks):
+            @classmethod
+            def _gclass_init_(cls, gclass=None):
+                _init_hook_counters['class_init_count'] += 1
+
+            def _ginstance_init_(self):
+                _init_hook_counters['instance_subinit_count'] += 1
+
+        # The additional _gobject_class_init_ hook in the sub-class is called
+        # but the base class hook is not called during a sub-classing as it
+        # was already called when the base class was created.
+        self.assertEqual(_init_hook_counters['class_init_count'],
+                         start_class_count + 1)
+
+        # Since overridden _ginstance_init_ methods are not automatically
+        # chained up like in GObject, only the subinit count changes
+        # and the base init count stays the same.
+        SubclassWithOverridenHooks()
+        self.assertEqual(_init_hook_counters['instance_init_count'],
+                         start_inst_count)
+        self.assertEqual(_init_hook_counters['instance_subinit_count'],
+                         start_subinst_count + 1)
+
+
 class TestReferenceCounting(unittest.TestCase):
     def test_regular_object(self):
         obj = GObject.GObject()
