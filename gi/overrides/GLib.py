@@ -55,6 +55,10 @@ def threads_init():
                   PyGIDeprecationWarning, stacklevel=2)
 
 
+#
+# GError Overrides
+#
+
 def gerror_matches(self, domain, code):
     # Handle cases where self.domain was set to an integer for compatibility
     # with the introspected GLib.Error.
@@ -80,6 +84,44 @@ Error.new_literal = staticmethod(gerror_new_literal)
 __all__ += ['GError', 'Error', 'OptionContext', 'OptionGroup', 'Pid',
             'spawn_async', 'threads_init']
 
+
+#
+# GBytes Overrides
+#
+
+def gbytes_get_item(self, key):
+    if isinstance(key, slice):
+        if key.step not in (None, 1):
+            raise ValueError('GLib.Bytes cannot be sliced with a step value '
+                             'other than 1, got %d.' % key.step)
+
+        start = slice.start
+        stop = slice.stop
+        length = self.get_length()
+
+        if start < 0:
+            start = length + start
+
+        if stop < 0:
+            stop = length + stop
+
+        return self.new_from_bytes(start, stop)
+
+    else:
+        return self.get_data()[key]
+
+
+GLib.Bytes.__new__ = GLib.Bytes.new
+GLib.Bytes.__len__ = GLib.Bytes.get_size
+GLib.Bytes.__hash__ = GLib.Bytes.hash
+GLib.Bytes.__eq__ = GLib.Bytes.equal
+GLib.Bytes.__iter__ = GLib.Bytes.get_data
+GLib.Bytes.__getitem__ = gbytes_get_item
+
+
+#
+# GVariant Overrides
+#
 
 class _VariantCreator(object):
 

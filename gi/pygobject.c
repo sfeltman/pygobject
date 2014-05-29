@@ -1664,17 +1664,21 @@ pygobject_bind_property(PyGObject *self, PyObject *args)
 	return pygobject_new (G_OBJECT (binding));
 }
 
-static PyObject *
-connect_helper(PyGObject *self, gchar *name, PyObject *callback, PyObject *extra_args, PyObject *object, gboolean after)
+
+static GClosure *
+connect_build_closure (PyGObject *self,
+                       gchar     *name,
+                       PyObject  *callback,
+                       PyObject  *extra_args,
+                       PyObject  *object,
+                       guint     *sigid,
+                       GQuark    *detail)
 {
-    guint sigid;
-    GQuark detail = 0;
     GClosure *closure = NULL;
-    gulong handlerid;
     GSignalQuery query_info;
 
     if (!g_signal_parse_name(name, G_OBJECT_TYPE(self->obj),
-			     &sigid, &detail, TRUE)) {
+			     sigid, detail, TRUE)) {
 	PyObject *repr = PyObject_Repr((PyObject*)self);
 	PyErr_Format(PyExc_TypeError, "%s: unknown signal name: %s",
 		     PYGLIB_PyUnicode_AsString(repr),
@@ -1683,7 +1687,7 @@ connect_helper(PyGObject *self, gchar *name, PyObject *callback, PyObject *extra
 	return NULL;
     }
 
-    g_signal_query (sigid, &query_info);
+    g_signal_query (*sigid, &query_info);
     if (!pyg_gtype_is_custom (query_info.itype)) {
         /* The signal is implemented by a non-Python class, probably
          * something in the gi repository. */
@@ -1698,6 +1702,22 @@ connect_helper(PyGObject *self, gchar *name, PyObject *callback, PyObject *extra
         closure = pyg_closure_new (callback, extra_args, object);
     }
 
+    return closure;
+}
+
+static PyObject *
+connect_helper(PyGObject *self, gchar *name, PyObject *callback, PyObject *extra_args, PyObject *object, gboolean after)
+{
+    guint sigid;
+    GQuark detail = 0;
+    gulong handlerid;
+    GClosure *closure = NULL;
+
+    closure = connect_build_closure (self, name, callback, extra_args, object,
+                                     &sigid, &detail);
+    if (closure == NULL) {
+        return NULL;
+    }
     pygobject_watch_closure((PyObject *)self, closure);
     handlerid = g_signal_connect_closure_by_id(self->obj, sigid, detail,
 					       closure, after);
@@ -1809,6 +1829,73 @@ pygobject_connect_object(PyGObject *self, PyObject *args)
     ret = connect_helper(self, name, callback, extra_args, object, FALSE);
     Py_DECREF(extra_args);
     return ret;
+}
+
+static int
+parse_callable_arg (PyObject *obj, PyObject **callable)
+{
+    if (!PyCallable_Check (obj)) {
+        PyErr_SetString (PyExc_TypeError, "must be callable");
+        return 0;
+    }
+    *callable = obj;
+    return 1;
+}
+
+static int
+parse_gobject_arg (PyObject *obj, GObject **gobj)
+{
+    if (!pygobject_check (obj, &PyGObject_Type)) {
+        PyErr_SetString (PyExc_TypeError, "must be a GObject");
+        return 0;
+    }
+    *gobj = pygobject_get (obj);
+    return 1;
+}
+
+static PyObject *
+pygobject_connect_gobject(PyGObject *self, PyObject *args, PyObject *kwargs)
+{
+    static char *kwlist[] = { "signal",  "handler", "gobject", "flags", NULL };
+
+    char *signal = NULL;
+    PyObject *py_handler = NULL;
+    GObject *gobject = NULL;
+    GConnectFlags flags = 0;
+    guint sigid;
+    GQuark detail = 0;
+    gulong handlerid;
+    GClosure *closure = NULL;
+
+    CHECK_GOBJECT(self);
+
+    if (!PyArg_ParseTupleAndKeywords (args, kwargs,
+                                      "sO&O&|i:GObject.Object.connect_gobject",
+                                      kwlist,
+                                      &signal,
+                                      parse_callable_arg, &py_handler,
+                                      parse_gobject_arg, &gobject,
+                                      &flags)) {
+        return NULL;
+    }
+
+
+    closure = connect_build_closure (self, signal, py_handler,
+                                     NULL, NULL,
+                                     &sigid, &detail);
+    if (closure == NULL) {
+        return NULL;
+    }
+
+    pygobject_watch_closure ((PyObject *)self, closure);
+
+    handlerid = g_signal_connect_object (pygobject_get (self),
+                                         signal,
+                                         closure,
+                                         gobject,
+                                         (GConnectFlags)flags);
+
+    return PyLong_FromUnsignedLong (handlerid);
 }
 
 static PyObject *
@@ -2169,6 +2256,7 @@ static PyMethodDef pygobject_methods[] = {
     { "connect", (PyCFunction)pygobject_connect, METH_VARARGS },
     { "connect_after", (PyCFunction)pygobject_connect_after, METH_VARARGS },
     { "connect_object", (PyCFunction)pygobject_connect_object, METH_VARARGS },
+    { "connect_gobject", (PyCFunction)pygobject_connect_gobject, METH_VARARGS|METH_KEYWORDS },
     { "connect_object_after", (PyCFunction)pygobject_connect_object_after, METH_VARARGS },
     { "disconnect_by_func", (PyCFunction)pygobject_disconnect_by_func, METH_VARARGS },
     { "handler_block_by_func", (PyCFunction)pygobject_handler_block_by_func, METH_VARARGS },
