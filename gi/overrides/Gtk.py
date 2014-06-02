@@ -23,6 +23,7 @@ import collections
 import sys
 import warnings
 
+import gi
 from gi.repository import GObject
 from ..overrides import override, strip_boolean_result, deprecated_init
 from ..module import get_introspection_module
@@ -1551,5 +1552,6 @@ def main_quit(*args):
 stock_lookup = strip_boolean_result(Gtk.stock_lookup)
 __all__.append('stock_lookup')
 
-initialized, argv = Gtk.init_check(sys.argv)
-sys.argv = list(argv)
+if gi.options.get('gtk_gdk_init_on_import'):
+    initialized, argv = Gtk.init_check(sys.argv)
+    sys.argv = list(argv)

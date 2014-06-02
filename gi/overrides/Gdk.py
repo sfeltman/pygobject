@@ -22,6 +22,7 @@
 import sys
 import warnings
 
+import gi
 from ..overrides import override, strip_boolean_result
 from ..module import get_introspection_module
 from gi import PyGIDeprecationWarning
@@ -404,4 +405,5 @@ if Gdk._version >= '3.0':
 
 import sys
 
-initialized, argv = Gdk.init_check(sys.argv)
+if gi.options.get('gtk_gdk_init_on_import'):
+    initialized, argv = Gdk.init_check(sys.argv)

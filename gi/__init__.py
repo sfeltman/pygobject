@@ -50,6 +50,16 @@ version_info = _gobject.pygobject_version[:]
 __version__ = "{0}.{1}.{2}".format(*version_info)
 
 
+# Options which can be enabled or disabled after importing 'gi' which may effect
+# repository imports or binding machinery in a backwards incompatible way.
+#
+#  gtk_gdk_init_on_import: When True (default), importing Gtk or Gdk will
+#                          call Gtk.init or Gdk.init respectively.
+#
+options = {'gtk_gdk_init_on_import': True,
+           }
+
+
 def check_version(version):
     if isinstance(version, str):
         version_list = tuple(map(int, version.split(".")))
