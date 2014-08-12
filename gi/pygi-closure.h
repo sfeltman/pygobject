@@ -32,16 +32,21 @@ G_BEGIN_DECLS
 typedef struct _PyGICClosure
 {
     GICallableInfo *info;
-    PyObject *function;
 
     ffi_closure *closure;
     ffi_cif cif;
 
     GIScopeType scope;
 
-    PyObject* user_data;
-
     PyGIClosureCache *cache;
+
+    PyObject *function;
+    PyObject *user_data;
+
+    /* Method of calling the Python "function" this closure holds. */
+    PyObject * (* call) (struct _PyGICClosure *pygi_closure,
+                         PyObject *args);
+
 } PyGICClosure;
 
 void _pygi_closure_handle (ffi_cif *cif, void *result, void

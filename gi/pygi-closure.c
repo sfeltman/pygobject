@@ -572,7 +572,7 @@ _pygi_closure_handle (ffi_cif *cif,
         goto end;
     }
 
-    retval = PyObject_CallObject ( (PyObject *) closure->function, state.py_in_args);
+    retval = closure->call (closure, state.py_in_args);
 
     if (retval == NULL) {
         _pygi_closure_clear_retval (closure->cache, result);
@@ -641,6 +641,13 @@ void _pygi_invoke_closure_free (gpointer data)
 }
 
 
+static PyObject *
+_pygi_closure_call (PyGICClosure *closure, PyObject *args)
+{
+    return PyObject_CallObject ((PyObject *)closure->function, args);
+}
+
+
 PyGICClosure*
 _pygi_make_native_closure (GICallableInfo* info,
                            GIScopeType scope,
@@ -659,6 +666,7 @@ _pygi_make_native_closure (GICallableInfo* info,
     closure->info = (GICallableInfo *) g_base_info_ref ( (GIBaseInfo *) info);
     closure->function = py_function;
     closure->user_data = py_user_data;
+    closure->call = _pygi_closure_call;
 
     Py_INCREF (py_function);
     Py_XINCREF (closure->user_data);
