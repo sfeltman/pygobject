@@ -903,15 +903,22 @@ _function_with_instance_cache_generate_args_cache_real (PyGICallableCache *calla
 {
     GIInterfaceInfo *interface_info;
     PyGIArgCache *instance_cache;
+    PyGIDirection direction;
 
     interface_info = g_base_info_get_container ((GIBaseInfo *) callable_info);
+
+    if (callable_cache->calling_context == PYGI_CALLING_CONTEXT_IS_FROM_PY) {
+        direction = PYGI_DIRECTION_FROM_PYTHON;
+    } else {
+        direction = PYGI_DIRECTION_TO_PYTHON;
+    }
 
     instance_cache =
         _arg_cache_new_for_interface (interface_info,
                                       NULL,
                                       NULL,
                                       GI_TRANSFER_NOTHING,
-                                      PYGI_DIRECTION_FROM_PYTHON,
+                                      direction,
                                       callable_cache);
 
     if (instance_cache == NULL)
