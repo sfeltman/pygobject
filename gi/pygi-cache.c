@@ -1067,6 +1067,12 @@ pygi_closure_cache_new (GICallableInfo *info)
 
     callable_cache->calling_context = PYGI_CALLING_CONTEXT_IS_FROM_C;
 
+    /* Signal caches are just like closures except they include the instance argument. */
+    if (g_base_info_get_type (info) == GI_INFO_TYPE_SIGNAL) {
+        callable_cache->args_offset += 1;
+        callable_cache->generate_args_cache = _function_with_instance_cache_generate_args_cache_real;
+    }
+
     if (!_callable_cache_init (callable_cache, info)) {
         g_free (closure_cache);
         return NULL;
