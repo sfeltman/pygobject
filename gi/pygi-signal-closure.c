@@ -44,130 +44,51 @@ _pygi_lookup_signal_from_g_type (GType g_type,
 }
 
 static void
-pygi_signal_closure_invalidate(gpointer data,
-                               GClosure *closure)
+signal_closure_invalidate (gpointer data, GClosure *closure)
 {
-    PyGClosure *pc = (PyGClosure *)closure;
-    PyGILState_STATE state;
-
-    state = PyGILState_Ensure();
-    Py_XDECREF(pc->callback);
-    Py_XDECREF(pc->extra_args);
-    Py_XDECREF(pc->swap_data);
-    PyGILState_Release(state);
-
-    pc->callback = NULL;
-    pc->extra_args = NULL;
-    pc->swap_data = NULL;
-
-    g_base_info_unref (((PyGISignalClosure *) pc)->signal_info);
-    ((PyGISignalClosure *) pc)->signal_info = NULL;
+    _pygi_invoke_closure_free (data);
 }
 
-static void
-pygi_signal_closure_marshal(GClosure *closure,
-                            GValue *return_value,
-                            guint n_param_values,
-                            const GValue *param_values,
-                            gpointer invocation_hint,
-                            gpointer marshal_data)
+/*
+ * signal_closure_call:
+ *
+ * Specialized call which always tacks user_data onto the tail of the
+ * Python arguments and optionally replaces the first argument with swap_data.
+ */
+static PyObject *
+signal_closure_call (PyGICClosure *closure, PyObject *args)
 {
-    PyGILState_STATE state;
-    PyGClosure *pc = (PyGClosure *)closure;
-    PyObject *params, *ret = NULL;
-    guint i;
-    GISignalInfo *signal_info;
-    gint n_sig_info_args;
-    gint sig_info_highest_arg;
+    PyObject *result = NULL;
+    PyObject *new_args;
 
-    state = PyGILState_Ensure();
-
-    signal_info = ((PyGISignalClosure *)closure)->signal_info;
-    n_sig_info_args = g_callable_info_get_n_args(signal_info);
-    /* the first argument to a signal callback is instance,
-       but instance is not counted in the introspection data */
-    sig_info_highest_arg = n_sig_info_args + 1;
-    g_assert_cmpint(sig_info_highest_arg, ==, n_param_values);
-
-    /* construct Python tuple for the parameter values */
-    params = PyTuple_New(n_param_values);
-    for (i = 0; i < n_param_values; i++) {
-        /* swap in a different initial data for connect_object() */
-        if (i == 0 && G_CCLOSURE_SWAP_DATA(closure)) {
-            g_return_if_fail(pc->swap_data != NULL);
-            Py_INCREF(pc->swap_data);
-            PyTuple_SetItem(params, 0, pc->swap_data);
-
-        } else if (i == 0) {
-            PyObject *item = pyg_value_as_pyobject(&param_values[i], FALSE);
-
-            if (!item) {
-                goto out;
-            }
-            PyTuple_SetItem(params, i, item);
-
-        } else if (i < sig_info_highest_arg) {
-            GIArgInfo arg_info;
-            GITypeInfo type_info;
-            GITransfer transfer;
-            GIArgument arg = { 0, };
-            PyObject *item = NULL;
-            gboolean free_array = FALSE;
-
-            g_callable_info_load_arg(signal_info, i - 1, &arg_info);
-            g_arg_info_load_type(&arg_info, &type_info);
-            transfer = g_arg_info_get_ownership_transfer(&arg_info);
-
-            arg = _pygi_argument_from_g_value(&param_values[i], &type_info);
-            
-            if (g_type_info_get_tag (&type_info) == GI_TYPE_TAG_ARRAY) {
-                /* Skip the self argument of param_values */
-                arg.v_pointer = _pygi_argument_to_array (&arg, NULL, param_values + 1, signal_info,
-                                                         &type_info, &free_array);
-            }
-            
-            item = _pygi_argument_to_object (&arg, &type_info, transfer);
-            
-            if (free_array) {
-                g_array_free (arg.v_pointer, FALSE);
-            }
-            
-
-            if (item == NULL) {
-                goto out;
-            }
-            PyTuple_SetItem(params, i, item);
+    if (closure->user_data) {
+        new_args = PySequence_Concat (args, closure->user_data);
+        if (new_args == NULL) {
+            return NULL;
         }
-    }
-    /* params passed to function may have extra arguments */
-    if (pc->extra_args) {
-        PyObject *tuple = params;
-        params = PySequence_Concat(tuple, pc->extra_args);
-        Py_DECREF(tuple);
-    }
-    ret = PyObject_CallObject(pc->callback, params);
-    if (ret == NULL) {
-        if (pc->exception_handler)
-            pc->exception_handler(return_value, n_param_values, param_values);
-        else
-            PyErr_Print();
-        goto out;
+    } else {
+        Py_INCREF (args);
+        new_args = args;
     }
 
-    if (G_IS_VALUE(return_value) && pyg_value_from_pyobject(return_value, ret) != 0) {
-        PyErr_SetString(PyExc_TypeError,
-                        "can't convert return value to desired type");
+    if (closure->swap_data) {
+        PyObject *list = PySequence_List (new_args);
+        if (list == NULL) {
+            goto out;
+        }
 
-        if (pc->exception_handler)
-            pc->exception_handler(return_value, n_param_values, param_values);
-        else
-            PyErr_Print();
+        Py_INCREF (closure->swap_data);
+        PyList_SetItem (list, 0, closure->swap_data);
+
+        Py_DECREF (new_args);
+        new_args = list;
     }
-    Py_DECREF(ret);
 
- out:
-    Py_DECREF(params);
-    PyGILState_Release(state);
+    result = PyObject_CallObject ((PyObject *)closure->function, new_args);
+
+out:
+    Py_DECREF (new_args);
+    return result;
 }
 
 GClosure *
@@ -179,7 +100,7 @@ pygi_signal_closure_new (PyGObject *instance,
                          PyObject *swap_data)
 {
     GClosure *closure = NULL;
-    PyGISignalClosure *pygi_closure = NULL;
+    PyGICClosure *pygi_closure = NULL;
     GISignalInfo *signal_info = NULL;
 
     g_return_val_if_fail(callback != NULL, NULL);
@@ -188,30 +109,20 @@ pygi_signal_closure_new (PyGObject *instance,
     if (signal_info == NULL)
         return NULL;
 
-    closure = g_closure_new_simple(sizeof(PyGISignalClosure), NULL);
-    g_closure_add_invalidate_notifier(closure, NULL, pygi_signal_closure_invalidate);
-    g_closure_set_marshal(closure, pygi_signal_closure_marshal);
+    pygi_closure = _pygi_make_native_closure (signal_info,
+                                              GI_SCOPE_TYPE_NOTIFIED,
+                                              callback,
+                                              extra_args,
+                                              swap_data);
 
-    pygi_closure = (PyGISignalClosure *)closure;
+    if (pygi_closure) {
+        pygi_closure->call = signal_closure_call;
 
-    pygi_closure->signal_info = signal_info;
-    Py_INCREF(callback);
-    pygi_closure->pyg_closure.callback = callback;
-
-    if (extra_args != NULL && extra_args != Py_None) {
-        Py_INCREF(extra_args);
-        if (!PyTuple_Check(extra_args)) {
-            PyObject *tmp = PyTuple_New(1);
-            PyTuple_SetItem(tmp, 0, extra_args);
-            extra_args = tmp;
-        }
-        pygi_closure->pyg_closure.extra_args = extra_args;
-    }
-    if (swap_data) {
-        Py_INCREF(swap_data);
-        pygi_closure->pyg_closure.swap_data = swap_data;
-        closure->derivative_flag = TRUE;
+        closure = g_cclosure_new (G_CALLBACK (pygi_closure->closure),
+                                  pygi_closure,
+                                  signal_closure_invalidate);
     }
 
+    g_base_info_unref (signal_info);
     return closure;
 }

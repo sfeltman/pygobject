@@ -26,14 +26,8 @@
 
 #include "pygobject.h"
 
-G_BEGIN_DECLS
 
-/* Private */
-typedef struct _PyGISignalClosure
-{
-    PyGClosure pyg_closure;
-    GISignalInfo *signal_info;
-} PyGISignalClosure;
+G_BEGIN_DECLS
 
 GClosure *
 pygi_signal_closure_new (PyGObject *instance,

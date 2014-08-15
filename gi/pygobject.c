@@ -1705,9 +1705,11 @@ connect_helper(PyGObject *self, gchar *name, PyObject *callback, PyObject *extra
         /* The signal is either implemented at the Python level, or it comes
          * from a foreign class that we don't have introspection data for. */
         closure = pyg_closure_new (callback, extra_args, object);
+
+        /* HACK: Temporarily moved since watching GI based closures currently breaks. */
+        pygobject_watch_closure((PyObject *)self, closure);
     }
 
-    pygobject_watch_closure((PyObject *)self, closure);
     handlerid = g_signal_connect_closure_by_id(self->obj, sigid, detail,
 					       closure, after);
     return PyLong_FromUnsignedLong(handlerid);
