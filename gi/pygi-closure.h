@@ -42,6 +42,7 @@ typedef struct _PyGICClosure
 
     PyObject *function;
     PyObject *user_data;
+    PyObject *swap_data;
 
     /* Method of calling the Python "function" this closure holds. */
     PyObject * (* call) (struct _PyGICClosure *pygi_closure,
@@ -56,8 +57,9 @@ void _pygi_invoke_closure_free (gpointer user_data);
 
 PyGICClosure* _pygi_make_native_closure (GICallableInfo* info,
                                          GIScopeType scope,
-                                         PyObject *function,
-                                         gpointer user_data);
+                                         PyObject *py_function,
+                                         PyObject *py_user_data,
+                                         PyObject *py_swap_data);
 
 PyGIArgCache *pygi_arg_callback_new_from_info  (GITypeInfo        *type_info,
                                                 GIArgInfo         *arg_info,   /* may be null */

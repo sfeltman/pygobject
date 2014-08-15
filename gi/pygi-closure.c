@@ -535,6 +535,7 @@ _pygi_invoke_closure_clear_py_data(PyGICClosure *invoke_closure)
 
     Py_CLEAR (invoke_closure->function);
     Py_CLEAR (invoke_closure->user_data);
+    Py_CLEAR (invoke_closure->swap_data);
 
     PyGILState_Release (state);
 }
@@ -652,7 +653,8 @@ PyGICClosure*
 _pygi_make_native_closure (GICallableInfo* info,
                            GIScopeType scope,
                            PyObject *py_function,
-                           gpointer py_user_data)
+                           PyObject *py_user_data,
+                           PyObject *py_swap_data)
 {
     PyGICClosure *closure;
     ffi_closure *fficlosure;
@@ -666,10 +668,12 @@ _pygi_make_native_closure (GICallableInfo* info,
     closure->info = (GICallableInfo *) g_base_info_ref ( (GIBaseInfo *) info);
     closure->function = py_function;
     closure->user_data = py_user_data;
+    closure->swap_data = py_swap_data;
     closure->call = _pygi_closure_call;
 
     Py_INCREF (py_function);
-    Py_XINCREF (closure->user_data);
+    Py_XINCREF (py_user_data);
+    Py_XINCREF (py_swap_data);
 
     fficlosure =
         g_callable_info_prepare_closure (info, &closure->cif, _pygi_closure_handle,
@@ -749,7 +753,11 @@ _pygi_marshal_from_py_interface_callback (PyGIInvokeState   *state,
 
     callable_info = (GICallableInfo *)callback_cache->interface_info;
 
-    closure = _pygi_make_native_closure (callable_info, callback_cache->scope, py_arg, py_user_data);
+    closure = _pygi_make_native_closure (callable_info,
+                                         callback_cache->scope,
+                                         py_arg,
+                                         py_user_data,
+                                         NULL);
     arg->v_pointer = closure->closure;
 
     /* always decref the user data as _pygi_make_native_closure adds its own ref */

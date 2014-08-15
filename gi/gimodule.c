@@ -414,7 +414,10 @@ _wrap_pyg_hook_up_vfunc_implementation (PyObject *self, PyObject *args)
         method_ptr = G_STRUCT_MEMBER_P (implementor_vtable, offset);
 
         closure = _pygi_make_native_closure ( (GICallableInfo*) callback_info,
-                                              GI_SCOPE_TYPE_NOTIFIED, py_function, NULL);
+                                              GI_SCOPE_TYPE_NOTIFIED,
+                                              py_function,
+                                              NULL,  /* user_data */
+                                              NULL); /* swap_data */
 
         *method_ptr = closure->closure;
 
