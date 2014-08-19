@@ -911,6 +911,19 @@ get_current_time = deprecated(get_current_time, 'GLib.get_real_time()')
 __all__.append('get_current_time')
 
 
+def _gbytes_getbufferinfo(obj):
+    return gi.BufferInfo(buf='data',
+                         len=gbytes.get_size(),
+                         itemsize=1,
+                         readonly=True,
+                         format='b')
+
+
+Bytes = GLib.Bytes
+Bytes._pygi_getbufferinfo_ = _gbytes_getbufferinfo
+__all__.append('Bytes')
+
+
 # backwards compatible API with default argument, and ignoring bytes_read
 # output argument
 def filename_from_utf8(utf8string, len=-1):

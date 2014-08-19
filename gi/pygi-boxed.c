@@ -20,6 +20,7 @@
  */
 
 #include "pygi-boxed.h"
+#include "pygi-struct.h"
 #include "pygi-info.h"
 #include "pygboxed.h"
 #include "pygtype.h"
@@ -48,6 +49,10 @@ boxed_del (PyGIBoxed *self)
         }
     }
     pyg_boxed_set_ptr (self, NULL);
+
+    if (PyErr_Occurred ()) {
+        PyErr_Print ();
+    }
 
     Py_RETURN_NONE;
 }
@@ -249,6 +254,10 @@ _pygi_boxed_register_types (PyObject *m)
     PyGIBoxed_Type.tp_flags = (Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE);
     PyGIBoxed_Type.tp_getset = pygi_boxed_getsets;
     PyGIBoxed_Type.tp_methods = boxed_methods;
+
+#if PY_MAJOR_VERSION >= 3
+    PyGIBoxed_Type.tp_as_buffer = &pygi_struct_buffer_procs;
+#endif
 
     if (PyType_Ready (&PyGIBoxed_Type))
         return;

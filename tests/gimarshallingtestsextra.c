@@ -16,6 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <string.h>
 #include "gimarshallingtestsextra.h"
 
 void
@@ -90,3 +91,45 @@ gi_marshalling_tests_filename_exists (gchar *path)
 {
   return g_file_test (path, G_FILE_TEST_EXISTS);
 }
+
+
+GIMarshallingTestsBuffer *
+gi_marshalling_tests_buffer_new (gsize size)
+{
+  GIMarshallingTestsBuffer *buf = g_malloc (sizeof (GIMarshallingTestsBuffer));
+  buf->data = g_malloc (size);
+  buf->size = size;
+  return buf;
+}
+
+static void
+gi_marshalling_tests_buffer_free (GIMarshallingTestsBuffer *buffer)
+{
+  g_free (buffer->data);
+  g_free (buffer);
+}
+
+static GIMarshallingTestsBuffer *
+gi_marshalling_tests_buffer_copy (const GIMarshallingTestsBuffer *other)
+{
+  GIMarshallingTestsBuffer *buf = gi_marshalling_tests_buffer_new (other->size);
+  memcpy (buf->data, other->data, other->size);
+  return buf;
+}
+
+GType
+gi_marshalling_tests_buffer_get_type (void)
+{
+  static GType type = 0;
+
+  if (type == 0)
+    {
+      type = g_boxed_type_register_static ("GIMarshallingTestsBuffer",
+                                           (GBoxedCopyFunc) gi_marshalling_tests_buffer_copy,
+                                           (GBoxedFreeFunc) gi_marshalling_tests_buffer_free);
+    }
+
+  return type;
+}
+
+

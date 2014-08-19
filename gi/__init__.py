@@ -29,6 +29,8 @@ import os
 import importlib
 import types
 
+from collections import namedtuple
+
 _static_binding_error = ('When using gi.repository you must not import static '
                          'modules like "gobject". Please change all occurrences '
                          'of "import gobject" to "from gi.repository import GObject". '
@@ -69,6 +71,13 @@ sys.modules['gobject'] = _DummyStaticModule('gobject', _static_binding_error)
 sys.modules['gio'] = _DummyStaticModule('gio', _static_binding_error)
 sys.modules['gtk'] = _DummyStaticModule('gtk', _static_binding_error)
 sys.modules['gtk.gdk'] = _DummyStaticModule('gtk.gdk', _static_binding_error)
+
+
+BufferInfo = namedtuple('BufferInfo', ['buf',
+                                       'len',
+                                       'itemsize',
+                                       'readonly',
+                                       'format'])
 
 
 def check_version(version):

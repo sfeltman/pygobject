@@ -3,7 +3,9 @@
 # vim: tabstop=4 shiftwidth=4 expandtab
 
 import sys
-
+import array
+import types
+import struct
 import unittest
 import tempfile
 import shutil
@@ -1107,6 +1109,86 @@ class TestGByteArray(unittest.TestCase):
         # thus it will not reflect any changes
         GIMarshallingTests.bytearray_none_in(ba)
         GIMarshallingTests.bytearray_none_in(ba)
+
+
+class TestBufferInfo(unittest.TestCase):
+    def run_array_test(self, testdata, readonly=False):
+        """Function to generically test different data formats based on the
+        given array.array() instance.
+        """
+        def getbufferinfo(obj):
+            return gi.BufferInfo(buf='data',
+                                 len=len(testdata),
+                                 itemsize=testdata.itemsize,
+                                 readonly=readonly,
+                                 format=testdata.typecode)
+
+        # Create a new buffer and assign the _pygi_getbufferinfo_ on the instance
+        # so it does not infect instances outside of this test.
+        buf = GIMarshallingTests.Buffer.new(len(testdata) * testdata.itemsize)
+        buf._pygi_getbufferinfo_ = types.MethodType(getbufferinfo, buf)
+
+        mem = memoryview(buf)
+        self.assertEqual(mem.format, testdata.typecode)
+        self.assertEqual(mem.itemsize, testdata.itemsize)
+        self.assertEqual(mem.nbytes, len(testdata) * testdata.itemsize)
+        self.assertEqual(len(mem), len(testdata))
+        self.assertEqual(mem.readonly, readonly)
+
+        for i, value in enumerate(testdata):
+            mem[i] = value
+
+        # Compare both the memoryview bytes and the bytes returned from gi marshalling.
+        self.assertEqual(mem.tobytes(), testdata.tobytes())
+        self.assertEqual(buf.data, testdata.tobytes())
+
+    def run_array_test_signed_integral_type(self, format):
+        nbits = struct.calcsize(format) * 8
+        self.run_array_test(array.array(format, [-2**(nbits-1), 0, 2**(nbits-1)-1]))
+
+    def run_array_test_unsigned_integral_type(self, format):
+        nbits = struct.calcsize(format) * 8
+        self.run_array_test(array.array(format, [0, 1, 2, 3, 2**nbits-1]))
+
+    def test_bytes(self):
+        self.run_array_test_signed_integral_type('b')
+
+    def test_ubytes(self):
+        self.run_array_test_unsigned_integral_type('B')
+
+    def test_shorts(self):
+        self.run_array_test_signed_integral_type('h')
+
+    def test_ushorts(self):
+        self.run_array_test_unsigned_integral_type('H')
+
+    def test_ints(self):
+        self.run_array_test_signed_integral_type('i')
+
+    def test_uints(self):
+        self.run_array_test_unsigned_integral_type('I')
+
+    def test_longs(self):
+        self.run_array_test_signed_integral_type('l')
+
+    def test_ulongs(self):
+        self.run_array_test_unsigned_integral_type('L')
+
+    def test_long_longs(self):
+        self.run_array_test_signed_integral_type('q')
+
+    def test_ulong_longs(self):
+        self.run_array_test_unsigned_integral_type('Q')
+
+    def test_floats(self):
+        self.run_array_test(array.array('f', [-42.0, 0.0, 0.2, 0.3, 42.0]))
+
+    def test_doubles(self):
+        self.run_array_test(array.array('d', [-42.0, 0.0, 0.2, 0.3, 42.0]))
+
+    def test_readonly_raises(self):
+        with self.assertRaises(TypeError):
+            self.run_array_test(array.array('b', b'asdf'), readonly=True)
 
 
 class TestGList(unittest.TestCase):

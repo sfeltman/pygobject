@@ -36,4 +36,18 @@ GHashTable * gi_marshalling_tests_ghashtable_enum_none_return (void);
 gchar * gi_marshalling_tests_filename_copy (gchar *path_in);
 gboolean gi_marshalling_tests_filename_exists (gchar *path);
 
+/**
+ * GIMarshallingTestsBuffer:
+ * @data: (array length=size): pointer to the data
+ * @size: size of @data
+ */
+typedef struct
+{
+  guint8 *data;
+  gsize size;
+} GIMarshallingTestsBuffer;
+
+GIMarshallingTestsBuffer * gi_marshalling_tests_buffer_new (gsize size);
+GType gi_marshalling_tests_buffer_get_type (void);
+
 #endif /* EXTRA_TESTS */

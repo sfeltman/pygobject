@@ -31,6 +31,7 @@ typedef struct {
 } PyGIStruct;
 
 extern PyTypeObject PyGIStruct_Type;
+extern PyBufferProcs pygi_struct_buffer_procs;
 
 PyObject *
 _pygi_struct_new (PyTypeObject *type,
