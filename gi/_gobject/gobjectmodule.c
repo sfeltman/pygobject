@@ -775,6 +775,23 @@ add_properties (GObjectClass *klass, PyObject *properties)
     return ret;
 }
 
+static gboolean
+add_class_pspecs (GObjectClass *gclass, PyObject *pyclass_dict)
+{
+    Py_ssize_t pos = 0;
+    PyObject *key;
+    PyObject *value;
+
+    while (PyDict_Next (pyclass_dict, &pos, &key, &value)) {
+        if (pyg_param_spec_check (value)) {
+            GParamSpec *pspec = pyg_param_spec_get (value);
+            g_object_class_install_property (gclass, 1, pspec);
+        }
+    }
+
+    return TRUE;
+}
+
 static void
 pyg_object_class_init(GObjectClass *class, PyObject *py_class)
 {
@@ -818,6 +835,9 @@ pyg_object_class_init(GObjectClass *class, PyObject *py_class)
 			    "__gproperties__ attribute not a dict!");
 	    return;
 	}
+        if (!add_pspecs (class, class_dict)) {
+            return;
+        }
 	if (!add_properties(class, gproperties)) {
 	    return;
 	}
