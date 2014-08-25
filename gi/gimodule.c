@@ -305,74 +305,80 @@ _wrap_pyg_register_interface_info (PyObject *self, PyObject *args)
     Py_RETURN_NONE;
 }
 
-static void
-find_vfunc_info (GIBaseInfo *vfunc_info,
-                 GType implementor_gtype,
-                 gpointer *implementor_class_ret,
-                 gpointer *implementor_vtable_ret,
-                 GIFieldInfo **field_info_ret)
+static GIFieldInfo *
+find_field (GIStructInfo *struct_info, const char *field_name)
 {
-    GType ancestor_g_type = 0;
     int length, i;
-    GIBaseInfo *ancestor_info;
-    GIStructInfo *struct_info;
-    gpointer implementor_class = NULL;
-    gboolean is_interface = FALSE;
-
-    ancestor_info = g_base_info_get_container (vfunc_info);
-    is_interface = g_base_info_get_type (ancestor_info) == GI_INFO_TYPE_INTERFACE;
-
-    ancestor_g_type = g_registered_type_info_get_g_type (
-                          (GIRegisteredTypeInfo *) ancestor_info);
-    implementor_class = g_type_class_ref (implementor_gtype);
-    if (is_interface) {
-        GTypeInstance *implementor_iface_class;
-        implementor_iface_class = g_type_interface_peek (implementor_class,
-                                                         ancestor_g_type);
-        if (implementor_iface_class == NULL) {
-            g_type_class_unref (implementor_class);
-            PyErr_Format (PyExc_RuntimeError,
-                          "Couldn't find GType of implementor of interface %s. "
-                          "Forgot to set __gtype_name__?",
-                          g_type_name (ancestor_g_type));
-            return;
-        }
-
-        *implementor_vtable_ret = implementor_iface_class;
-
-        struct_info = g_interface_info_get_iface_struct ( (GIInterfaceInfo*) ancestor_info);
-    } else {
-        struct_info = g_object_info_get_class_struct ( (GIObjectInfo*) ancestor_info);
-        *implementor_vtable_ret = implementor_class;
-    }
-
-    *implementor_class_ret = implementor_class;
 
     length = g_struct_info_get_n_fields (struct_info);
     for (i = 0; i < length; i++) {
-        GIFieldInfo *field_info;
-        GITypeInfo *type_info;
-
+        GIFieldInfo* field_info;
+        GITypeInfo* type_info;
         field_info = g_struct_info_get_field (struct_info, i);
-
-        if (strcmp (g_base_info_get_name ( (GIBaseInfo*) field_info),
-                    g_base_info_get_name ( (GIBaseInfo*) vfunc_info)) != 0) {
+        if (strcmp (g_base_info_get_name ((GIBaseInfo*) field_info), field_name) != 0) {
             g_base_info_unref (field_info);
             continue;
         }
-
         type_info = g_field_info_get_type (field_info);
         if (g_type_info_get_tag (type_info) == GI_TYPE_TAG_INTERFACE) {
             g_base_info_unref (type_info);
-            *field_info_ret = field_info;
-            break;
+            return field_info;
         }
-
         g_base_info_unref (type_info);
         g_base_info_unref (field_info);
     }
 
-    g_base_info_unref (struct_info);
+    return NULL;
+}
+
+static void *
+get_interface_vtable (PyTypeObject *pytype,
+                      GIBaseInfo   *vfunc_info,
+                      gpointer      implementor_class,
+                      GType         implementor_gtype,
+                      GType         interface_gtype)
+{
+    Py_ssize_t i;
+    Py_ssize_t length;
+    GTypeInstance *implementor_iface_class;
+    PyObject *bases;
+    gboolean interface_found = FALSE;
+
+    bases = PyObject_GetAttrString ((PyObject *)pytype, "__bases__");
+    length = PySequence_Length (bases);
+
+    for (i = 0; i < length && !interface_found; i++) {
+        PyObject *base = PySequence_GetItem (bases, i);
+        if (PyType_IsSubtype ((PyTypeObject *)base, &PyGInterface_Type)) {
+            GType gtype = pyg_type_from_object (base);
+            if (gtype == interface_gtype) {
+                interface_found = TRUE;
+            }
+        }
+        Py_DECREF (base);
+    }
+    Py_DECREF (bases);
+
+    if (!interface_found) {
+        PyErr_Format (PyExc_TypeError,
+                      "Couldn't override virtual method \"%s\" because the class \"%s\" "
+                      "does not explicitly derive from interface \"%s\".",
+                      g_base_info_get_name (vfunc_info),
+                      pytype->tp_name,
+                      g_type_name (interface_gtype));
+        return NULL;
+    }
+
+    implementor_iface_class = g_type_interface_peek (implementor_class, interface_gtype);
+    if (implementor_iface_class == NULL) {
+        PyErr_Format (PyExc_RuntimeError,
+                      "Couldn't find GType of implementor of interface %s. "
+                      "Forgot to set __gtype_name__?",
+                      g_type_name (interface_gtype));
+        return NULL;
+    }
+
+    return implementor_iface_class;
 }
 
 static PyObject *
@@ -381,28 +387,54 @@ _wrap_pyg_hook_up_vfunc_implementation (PyObject *self, PyObject *args)
     PyGIBaseInfo *py_info;
     PyObject *py_type;
     PyObject *py_function;
+
     GType implementor_gtype = 0;
     gpointer implementor_class = NULL;
     gpointer implementor_vtable = NULL;
     GIFieldInfo *field_info = NULL;
-    gpointer *method_ptr = NULL;
-    PyGICClosure *closure = NULL;
+    GIBaseInfo *vfunc_container = NULL;
+    GIStructInfo *struct_info;
+    GIBaseInfo *vfunc_info;
 
     if (!PyArg_ParseTuple (args, "O!O!O:hook_up_vfunc_implementation",
                            &PyGIBaseInfo_Type, &py_info,
-                           &PyGTypeWrapper_Type, &py_type,
+                           &PyType_Type, &py_type,
                            &py_function))
         return NULL;
 
     implementor_gtype = pyg_type_from_object (py_type);
     g_assert (G_TYPE_IS_CLASSED (implementor_gtype));
 
-    find_vfunc_info (py_info->info, implementor_gtype, &implementor_class, &implementor_vtable, &field_info);
+    vfunc_info = py_info->info;
+    implementor_class = g_type_class_ref (implementor_gtype);
+    vfunc_container = g_base_info_get_container (py_info->info);
+
+    if (g_base_info_get_type (vfunc_container) == GI_INFO_TYPE_INTERFACE) {
+        GType interface_gtype = g_registered_type_info_get_g_type (
+                (GIRegisteredTypeInfo *) vfunc_container);
+        struct_info = g_interface_info_get_iface_struct ((GIInterfaceInfo*) vfunc_container);
+
+        implementor_vtable = get_interface_vtable ((PyTypeObject *)py_type,
+                                                   vfunc_info,
+                                                   implementor_class,
+                                                   implementor_gtype,
+                                                   interface_gtype);
+        if (implementor_vtable == NULL) {
+            goto out;
+        }
+    } else {
+        struct_info = g_object_info_get_class_struct ((GIObjectInfo*) vfunc_container);
+        implementor_vtable = implementor_class;
+    }
+
+    field_info = find_field (struct_info, g_base_info_get_name ((GIBaseInfo*) vfunc_info));
     if (field_info != NULL) {
         GITypeInfo *type_info;
         GIBaseInfo *interface_info;
         GICallbackInfo *callback_info;
         gint offset;
+        PyGICClosure *closure = NULL;
+        gpointer *method_ptr = NULL;
 
         type_info = g_field_info_get_type (field_info);
 
@@ -422,6 +454,9 @@ _wrap_pyg_hook_up_vfunc_implementation (PyObject *self, PyObject *args)
         g_base_info_unref (type_info);
         g_base_info_unref (field_info);
     }
+
+out:
+    g_base_info_unref (struct_info);
     g_type_class_unref (implementor_class);
 
     Py_RETURN_NONE;

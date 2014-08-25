@@ -119,7 +119,9 @@ class MetaClassHelper(object):
                                      ambiguous_base.__info__.get_namespace(),
                                      ambiguous_base.__info__.get_name()
                                     ))
-                hook_up_vfunc_implementation(vfunc_info, cls.__gtype__,
+                print("VFUNC HOOKUP", cls, cls.__gtype__, vfunc_info)
+                hook_up_vfunc_implementation(vfunc_info,
+                                             cls,
                                              py_vfunc)
 
     def _setup_native_vfuncs(cls):

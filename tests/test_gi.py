@@ -2363,10 +2363,10 @@ class TestInterfaces(unittest.TestCase):
 
     def test_subclass_override(self):
         class TestInterfaceImplD(TestInterfaces.TestInterfaceImpl):
-            val2 = None
+            val2 = 0
 
             def do_test_int8_in(self, int8):
-                self.val2 = int8
+                self.val2 += int8
 
         instance = TestInterfaceImplD()
         self.assertEqual(instance.val, None)
