@@ -131,7 +131,7 @@ _gi_la_LIBADD = \
 	$(FFI_LIBS)
 _gi_la_LDFLAGS = \
 	$(extension_ldflags) \
-	-export-symbols-regex "init_gi|PyInit__gi"
+	-export-symbols-regex "_?pygi_.*|init_gi|PyInit__gi"
 
 if ENABLE_CAIRO
 pygi_LTLIBRARIES += _gi_cairo.la

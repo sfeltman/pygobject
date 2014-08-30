@@ -81,7 +81,31 @@ G_BEGIN_DECLS
 #define _g_array_index(a,t,i) \
     *(t *)((a)->data + g_array_get_element_size(a) * (i))
 
-
 G_END_DECLS
+
+
+
+struct PyGIPrivateAPI {
+    int version;
+};
+
+static struct PyGIPrivateAPI *pygi_private_api = NULL;
+
+static int
+pygi_private_api_import (void)
+{
+    if (pygi_private_api != NULL) {
+        return 1;
+    }
+
+    pygi_private_api = (struct PyGIPrivateAPI*) PyCapsule_Import("gi._gi._private_api", FALSE);
+    if (pygi_private_api == NULL) {
+        return -1;
+    }
+
+    return 0;
+}
+
+
 
 #endif /* __PYGI_PRIVATE_H__ */

@@ -78,5 +78,4 @@ typedef struct {
     PyGICCallbackCache *cache;
 } PyGICCallback;
 
-
 #endif /* __PYGI_H__ */

@@ -67,12 +67,32 @@ testhelper_la_SOURCES = \
 testhelper.la: $(testhelper_la_OBJECTS) $(testhelper_la_DEPENDENCIES)
 	$(AM_V_GEN) $(LINK) -rpath $(pkgpyexecdir) $(testhelper_la_LDFLAGS) $(testhelper_la_OBJECTS) $(testhelper_la_LIBADD) $(LIBS)
 
+# HACK because this does not seem to be setup properly by python.m4
+PYTHON_LIBS=`python$(PYTHON_VERSION)-config --ldflags`
+
+test_arrays_CFLAGS = -I$(top_srcdir)/gi \
+					 $(PYTHON_INCLUDES) \
+					 $(GLIB_CFLAGS) \
+					 $(GI_CFLAGS)
+test_arrays_LDFLAGS = $(PYTHON_LIBS) \
+					  -module -avoid-version -shrext $(PYTHON_SO)
+test_arrays_LDADD = $(top_builddir)/gi/_gi.la \
+					$(GLIB_LIBS) \
+					$(GI_LIBS)
+test_arrays_SOURCES = test_arrays.c
+
+TEST_PROGS = \
+	test_arrays
+
+noinst_PROGRAMS = $(TEST_PROGS)
+check_PROGRAMS = $(TEST_PROGS)
+
 
 .la.$(OS_EXT):
 	test -L $@ || $(LN_S) .libs/$@ $@
 
 
-all: $(check_LTLIBRARIES:.la=.$(OS_EXT))
+all: $(check_LTLIBRARIES:.la=.$(OS_EXT)) $(check_PROGRAMS)
 
 EXTRA_DIST = \
 	compathelper.py \
@@ -134,9 +154,12 @@ RUN_TESTS_ENV_VARS= \
 	G_SLICE=debug-blocks \
 	TESTS_BUILDDIR=$(builddir)
 
+TESTS = gtester
+GTESTER_REPORT = gtester-report
+
 # pygtkcompat tests need to be run in a separate process as they
 # clobber global name space
-check-local: $(check_LTLIBRARIES:.la=.$(OS_EXT)) $(test_typelibs) gschemas.compiled
+check-local: $(check_LTLIBRARIES:.la=.$(OS_EXT)) $(test_typelibs) $(TEST_PROGS) gschemas.compiled
 	export `$(DBUS_LAUNCH)` && \
 	$(RUN_TESTS_ENV_VARS) $(EXEC_NAME) $(PYTHON) -Wd $(srcdir)/runtests.py; rc=$$?; \
 	[ "$$rc" -ne 0 ] || [ -n "$$TEST_NAMES" ] || { TEST_NAMES=compat_test_pygtk $(RUN_TESTS_ENV_VARS) $(EXEC_NAME) $(PYTHON) -Wd -Werror::PendingDeprecationWarning -Werror::DeprecationWarning -Werror::RuntimeWarning $(srcdir)/runtests.py; rc=$$?; }; \

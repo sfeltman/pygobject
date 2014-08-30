@@ -37,7 +37,8 @@ os.environ['G_FILENAME_ENCODING'] = 'UTF-8'
 
 # Load tests.
 if 'TEST_NAMES' in os.environ:
-    names = os.environ['TEST_NAMES'].split()
+    names = [name for name in os.environ['TEST_NAMES'].split()
+             if not name.startswith('/')]  # ignore gtester tests
 elif 'TEST_FILES' in os.environ:
     names = []
     for filename in os.environ['TEST_FILES'].split():

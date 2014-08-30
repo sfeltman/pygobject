@@ -630,9 +630,14 @@ static struct PyGI_API CAPI = {
   pygi_register_foreign_struct,
 };
 
+static struct PyGIPrivateAPI the_private_api = {
+    1,  /* version */
+};
+
 PYGLIB_MODULE_START(_gi, "_gi")
 {
-    PyObject *api;
+    PyObject *foreign_api;
+    PyObject *private_api;
     PyObject *_glib_module;
     PyObject *_gobject_module;
 
@@ -698,10 +703,16 @@ PYGLIB_MODULE_START(_gi, "_gi")
     Py_INCREF(PyGIDeprecationWarning);
     PyModule_AddObject(module, "PyGIDeprecationWarning", PyGIDeprecationWarning);
 
-    api = PYGLIB_CPointer_WrapPointer ( (void *) &CAPI, "gi._API");
-    if (api == NULL) {
+    foreign_api = PYGLIB_CPointer_WrapPointer ( (void *) &CAPI, "gi._API");
+    if (foreign_api == NULL) {
         return PYGLIB_MODULE_ERROR_RETURN;
     }
-    PyModule_AddObject (module, "_API", api);
+    PyModule_AddObject (module, "_API", foreign_api);
+
+    private_api = PyCapsule_New ( (void *) &the_private_api, "gi._gi._private_api", NULL);
+    if (private_api == NULL) {
+        return PYGLIB_MODULE_ERROR_RETURN;
+    }
+    PyModule_AddObject (module, "_private_api", private_api);
 }
 PYGLIB_MODULE_END
