@@ -372,6 +372,10 @@ class Test(unittest.TestCase):
         self.assertRaises(TypeError, IntrospectedRepository.Argument)
         IntrospectedRepository.Argument.__info__ = old_info
 
+    def test_get_dependencies(self):
+        deps = repo.get_dependencies('GIMarshallingTests')
+        self.assertTrue('Gio-2.0' in deps)
+
 
 if __name__ == '__main__':
     unittest.main()
