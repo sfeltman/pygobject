@@ -22,7 +22,9 @@
 
 from __future__ import absolute_import
 import sys
+import importlib
 
+import gi
 from ._gi import Repository
 from .module import DynamicModule
 
@@ -37,6 +39,7 @@ class DynamicImporter(object):
 
     def __init__(self, path):
         self.path = path
+        self.tabs = ''
 
     def find_module(self, fullname, path=None):
         if not fullname.startswith(self.path):
@@ -65,5 +68,12 @@ class DynamicImporter(object):
 
         sys.modules[fullname] = dynamic_module
         dynamic_module._load()
+
+        # Recursively load all GI modules this module depends on.
+        deps = repository.get_dependencies(namespace)
+        for dep in deps:
+            dep_namespace, dep_version = dep.split('-')
+            gi.require_version(dep_namespace, dep_version)
+            importlib.import_module('gi.repository.' + dep_namespace)
 
         return dynamic_module
