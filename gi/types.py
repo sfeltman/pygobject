@@ -22,6 +22,7 @@
 
 from __future__ import absolute_import
 
+import collections
 import sys
 import warnings
 
@@ -29,6 +30,7 @@ from ._constants import TYPE_INVALID
 from .docstring import generate_doc_string
 
 from ._gi import \
+    CallableInfo, \
     InterfaceInfo, \
     ObjectInfo, \
     StructInfo, \
@@ -48,6 +50,8 @@ if (3, 0) <= sys.version_info < (3, 3):
     # callable not available for python 3.0 thru 3.2
     def callable(obj):
         return hasattr(obj, '__call__')
+
+collections.Callable.register(CallableInfo)
 
 
 class MetaClassHelper(object):

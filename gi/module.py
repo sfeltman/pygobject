@@ -265,6 +265,7 @@ def get_introspection_module(namespace):
     """
     :Returns:
         An object directly wrapping the gi module without overrides.
+
     """
     if namespace in _introspection_modules:
         return _introspection_modules[namespace]

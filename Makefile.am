@@ -204,4 +204,10 @@ check.valgrindlog:
 check.valgrindxml:
 	cd tests && $(MAKE) check.valgrindxml
 
+docs.html:
+	cd docs && $(MAKE) html
+
+docs.devhelp:
+	cd docs && $(MAKE) devhelp
+
 @GNOME_CODE_COVERAGE_RULES@

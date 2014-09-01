@@ -450,6 +450,7 @@ class Builder(Gtk.Builder):
         .. code-block:: python
 
             builder.connect_signals({'on_clicked': (on_clicked, arg1, arg2)})
+
         """
         self.connect_signals_full(_builder_connect_callback, obj_or_map)
 
