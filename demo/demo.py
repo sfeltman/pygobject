@@ -19,6 +19,11 @@
 # Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301
 # USA
 
+title = "PyGI Demo App"
+description = """
+Python GObject-Introspection demo application showing various techniques for
+programming the GNOME platform.
+"""
 
 import codecs
 import os
@@ -72,6 +77,11 @@ class DemoTreeStore(Gtk.TreeStore):
 
         self._parent_nodes = {}
 
+        # Add "self" module as the first demo program listed.
+        module = sys.modules[__name__]
+        demo = Demo(module.title, module, __file__)
+        self.append(None, (demo.title, demo, Pango.Style.NORMAL))
+
         for filename in self._list_dir(DEMOCODEDIR):
             fullpath = os.path.join(DEMOCODEDIR, filename)
             initfile = os.path.join(os.path.dirname(fullpath), '__init__.py')
@@ -109,9 +119,11 @@ class DemoTreeStore(Gtk.TreeStore):
 
 
 class App(Gtk.Application):
+    app_count = 0  # Allow multiple launches of this app within the same process.
 
     def __init__(self):
-        super(App, self).__init__(application_id='org.gnome.pygi.demo')
+        super(App, self).__init__(application_id='org.gnome.pygi.demo' + str(self.app_count))
+        App.app_count += 1
 
         self.gtksettings = Gtk.Settings.get_default()
 
@@ -356,11 +368,12 @@ class App(Gtk.Application):
         return super(App, self).run(argv)
 
 
-def main(argv):
+def main(demoapp=None):
     """Entry point for demo manager"""
     app = App()
-    return app.run(argv)
+    return app.run(sys.argv)
 
 
 if __name__ == '__main__':
-    SystemExit(main(sys.argv))
+    app = App()
+    raise SystemExit(app.run(sys.argv))
