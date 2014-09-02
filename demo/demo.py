@@ -113,6 +113,8 @@ class App(Gtk.Application):
     def __init__(self):
         super(App, self).__init__(application_id='org.gnome.pygi.demo')
 
+        self.gtksettings = Gtk.Settings.get_default()
+
         # Use a GResource to hold the CSS files. Resource bundles are created by
         # the glib-compile-resources program shipped with Glib which takes an xml
         # file that describes the bundle, and a set of files that the xml
@@ -322,7 +324,16 @@ class App(Gtk.Application):
             lang_mgr = GtkSource.LanguageManager()
             lang = lang_mgr.get_language('python')
 
+            # Choose a resonable syntax hightlighting color scheme.
+            scheme_mgr = GtkSource.StyleSchemeManager.get_default()
+            if self.gtksettings.get_property('gtk-application-prefer-dark-theme'):
+                scheme = scheme_mgr.get_scheme('oblivion')
+
             buffer = GtkSource.Buffer()
+
+            if scheme:
+                buffer.set_style_scheme(scheme)
+
             buffer.set_language(lang)
             buffer.set_highlight_syntax(True)
 
