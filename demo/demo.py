@@ -108,11 +108,10 @@ class DemoTreeStore(Gtk.TreeStore):
         return self._parent_nodes[name]
 
 
-class GtkDemoApp(Gtk.Application):
-    __gtype_name__ = 'GtkDemoWindow'
+class App(Gtk.Application):
 
     def __init__(self):
-        super(GtkDemoApp, self).__init__(application_id='org.gnome.pygobject.gtkdemo')
+        super(App, self).__init__(application_id='org.gnome.pygi.demo')
 
         # Use a GResource to hold the CSS files. Resource bundles are created by
         # the glib-compile-resources program shipped with Glib which takes an xml
@@ -130,7 +129,7 @@ class GtkDemoApp(Gtk.Application):
 
     def on_activate(self, app):
         self.window = Gtk.ApplicationWindow.new(self)
-        self.window.set_title('PyGObject GTK+ Code Demos')
+        self.window.set_title('PyGI Code Demos')
         self.window.set_default_size(600, 400)
         self.setup_default_icon()
 
@@ -344,12 +343,12 @@ class GtkDemoApp(Gtk.Application):
 
     def run(self, argv):
         self.connect('activate', self.on_activate)
-        return super(GtkDemoApp, self).run(argv)
+        return super(App, self).run(argv)
 
 
 def main(argv):
     """Entry point for demo manager"""
-    app = GtkDemoApp()
+    app = App()
     return app.run(argv)
 
 
