@@ -147,15 +147,26 @@ class App(Gtk.Application):
         self.window.set_default_size(600, 400)
         self.setup_default_icon()
 
-        self.header_bar = Gtk.HeaderBar(show_close_button=True,
-                                        subtitle='Foobar')
-        self.window.set_titlebar(self.header_bar)
+        self.hsize_group = Gtk.SizeGroup(Gtk.SizeGroupMode.HORIZONTAL)
+
+        header = Gtk.Box()
+
+        left_header_bar = Gtk.HeaderBar(show_close_button=False,
+                                        title='PyGI Demos',
+                                        subtitle='(double click to launch)')
+
+        right_header_bar = Gtk.HeaderBar(show_close_button=True)
+        header.pack_start(left_header_bar, False, False, 0)
+        header.pack_start(right_header_bar, True, True, 0)
+
+        self.window.set_titlebar(header)
+        self.hsize_group.add_widget(left_header_bar)
 
         stack = Gtk.Stack(transition_type=Gtk.StackTransitionType.SLIDE_LEFT_RIGHT,
                           homogeneous=True)
         switcher = Gtk.StackSwitcher(stack=stack, halign=Gtk.Align.CENTER)
 
-        self.header_bar.set_custom_title(switcher)
+        right_header_bar.set_custom_title(switcher)
 
         hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL,
                        homogeneous=False,
@@ -163,6 +174,7 @@ class App(Gtk.Application):
         self.window.add(hbox)
 
         tree = self.create_tree()
+        self.hsize_group.add_widget(tree)
         hbox.pack_start(child=tree, expand=False, fill=False, padding=0)
         hbox.pack_start(child=stack, expand=True, fill=True, padding=0)
 
@@ -293,15 +305,9 @@ class App(Gtk.Application):
                                    Gtk.PolicyType.AUTOMATIC)
 
         scrolled_window.add(tree_view)
-
-        label = Gtk.Label(label='Widget (double click for demo)')
-
-        box = Gtk.Notebook()
-        box.append_page(scrolled_window, label)
-
         tree_view.grab_focus()
 
-        return box
+        return scrolled_window
 
     def create_scrolled_window(self):
         scrolled_window = Gtk.ScrolledWindow(hadjustment=None,
