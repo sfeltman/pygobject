@@ -690,6 +690,53 @@ _wrap_c_array (PyGIInvokeState   *state,
 }
 
 static void
+_pygi_marshal_cleanup_to_py_garray (PyGIInvokeState *state,
+                                    PyGIArgCache    *arg_cache,
+                                    PyObject        *dummy,
+                                    gpointer         data,
+                                    gboolean         was_processed)
+{
+    g_array_unref ((GArray *)data);
+}
+
+static void
+_pygi_marshal_cleanup_to_py_gbytearray (PyGIInvokeState *state,
+                                        PyGIArgCache    *arg_cache,
+                                        PyObject        *dummy,
+                                        gpointer         data,
+                                        gboolean         was_processed)
+{
+    g_byte_array_unref ((GByteArray *)data);
+}
+
+static void
+_pygi_marshal_cleanup_to_py_gptrarray (PyGIInvokeState *state,
+                                       PyGIArgCache    *arg_cache,
+                                       PyObject        *dummy,
+                                       gpointer         data,
+                                       gboolean         was_processed)
+{
+    PyGISequenceCache *sequence_cache = (PyGISequenceCache *)arg_cache;
+
+    if (sequence_cache->item_cache->to_py_cleanup != NULL) {
+        guint i;
+        GPtrArray *ptr_array = (GPtrArray *)data;
+        PyGIMarshalCleanupFunc cleanup_func = sequence_cache->item_cache->to_py_cleanup;
+
+        for (i = 0; i < ptr_array->len; i++) {
+            cleanup_func (state,
+                          sequence_cache->item_cache,
+                          NULL,
+                          g_ptr_array_index (ptr_array, i),
+                          was_processed);
+        }
+    }
+
+    g_ptr_array_unref ((GPtrArray *)data);
+}
+
+
+static void
 _pygi_marshal_cleanup_to_py_array (PyGIInvokeState *state,
                                    PyGIArgCache    *arg_cache,
                                    PyObject        *dummy,
@@ -869,7 +916,35 @@ pygi_arg_garray_setup (PyGIArgGArray     *sc,
 
     if (direction & PYGI_DIRECTION_TO_PYTHON) {
         arg_cache->to_py_marshaller = _pygi_marshal_to_py_array;
-        arg_cache->to_py_cleanup = _pygi_marshal_cleanup_to_py_array;
+
+        if (arg_cache->transfer == GI_TRANSFER_EVERYTHING ||
+            arg_cache->transfer == GI_TRANSFER_CONTAINER ||
+            arg_cache->is_caller_allocates) {
+
+            switch (sc->array_type) {
+            case GI_ARRAY_TYPE_C:
+                arg_cache->to_py_cleanup = cleanup_to_py_c_array;
+                break;
+
+            case GI_ARRAY_TYPE_ARRAY:
+                arg_cache->to_py_cleanup = cleanup_to_py_g_array;
+                break;
+
+            case GI_ARRAY_TYPE_PTR_ARRAY:
+                arg_cache->to_py_cleanup = cleanup_to_py_ptr_array;
+                break;
+
+            case GI_ARRAY_TYPE_BYTE_ARRAY:
+                arg_cache->to_py_cleanup = cleanup_to_py_byte_array;
+                break;
+
+            default:
+                PyErr_Format (PyExc_ValueError,
+                              "Unsupported array type %d.",
+                              sc->array_type);
+                return FALSE;
+            }
+        }
     }
 
     return TRUE;
